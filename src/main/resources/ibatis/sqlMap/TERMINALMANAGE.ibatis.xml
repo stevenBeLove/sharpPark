@@ -1,0 +1,1614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="terminalmanage">
+	<!-- 获取终端数据 -->
+	<select id="getTerminalManageTbCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT
+		count(*)
+		FROM QT1TBLTERMINAL tm
+		LEFT JOIN rtb_qt1tblagency T2
+		ON tm.AGENCYID = T2.AGENCY_ID
+		<isNotEmpty property="status">
+			AND tm.TERMINALSTATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeId">
+			AND tm.TERMINATYPEID=#terminalTypeId#
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			AND tm.TERMINALCODE LIKE
+			'%$terminalCode$%'
+		</isNotEmpty>
+		WHERE
+		(T2.ONLINECHANNEL = #agencyId#
+		OR T2.AGENCY_ID = #agencyId#)
+		<isNotEmpty property="systemId">
+			AND T2.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="systemId">
+			AND tm.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+
+	</select>
+
+	<!-- 获取终端数据(审核、下发) -->
+	<select id="getTerminalManageTb" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+
+		SELECT *
+		FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT
+		tm.ONLYCODE AS onlyCode,
+		TM.TERMINALCODE AS terminalCode,
+		tm.MERCHANTCODE AS merchantCode,
+		tm.TERMINATYPEID AS terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TM.TERMINATYPEID) AS terminaltypeName,
+		TM.AGENCYID AS agencyId,
+		GETAGENCYNAMEBYID(TM.AGENCYID) AS agencyName,
+		tm.TERMINALSTATUS AS terminalStatus,
+		CASE WHEN tm.TERMINALSTATUS='0'
+		THEN '未激活'
+		WHEN tm.TERMINALSTATUS='1' THEN '已激活'
+		WHEN tm.TERMINALSTATUS='2' THEN '冻结'
+		WHEN tm.TERMINALSTATUS='3' THEN '回拨'
+		WHEN tm.TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr,
+		tm.OPENDATE AS
+		openDate,
+		tm.CLIENTCODE AS clientCode,
+		tm.SCRAPDATE AS scrapDate,
+		getUserNameById(tm.CREATEID) AS createId,
+		tm.CREATEDT AS createDt,
+		GETSYSTEMNAMEBYID(tm.SYSTEMSOURCE) as systemSource
+		FROM
+		rtb_qt1tblterminal tm
+		LEFT JOIN rtb_qt1tblagency T2
+		ON tm.AGENCYID = T2.AGENCY_ID
+		<isNotEmpty property="status">
+			AND tm.TERMINALSTATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeId">
+			AND tm.TERMINATYPEID=#terminalTypeId#
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			AND tm.TERMINALCODE LIKE
+			'%$terminalCode$%'
+		</isNotEmpty>
+		WHERE
+		(T2.ONLINECHANNEL = #agencyId#
+		OR T2.AGENCY_ID = #agencyId#)
+		<isNotEmpty property="systemId">
+			AND T2.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="systemId">
+			AND tm.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+		) d2
+        <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+
+	</select>
+
+	<!-- 获取终端审核页面总记录数 -->
+	<select id="getTerminalManagecheckCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT
+		count(*)
+		FROM QT1TBLTERMINAL tm
+		LEFT JOIN rtb_qt1tblagency T2
+		ON tm.AGENCYID = T2.AGENCY_ID
+		<isNotEmpty property="status">
+			AND tm.TERMINALSTATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeId">
+			AND tm.TERMINATYPEID=#terminalTypeId#
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			AND tm.TERMINALCODE LIKE
+			'%$terminalCode$%'
+		</isNotEmpty>
+		WHERE
+		T2.ONLINECHANNEL = #agencyId#
+		<isNotEmpty property="systemId">
+			AND T2.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="systemId">
+			AND tm.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+	</select>
+
+	<!-- 获取终端审核页面信息 -->
+	<select id="getTerminalManagecheck" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+
+		SELECT *
+		FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT
+		tm.ONLYCODE AS onlyCode,
+		tm.MERCHANTCODE AS merchantCode,
+		tm.TERMINALCODE AS terminalCode,
+		tm.TERMINATYPEID AS terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TM.TERMINATYPEID) AS terminaltypeName,
+		tm.AGENCYID AS agencyId,
+		GETAGENCYNAMEBYID(TM.AGENCYID) AS agencyName,
+		tm.TERMINALSTATUS AS terminalStatus,
+		CASE WHEN tm.TERMINALSTATUS='0'
+		THEN '未激活'
+		WHEN tm.TERMINALSTATUS='1' THEN '已激活'
+		WHEN tm.TERMINALSTATUS='2' THEN '冻结'
+		WHEN tm.TERMINALSTATUS='3' THEN '回拨'
+		WHEN tm.TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr,
+		tm.TERMINALDESC AS
+		terminalDesc,
+		tm.OPENDATE AS openDate,
+		tm.CLIENTCODE AS clientCode,
+		tm.SCRAPDATE AS scrapDate,
+		getUserNameById(tm.CREATEID) AS createId,
+		tm.CREATEDT AS createDt,
+		GETSYSTEMNAMEBYID(tm.SYSTEMSOURCE) as
+		systemSource
+		FROM rtb_qt1tblterminal tm
+		LEFT JOIN rtb_qt1tblagency T2
+		ON tm.AGENCYID = T2.AGENCY_ID
+		<isNotEmpty property="status">
+			AND tm.TERMINALSTATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeId">
+			AND tm.TERMINATYPEID=#terminalTypeId#
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			AND tm.TERMINALCODE LIKE
+			'%$terminalCode$%'
+		</isNotEmpty>
+		WHERE
+		T2.ONLINECHANNEL = #agencyId#
+		<isNotEmpty property="systemId">
+			AND T2.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="systemId">
+			AND tm.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+		) d2
+        <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+
+	</select>
+
+	<!-- 获取终端回拨页面总记录数 <select id="getTerminalManagebackCount" resultClass="java.lang.Integer" parameterClass="java.util.Map"> SELECT count(*) FROM QT1TBLTERMINAL tm WHERE tm.AGENCYID = #agencyId# and tm.SYSTEMSOURCE=#systemId# 
+		<isNotEmpty property="status"> AND tm.TERMINALSTATUS=#status# </isNotEmpty> <isNotEmpty property="terminalTypeId"> AND tm.TERMINATYPEID=#terminalTypeId# </isNotEmpty> <isNotEmpty property="terminalCode"> 
+		AND tm.TERMINALCODE LIKE '%$terminalCode$%' </isNotEmpty> <isNotEmpty property="flagCTP"> <isNotEmpty property="terminalCodeStart"> AND tm.TERMINALCODE >=#terminalCodeStart# </isNotEmpty> <isNotEmpty property="terminalCodeEnd"> 
+		<![CDATA[ AND tm.TERMINALCODE <=#terminalCodeEnd# ]]> </isNotEmpty> </isNotEmpty> </select> -->
+
+
+	<!-- 获取终端回拨页面总记录数 14.10.30需求变更，改为获取直属下一级的所有的终端 -->
+	<select id="getTerminalManagebackCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT
+		count(*)
+		FROM rtb_qt1tblterminal tm
+		LEFT JOIN rtb_qt1tblagency T2
+		ON tm.AGENCYID = T2.AGENCY_ID
+		<isNotEmpty property="status">
+			AND tm.TERMINALSTATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeId">
+			AND tm.TERMINATYPEID=#terminalTypeId#
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			AND tm.TERMINALCODE LIKE
+			'%$terminalCode$%'
+		</isNotEmpty>
+		WHERE
+		1=1
+		<isNotEmpty property="agencyId">
+			and T2.ONLINECHANNEL = #agencyId#
+		</isNotEmpty>
+		<!-- <isNotEmpty property="systemId"> AND T2.SYSTEMID=#systemId# </isNotEmpty> -->
+
+		<isNotEmpty property="flagCTP">
+
+
+			<isNotEmpty property="terminalCodeStart">
+				AND tm.TERMINALCODE >=#terminalCodeStart#
+			</isNotEmpty>
+			<isNotEmpty property="terminalCodeEnd"> 
+				  		<![CDATA[	AND tm.TERMINALCODE  <=#terminalCodeEnd#	  ]]>
+			</isNotEmpty>
+		</isNotEmpty>
+		<isNotEmpty property="agencytreeId">
+			AND tm.AGENCYID =#agencytreeId#
+		</isNotEmpty>
+
+		<isNotEmpty property="datestart">
+			AND substr(replace(t3.createdt,'-',''),1,8) >=#datestart#
+		</isNotEmpty>
+		<isNotEmpty property="dateend"> 
+				  		<![CDATA[	AND  substr(replace(t3.createdt,'-',''),1,8)  <=#dateend#	  ]]>
+		</isNotEmpty>
+
+
+	</select>
+
+
+	<!-- 获取终端回拨页面信息 <select id="getTerminalManageback" resultClass="TerminalManageBean" parameterClass="java.util.Map"> SELECT * FROM ( SELECT d2. * ,ROWNUM RN FROM ( SELECT tm.ONLYCODE AS onlyCode, tm.TERMINALCODE 
+		AS terminalCode, tm.TERMINATYPEID AS terminaltypeId, GETTERMINALTYPENAMEBYID(TM.TERMINATYPEID) AS terminaltypeName, tm.AGENCYID AS agencyId, GETAGENCYNAMEBYID(TM.AGENCYID) AS agencyName, tm.TERMINALSTATUS 
+		AS terminalStatus, CASE WHEN tm.TERMINALSTATUS='0' THEN '未激活' WHEN tm.TERMINALSTATUS='1' THEN '已激活' WHEN tm.TERMINALSTATUS='2' THEN '冻结' WHEN tm.TERMINALSTATUS='3' THEN '回拨' WHEN tm.TERMINALSTATUS='4' 
+		THEN '作废' END AS terminalStatusStr, tm.OPENDATE AS openDate, tm.CLIENTCODE AS clientCode, tm.SCRAPDATE AS scrapDate, getUserNameById(tm.CREATEID) AS createId, tm.CREATEDT AS createDt FROM QT1TBLTERMINAL 
+		tm WHERE tm.AGENCYID = #agencyId# and tm.SYSTEMSOURCE=#systemId# <isNotEmpty property="status"> AND tm.TERMINALSTATUS=#status# </isNotEmpty> <isNotEmpty property="terminalTypeId"> AND tm.TERMINATYPEID=#terminalTypeId# 
+		</isNotEmpty> <isNotEmpty property="terminalCode"> AND tm.TERMINALCODE LIKE '%$terminalCode$%' </isNotEmpty> <isNotEmpty property="flagCTP"> <isNotEmpty property="terminalCodeStart"> AND tm.TERMINALCODE 
+		>=#terminalCodeStart# </isNotEmpty> <isNotEmpty property="terminalCodeEnd"> <![CDATA[ AND tm.TERMINALCODE <=#terminalCodeEnd# ]]> </isNotEmpty> </isNotEmpty> order by tm.TERMINALCODE ) d2 <![CDATA[ WHERE 
+		ROWNUM <= #end# ]]> ) WHERE RN > #start# </select> -->
+
+	<!-- 获取终端回拨页面信息 14.10.30需求变更，改为获取直属下一级的所有的终端 -->
+	<select id="getTerminalManageback" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+
+		SELECT *
+		FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT
+		tm.ONLYCODE AS onlyCode,
+		TM.TERMINALCODE AS terminalCode,
+		tm.TERMINATYPEID AS terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TM.TERMINATYPEID) AS
+		terminaltypeName,
+		tm.AGENCYID AS agencyId,
+		GETAGENCYNAMEBYID(TM.AGENCYID) AS agencyName,
+		tm.TERMINALSTATUS AS terminalStatus,
+		CASE WHEN tm.TERMINALSTATUS='0' THEN '未激活'
+		WHEN tm.TERMINALSTATUS='1' THEN
+		'已激活'
+		WHEN tm.TERMINALSTATUS='2' THEN '冻结'
+		WHEN tm.TERMINALSTATUS='3' THEN '回拨'
+		WHEN tm.TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr,
+		tm.OPENDATE AS openDate,
+		tm.CLIENTCODE AS clientCode,
+		tm.SCRAPDATE AS scrapDate,
+		getUserNameById(t3.CREATEID) AS createId,
+		t3.CREATEDT AS createDt
+		FROM rtb_qt1tblterminal tm
+		LEFT JOIN rtb_qt1tblagency T2
+		ON tm.AGENCYID = T2.AGENCY_ID
+		<isNotEmpty property="status">
+			AND tm.TERMINALSTATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeId">
+			AND tm.TERMINATYPEID=#terminalTypeId#
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			AND tm.TERMINALCODE LIKE
+			'%$terminalCode$%'
+		</isNotEmpty>
+		left join qt1tblterminalline t3
+		on tm.AGENCYID=t3.oldagencyid and tm.TERMINALCODE=t3.terminaid and
+		t3.terminaldesc='下发'
+		WHERE 1=1
+		<isNotEmpty property="agencyId">
+			and T2.ONLINECHANNEL = #agencyId#
+		</isNotEmpty>
+
+		<!-- <isNotEmpty property="systemId"> AND T2.SYSTEMID=#systemId# </isNotEmpty> -->
+
+		<isNotEmpty property="flagCTP">
+			<isNotEmpty property="terminalCodeStart">
+				AND tm.TERMINALCODE >=#terminalCodeStart#
+			</isNotEmpty>
+			<isNotEmpty property="terminalCodeEnd"> 
+				  		<![CDATA[	AND  tm.TERMINALCODE  <=#terminalCodeEnd#	  ]]>
+			</isNotEmpty>
+		</isNotEmpty>
+		<isNotEmpty property="agencytreeId">
+			AND t2.AGENCY_ID =#agencytreeId#
+		</isNotEmpty>
+
+		<isNotEmpty property="datestart">
+			AND substr(replace(t3.createdt,'-',''),1,8) >=#datestart#
+		</isNotEmpty>
+		<isNotEmpty property="dateend"> 
+				  		<![CDATA[	AND  substr(replace(t3.createdt,'-',''),1,8)  <=#dateend#	  ]]>
+		</isNotEmpty>
+		order by tm.onlycode
+		) d2
+        <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+
+	</select>
+
+
+	<!-- 获取终端信息总记录数（包括下发） -->
+	<select id="getTerminalManageAllTbCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT count(*)
+		FROM (SELECT *
+		FROM (select *
+		FROM (SELECT AGENCY_ID
+		FROM rtb_qt1tblagency
+		where 1 = 1
+		<isNotEmpty property="agencyCode">
+			AND COMPANYNAME LIKE
+			'%$agencyCode$%'
+		</isNotEmpty>
+
+		<isNotEmpty property="agencyId">
+			AND AGENCY_ID=#agencyId#
+		</isNotEmpty>
+		START WITH AGENCY_ID = #agencytopId#
+		CONNECT BY PRIOR AGENCY_ID = ONLINECHANNEL) T1
+		INNER JOIN rtb_qt1tblterminal T0
+
+		ON T1.AGENCY_ID = T0.AGENCYID 
+		left join rtb_paypsam psm on T0.terminalcode = psm.psamid
+		left join rtb_payterminal tp on T0.terminalCode=tp.psamid 
+
+		<dynamic prepend="where">
+			<isNotEmpty property="systemId" prepend="AND">
+				T0.SYSTEMSOURCE=#systemId#
+			</isNotEmpty>
+			<isNotEmpty property="status" prepend="AND">
+				T0.TERMINALSTATUS=#status#
+			</isNotEmpty>
+			<isNotEmpty property="terminalTypeId" prepend="AND">
+				T0.TERMINATYPEID=#terminalTypeId#
+			</isNotEmpty>
+
+			<isNotEmpty property="isJoincash" prepend="AND">
+				psm.is_joincash = #isJoincash#
+			</isNotEmpty>
+			<isNotEmpty property="isPay" prepend="AND">
+				psm.is_pay = #isPay#
+			</isNotEmpty>
+
+			<isNotEmpty property="terminalCode" prepend="AND">
+				T0.TERMINALCODE LIKE
+				'%$terminalCode$%'
+			</isNotEmpty>
+
+			<!-- 增加起止编号查询条件 20141030 -->
+			<isNotEmpty property="startCode" prepend="AND">
+				T0.TERMINALCODE>=#startCode#
+			</isNotEmpty>
+			<isNotEmpty property="endCode" prepend="AND">  
+	                 <![CDATA[ T0.TERMINALCODE<=#endCode# ]]>
+			</isNotEmpty>
+
+			<!-- 增加激活时间查询条件 20150313 -->
+			<isNotEmpty property="activeDtStart" prepend="AND">
+				T0.ACTIVEDT>=#activeDtStart#
+			</isNotEmpty>
+			<isNotEmpty property="activeDtEnd" prepend="AND">  
+	                              <![CDATA[  T0.ACTIVEDT<=#activeDtEnd# ]]>
+			</isNotEmpty>
+			<!-- 增加绑定时间查询条件 zhangke -->
+			<isNotEmpty property="bindDtstart" prepend="AND">
+				TP.OPENDATE>=#bindDtstart#
+			</isNotEmpty>
+			<isNotEmpty property="bindDtend" prepend="AND">  
+		                              <![CDATA[ TP.OPENDATE<=#bindDtend# ]]>
+			</isNotEmpty>
+		</dynamic>
+		<isNotEmpty property="uppweAgencyid">
+			left join (SELECT * FROM TABLE(query_agency.prodFunc(#uppweAgencyid#)))
+			T2
+			ON T2.agency_id=T1.AGENCY_ID
+		</isNotEmpty>
+		<isNotEmpty property="agecyFlag">
+			left join (SELECT * FROM TABLE(query_agency.prodFunc(#agecyFlag#))) T2
+			ON T2.agency_id=T1.AGENCY_ID
+		</isNotEmpty>
+		order by T0.Onlycode) tm 
+		
+		<dynamic prepend="where">
+			<isNotEmpty property="havepsam">
+				<isEqual property="havepsam" compareValue="0">
+					havepsam is null
+				</isEqual>
+				<isEqual property="havepsam" compareValue="1">
+					havepsam is not null
+				</isEqual>
+			</isNotEmpty>
+
+		</dynamic>
+		) d2
+
+
+	</select>
+
+	<!-- 获取终端信息 -->
+	<select id="getTerminalManageAllTb" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		SELECT *
+		FROM (SELECT d2. *, ROWNUM RN
+		FROM (select TM.SYSTEMSOURCE AS systemId,
+		TM.TERMINALCODE AS terminalCode,
+		TM.MERCHANTCODE AS merchantCode,
+		TM.TERMINATYPEID AS terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TM.TERMINATYPEID) AS terminaltypeName,
+		TM.AGENCYID AS agencyId,
+		GETAGENCYNAMEBYID(TM.AGENCYID) AS agencyName,
+		TM.TERMINALSTATUS AS terminalStatus,
+		CASE
+		WHEN tm.TERMINALSTATUS =
+		'0' THEN
+		'未激活'
+		WHEN tm.TERMINALSTATUS = '1' THEN
+		'已激活'
+		WHEN tm.TERMINALSTATUS = '2' THEN
+		'冻结'
+		WHEN tm.TERMINALSTATUS = '3' THEN
+		'回拨'
+		WHEN tm.TERMINALSTATUS = '4' THEN
+		'作废'
+		END AS terminalStatusStr,
+		TM.OPENDATE AS openDate,
+		TM.CLIENTCODE AS clientCode,
+		TM.SCRAPDATE AS scrapDate,
+		getUserNameById(TM.CREATEID) AS createId,
+		TM.CREATEDT AS createDt,
+		GETSYSTEMNAMEBYID(TM.SYSTEMSOURCE) AS systemSource,
+		tm.activedt as activedt,
+		CASE
+		WHEN havepsam = '1' THEN
+		'已绑定'
+		WHEN havepsam is null THEN
+		'未绑定'
+		END AS havePsam,
+		tm.isJoincash,
+		bindDt,
+
+		tm.isPay
+
+		from (SELECT T0.SYSTEMSOURCE,
+		T0.ONLYCODE,
+		T0.TERMINALCODE,
+		T0.MERCHANTCODE,
+		T0.TERMINATYPEID,
+		<isNotEmpty property="parentAgencyid">
+			T0.AGENCYID,
+		</isNotEmpty>
+
+		<isNotEmpty property="uppweAgencyid">
+			case when T2.PARENTAGENCYID is null then T0.AGENCYID
+			else T0.AGENCYID
+			end AS AGENCYID,
+		</isNotEmpty>
+		<isNotEmpty property="agecyFlag">
+			case when T2.PARENTAGENCYID is null then #userAgencyId#
+			when T2.PARENTAGENCYID=#userAgencyId# then t2.agency_id
+			else ( select a.agency_id from rtb_qt1tblagency a where
+			a.onlinechannel=
+			#userAgencyId# start with a.agency_id= T2.PARENTAGENCYID connect by
+			prior a.onlinechannel=a.agency_id)
+			end AS AGENCYID,
+		</isNotEmpty>
+		T0.TERMINALSTATUS,
+		T0.OPENDATE,
+		T0.CLIENTCODe,
+		T0.SCRAPDATE,
+		T0.CREATEID,
+		T0.CREATEDT,
+		T0.activedt,
+		(case psm.is_joincash
+		when '0' then '否'
+		when '1' then '是'
+		end) as isJoincash,
+		(case psm.is_pay
+		when '0' then
+		'否'
+		when '1' then '是'
+		end) as isPay,
+		tp.opendate as bindDt,
+		tp.havepsam
+		FROM (SELECT AGENCY_ID
+		FROM rtb_qt1tblagency
+		where 1 = 1
+		<isNotEmpty property="agencyCode">
+			AND COMPANYNAME LIKE
+			'%$agencyCode$%'
+		</isNotEmpty>
+
+		<isNotEmpty property="agencyId">
+			AND AGENCY_ID=#agencyId#
+		</isNotEmpty>
+		START WITH AGENCY_ID = #agencytopId#
+		CONNECT BY PRIOR AGENCY_ID = ONLINECHANNEL) T1
+		INNER JOIN rtb_qt1tblterminal T0
+		ON T1.AGENCY_ID = T0.AGENCYID
+		left join rtb_paypsam psm on T0.terminalcode =	psm.psamid
+		left join rtb_payterminal tp on T0.terminalCode = tp.psamid
+		<dynamic prepend="where">
+			<isNotEmpty property="systemId" prepend="AND">
+				T0.SYSTEMSOURCE=#systemId#
+			</isNotEmpty>
+			<isNotEmpty property="status" prepend="AND">
+				T0.TERMINALSTATUS=#status#
+			</isNotEmpty>
+			<isNotEmpty property="terminalTypeId" prepend="AND">
+				T0.TERMINATYPEID=#terminalTypeId#
+			</isNotEmpty>
+
+			<isNotEmpty property="isJoincash" prepend="AND">
+				psm.is_joincash = #isJoincash#
+			</isNotEmpty>
+			<isNotEmpty property="isPay" prepend="AND">
+				psm.is_pay = #isPay#
+			</isNotEmpty>
+			
+			<isNotEmpty property="terminalCode" prepend="AND">
+				T0.TERMINALCODE LIKE
+				'%$terminalCode$%'
+			</isNotEmpty>
+
+			<!-- 增加起止编号查询条件 20141030 -->
+			<isNotEmpty property="startCode" prepend="AND">
+				T0.TERMINALCODE>=#startCode#
+			</isNotEmpty>
+			<isNotEmpty property="endCode" prepend="AND">  
+	                              <![CDATA[ T0.TERMINALCODE<=#endCode# ]]>
+			</isNotEmpty>
+
+			<!-- 增加激活时间查询条件 20150313 -->
+			<isNotEmpty property="activeDtStart" prepend="AND">
+				T0.ACTIVEDT>=#activeDtStart#
+			</isNotEmpty>
+			<isNotEmpty property="activeDtEnd" prepend="AND">  
+	                              <![CDATA[  T0.ACTIVEDT<=#activeDtEnd# ]]>
+			</isNotEmpty>
+			<!-- 增加绑定时间查询条件 zhangke -->
+			<isNotEmpty property="bindDtstart" prepend="AND">
+				TP.OPENDATE>=#bindDtstart#
+			</isNotEmpty>
+			<isNotEmpty property="bindDtend" prepend="AND">  
+		                              <![CDATA[ TP.OPENDATE<=#bindDtend# ]]>
+			</isNotEmpty>
+		</dynamic>
+		<isNotEmpty property="uppweAgencyid">
+			left join (SELECT * FROM TABLE(query_agency.prodFunc(#uppweAgencyid#)))
+			T2
+			ON T2.agency_id=T1.AGENCY_ID
+		</isNotEmpty>
+		<isNotEmpty property="agecyFlag">
+			left join (SELECT * FROM TABLE(query_agency.prodFunc(#agecyFlag#))) T2
+			ON T2.agency_id=T1.AGENCY_ID
+		</isNotEmpty>
+
+		order by T0.Onlycode) tm
+		<dynamic prepend="where">
+			<isNotEmpty property="havepsam">
+				<isEqual property="havepsam" compareValue="0">
+					havepsam is null
+				</isEqual>
+				<isEqual property="havepsam" compareValue="1">
+					 havepsam is not null
+				</isEqual>
+			</isNotEmpty>
+		</dynamic>
+		) d2
+            <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+	</select>
+
+	<!-- 获取终端批量下发总记录数 -->
+
+	<select id="getTerminalBatchIssuedCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT
+		count(TERMINALCODE)
+
+		FROM
+		rtb_qt1tblterminal
+		where AGENCYID=#agencyId#
+		AND SYSTEMSOURCE=#systemId#
+		AND
+		TERMINALSTATUS='0'
+		AND TERMINALCODE between $startCodes$ and $endCodes$
+	</select>
+	<!-- 获取终端批量下发的终端号 -->
+
+	<select id="queryTerminalCode" resultClass="java.lang.String" parameterClass="java.util.Map">
+		SELECT
+		TERMINALCODE
+
+		FROM
+		QT1TBLTERMINAL
+		where AGENCYID=#agencyId#
+		AND SYSTEMSOURCE=#systemId#
+		AND TERMINALSTATUS='0'
+		AND
+		TERMINALCODE between $startCodes$ and $endCodes$
+	</select>
+	<!-- 获取批量下发终端信息 -->
+	<select id="getTerminalBatchIssuedTb" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+
+		SELECT *
+		FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT
+		SYSTEMSOURCE AS systemId,
+		TERMINALCODE AS terminalCode,
+		TERMINATYPEID AS terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TERMINATYPEID) AS terminaltypeName,
+		AGENCYID AS agencyId,
+		GETAGENCYNAMEBYID(AGENCYID) AS agencyName,
+		TERMINALSTATUS AS terminalStatus,
+		CASE WHEN TERMINALSTATUS='0' THEN '未激活'
+		WHEN TERMINALSTATUS='1' THEN '已激活'
+		WHEN TERMINALSTATUS='2' THEN
+		'冻结'
+		WHEN TERMINALSTATUS='3' THEN '回拨'
+		WHEN TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr,
+		OPENDATE AS openDate,
+		CLIENTCODE AS clientCode,
+		SCRAPDATE AS scrapDate,
+		getUserNameById (CREATEID) AS
+		createId,
+		CREATEDT AS createDt,
+		TERMINALDESC AS terminalDesc,
+		GETSYSTEMNAMEBYID(SYSTEMSOURCE) AS systemSource,
+		ONLYCODE AS onlyCode,
+		MERCHANTCODE AS merchantCode
+		FROM
+		rtb_qt1tblterminal
+		where
+		AGENCYID=#agencyId#
+		AND TERMINALSTATUS='0'
+		AND SYSTEMSOURCE=#systemId#
+		AND TERMINALCODE between $startCodes$ and $endCodes$
+		order by onlycode
+
+		) d2
+		       <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+	</select>
+
+
+
+	<!-- 添加终端数据 -->
+
+	<insert id="addTerminalManage" parameterClass="TerminalManageBean">
+
+		INSERT
+		INTO QT1TBLTERMINAL
+		(
+		ONLYCODE,
+		TERMINALCODE,
+		SYSTEMSOURCE,
+		MERCHANTCODE,
+		TERMINATYPEID,
+		AGENCYID,
+		TERMINALSTATUS,
+		OPENDATE,
+		CLIENTCODE,
+		SCRAPDATE,
+		CREATEID,
+		CREATEDT
+		)
+		VALUES
+		(
+		#onlyCode#,
+		#terminalCode#,
+		#systemSource#,
+		#merchantCode#,
+		#terminaltypeId#,
+		#agencyId#,
+		#terminalStatus#,
+		#openDate#,
+		#clientCode#,
+		#scrapDate#,
+		#createId#,
+		#createDt#
+		)
+
+	</insert>
+	<!--添加终端失败数据到另一张表 -->
+	<insert id="addTerminalManageFail" parameterClass="java.util.Map">
+
+		INSERT
+		INTO QT1TBLTERMINALFAILTEMP
+		(
+		TERFILEID,
+		TERFAILDATA,
+		TERMINALFAILDESC,
+		CREATEDT
+		)
+		VALUES
+		(
+		#terminalFailId#,
+		#failTxt#,
+		#terminalFailDesc#,
+		#createDt#
+		)
+
+	</insert>
+
+	<!-- 修改终端状态 -->
+	<update id="updateTerminalStatus" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal SET TERMINALSTATUS =#status#
+		WHERE substr(ONLYCODE,0,15) = #terminalCode#
+	</update>
+
+	<!-- 修改终端审核信息 -->
+	<update id="updateTerminalExamine" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal
+		SET AGENCYID =
+		#agencyId#,MERCHANTCODE=#merchantCodes#,ONLYCODE=ONLYCODE||#merchantCodes#
+		WHERE ONLYCODE IN
+		($terminalCode$)
+	</update>
+
+	<!-- 批量下发终端 -->
+	<update id="updateTerminalBatchIssued" parameterClass="java.util.Map">
+
+		UPDATE rtb_qt1tblterminal
+		SET
+		AGENCYID=#agencyId#,MERCHANTCODE=#merchantCode#,ONLYCODE=ONLYCODE||#merchantCode#
+		WHERE
+		AGENCYID=#parentAgencyId#
+		AND TERMINALSTATUS='0'
+		AND SYSTEMSOURCE=#systemId#
+		AND TERMINALCODE between $startCode$ and $endCode$
+
+	</update>
+
+	<!-- 修改终端审核通过信息 -->
+	<update id="checkTerminalpass" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal
+		SET AGENCYID = #agencyId#,
+		TERMINALSTATUS='0',
+		ONLYCODE =SUBSTR(ONLYCODE,0,length(ONLYCODE))
+		WHERE ONLYCODE IN
+		($terminalCode$)
+		AND AGENCYID IN (SELECT AGENCY_ID FROM rtb_qt1tblagency
+		WHERE ONLINECHANNEL=#agencyId#)
+	</update>
+
+
+	<!-- 修改终端审核不通过信息 -->
+	<update id="checkTerminalfail" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal
+		SET TERMINALSTATUS='0'
+		WHERE ONLYCODE IN ($terminalCode$)
+	</update>
+
+
+	<!-- 批量插入终端信息 -->
+	<insert id="addserilTeminal" parameterClass="java.util.List">
+		insert all
+		<iterate conjunction=" ">
+			into QT1TBLTERMINALLINE(
+			TERMINAID,
+			AGENCYID,
+			NEWAGENCYID,
+			OLDAGENCYID,
+			TERMINALTYPEID,
+			TERMINALDESC,
+			CREATEID,
+			CREATEDT
+			)values (
+			#beanList[].terminalId#,
+			#beanList[].agencyId#,
+			#beanList[].newagencyId#,
+			#beanList[].oldagencyId#,
+			#beanList[].terminaltypeId#,
+			#beanList[].terminalDesc#,
+			#beanList[].createId#,
+			#beanList[].createDt#
+			)
+		</iterate>
+		SELECT * FROM dual
+	</insert>
+
+	<!-- 获取终端编号 -->
+	<select id="getTeminalId" resultClass="java.lang.Integer">
+		select case when
+		max(SERIALNUMBER) is null then 1 else max(SERIALNUMBER)+1 end from
+		QT1TBLTERMINALLINE
+	</select>
+
+	<!-- 修改终端状态 -->
+	<update id="teminalActivating" parameterClass="java.lang.String">
+		UPDATE
+		QT1TBLTERMINAL T
+		SET T.TERMINALSTATUS = 1
+		WHERE EXISTS
+		(SELECT 1 FROM qt1tbldeal T1 WHERE T.ONLYCODE = T1.TERMINAL_ONLYCODE AND
+		T1.AGENCYID=T.AGENCYID AND T1.CREATEDT = #createDt#)
+
+	</update>
+
+	<select id="getTerminalstatus" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		select * from (select t.*,rownum no from (
+		select
+		TM.SYSTEMSOURCE AS systemId,
+		TM.ONLYCODE AS onlyCode,
+		TM.TERMINALCODE AS terminalCode,
+		TM.MERCHANTCODE AS merchantCode,
+		TM.TERMINATYPEID AS
+		terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TM.TERMINATYPEID) AS terminaltypeName,
+		TM.AGENCYID AS agencyId,
+		<isNotEmpty property="flag1">
+			GETAGENCYNAMEBYID(tm.agencyId ) AS agencyName,
+		</isNotEmpty>
+		<isNotEmpty property="flag2">
+			case when TM.AGENCYID=#agencyId# then GETAGENCYNAMEBYID(#agencyId# )
+			else GETAGENCYNAMEBYID( select a.agency_id from rtb_qt1tblagency a where
+			a.onlinechannel=tm.agencyId start with a.agency_id=tm.agencyId
+			connect by prior a.onlinechannel=a.agency_id)
+			end AS agencyName,
+		</isNotEmpty>
+		TM.TERMINALSTATUS AS terminalStatus,
+		CASE WHEN tm.TERMINALSTATUS='0' THEN '未激活'
+		WHEN tm.TERMINALSTATUS='1' THEN '已激活'
+		WHEN tm.TERMINALSTATUS='2' THEN '冻结'
+		WHEN tm.TERMINALSTATUS='3' THEN '回拨'
+		WHEN
+		tm.TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr,
+		TM.OPENDATE AS openDate,
+		TM.CLIENTCODE AS clientCode,
+		TM.SCRAPDATE AS scrapDate,
+		getUserNameById (TM.CREATEID) AS createId,
+		TM.CREATEDT AS
+		createDt,
+		GETSYSTEMNAMEBYID(TM.SYSTEMSOURCE) AS systemSource
+		from (SELECT
+		*
+		FROM rtb_qt1tblterminal TM
+		where tm.TERMINALCODE like '%$terminalcode$%'
+		and tm.terminalstatus = '1'
+		and exists
+		(select count(*)
+		from qtfr3.rtb_qt1tblagency q where q.agency_id=tm.agencyid)
+		) tm order by TM.CREATEDT )t where  <![CDATA[   ROWNUM <= #end# ]]>)
+		where no>#start#
+
+	</select>
+	<select id="getTerminalstatusCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT
+		count(*)
+		FROM rtb_qt1tblterminal TM
+		where tm.TERMINALCODE like '%$terminalcode$%'
+		and tm.terminalstatus =
+		'1'
+		and exists
+		(select count(*) from qtfr3.rtb_qt1tblagency q where q.agency_id=tm.agencyid)
+	</select>
+	<!-- 修改终端审核不通过信息 -->
+	<update id="updateTerminalStatus1" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal tm
+		SET tm.TERMINALSTATUS=#status#
+		WHERE tm.terminalCode
+		=#terminalCode#
+	</update>
+
+
+	<!-- 批量插入终端信息 -->
+	<insert id="addserilTeminalAll" parameterClass="java.util.Map">
+
+		insert into QT1TBLTERMINALLINE(
+		TERMINAID,
+		AGENCYID,
+		NEWAGENCYID,
+		OLDAGENCYID,
+		TERMINALTYPEID,
+		TERMINALDESC,
+		CREATEID,
+		CREATEDT
+		)
+		select
+		terminalcode,
+		#agencyId#,
+		#agencyId#,
+		#oldaAgencyId#,
+		null,
+		#remark#,
+		#userId#,
+		#CREATEDT# from rtb_qt1tblterminal
+		where
+		AGENCYID=#oldaAgencyId#
+		AND TERMINALSTATUS='0'
+		AND SYSTEMSOURCE=#systemId#
+		AND TERMINALCODE between
+		$startCode$ and $endCode$
+	</insert>
+
+	<select id="getAgencyTerminaicode" resultClass="TerminalCountBean" parameterClass="java.util.Map">
+		select a.addCount, b.psamCount, b.activeCount
+		from (select #agencyid# agencyid,
+		count(1) psamCount,
+		sum(case
+		when terminalstatus = '1' then
+		1
+		else
+		0
+		end) activeCount
+		from qt1tblterminal
+		where agencyid in (
+		select agency_id from rtb_qt1tblagency start with
+		agency_id=#agencyid# connect by prior agency_id=onlinechannel )
+		) b
+		left join (select agencyid,
+		sum(case
+		when terminaldesc = '下发' then
+		1
+		when terminaldesc
+		= '回拔' then
+		-1
+		else
+		0
+		end) as addCount
+		from QT1TBLTERMINALLINE
+		where agencyid = #agencyid#
+		and substr( replace(createdt,'-'）,0,8)>=#datestart#
+		and  <![CDATA[ substr( replace(createdt,'-'）,0,8) <= #dateend# ]]>
+		group by agencyid) a
+		on a.agencyid = b.agencyid
+	</select>
+
+	<sql id="terminalHB">
+		select ll.*
+		from qt1tblterminalline ll
+		where ll.terminaldesc = '回拔'
+		<isNotEmpty property="userAgencyId">
+			and (ll.oldagencyid=#userAgencyId# or ll.agencyid=#userAgencyId#)
+		</isNotEmpty>
+		<isNotEmpty property="agencyId">
+			and ll.agencyid in
+			(select agency_id from rtb_qt1tblagency a where (a.onlinechannel =#userAgencyId#
+			or a.agency_id =#userAgencyId#) and a.companyname like
+			'%$agencyId$%')
+		</isNotEmpty>
+		<isNotEmpty property="selAgencyId">
+			and ll.agencyid=#selAgencyId#
+		</isNotEmpty>
+		<isNotEmpty property="agencyIdOld">
+			and ll.oldagencyid in
+			(select agency_id from rtb_qt1tblagency a where (a.onlinechannel =#userAgencyId#
+			or a.agency_id =#userAgencyId#) and a.companyname like
+			'%$agencyIdOld$%')
+		</isNotEmpty>
+		<isNotEmpty property="selAgencyIdOld">
+			and ll.oldagencyid=#selAgencyIdOld#
+		</isNotEmpty>
+		<isNotEmpty property="startCode">
+			and substr(ll.terminaid, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(ll.terminaid, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+		<isNotEmpty property="datestart">
+			and substr(replace(ll.createdt,'-',''),1,8) >=#datestart#
+		</isNotEmpty>
+		<isNotEmpty property="dateend">
+			and substr(replace(ll.createdt,'-',''),1,8)  <![CDATA[ <=   ]]>#dateend#
+		</isNotEmpty>
+	</sql>
+
+	<sql id="terminalXF">
+		select ll.*
+		from qt1tblterminalline ll
+		where ll.terminaldesc = '下发'
+		<isNotEmpty property="userAgencyId">
+			and ll.oldagencyid=#userAgencyId#
+		</isNotEmpty>
+		<isNotEmpty property="agencyId">
+			and ll.agencyid in
+			(select agency_id from rtb_qt1tblagency a where (a.onlinechannel =#userAgencyId#
+			or a.agency_id =#userAgencyId#) and a.companyname like
+			'%$agencyId$%')
+		</isNotEmpty>
+		<isNotEmpty property="selAgencyId">
+			and ll.agencyid=#selAgencyId#
+		</isNotEmpty>
+		<isNotEmpty property="agencyIdOld">
+			and ll.oldagencyid in
+			(select agency_id from rtb_qt1tblagency a where (a.onlinechannel =#userAgencyId#
+			or a.agency_id =#userAgencyId#) and a.companyname like
+			'%$agencyIdOld$%')
+		</isNotEmpty>
+		<isNotEmpty property="selAgencyIdOld">
+			and ll.oldagencyid=#selAgencyIdOld#
+		</isNotEmpty>
+		<isNotEmpty property="startCode">
+			and substr(ll.terminaid, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(ll.terminaid, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+		<isNotEmpty property="datestart">
+			and substr(replace(ll.createdt,'-',''),1,8) >=#datestart#
+		</isNotEmpty>
+		<isNotEmpty property="dateend">
+			and substr(replace(ll.createdt,'-',''),1,8)  <![CDATA[ <= ]]>#dateend#
+		</isNotEmpty>
+	</sql>
+
+
+	<select id="getTerminalViewCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1)
+		from (
+		<isEqual property="opt" compareValue="1">
+			<include refid="terminalHB" />
+		</isEqual>
+		<isEqual property="opt" compareValue="2">
+			<include refid="terminalXF" />
+		</isEqual>
+		<isEqual property="opt" compareValue="3">
+			<include refid="terminalHB" />
+			union all
+			<include refid="terminalXF" />
+		</isEqual>
+		)
+		order by createdt desc,terminaid
+
+	</select>
+
+	<select id="getTerminalView" resultClass="TerminalViewBean" parameterClass="java.util.Map">
+		select * from (
+		select
+		a.terminaid as terminalId,
+		getagencynamebyid(a.agencyid) as agencyid,
+		getagencynamebyid(a.oldagencyid) as oldagencyid,
+		case
+		when a.terminaldesc = '回拔' then
+		a.createdt
+		else
+		null
+		end
+		hbdate,
+		case
+		when a.terminaldesc = '下发' then
+		a.createdt
+		else
+		null
+		end xfdate,
+		getusernamebyid(a.createid) as username,
+		a.createdt,rownum rn from (
+		select *
+		from (
+		<isEqual property="opt" compareValue="1">
+			<include refid="terminalHB" />
+		</isEqual>
+		<isEqual property="opt" compareValue="2">
+			<include refid="terminalXF" />
+		</isEqual>
+		<isEqual property="opt" compareValue="3">
+			<include refid="terminalHB" />
+			union all
+			<include refid="terminalXF" />
+		</isEqual>
+		)
+		order by createdt desc,terminaid) a
+			        <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		where rn>#start#
+	</select>
+
+	<select id="getTerminalCoreCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1) from rtb_paypsam
+		where 1=1
+		<isNotEmpty property="startCode">
+			and substr(psamid, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(psamid, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+	</select>
+
+	<select id="getTerminalCore" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		select psamid terminalCode ,branchname agencyId from
+		(select t.*,rownum rn from
+		(select p.psamid,b.branchname
+		from rtb_paypsam p,qtpay.paybranch b
+		where p.branchid=b.branchid
+		<isNotEmpty property="startCode">
+			and substr(psamid, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(psamid, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+		) t
+		where  <![CDATA[   ROWNUM <= #end# ]]>
+		)
+		where rn>#start#
+	</select>
+
+
+
+	<select id="getTaCardTerminalCoreCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1) from qtpay.tbv_card p
+		where 1=1 and p.type='0'
+		<isNotEmpty property="startCode">
+			and p.taaccount >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and p.taaccount <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+	</select>
+
+	<select id="getTaCardTerminalCore" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		select taaccount terminalCode ,branchname agencyId from
+		(select t.*,rownum rn from
+		(select p.taaccount,b.branchname
+		from qtpay.tbv_card p,qtpay.paybranch b
+		where p.branchid=b.branchid
+		and p.type='0'
+		<isNotEmpty property="startCode">
+			and p.taaccount >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and p.taaccount  <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+		) t
+		where  <![CDATA[   ROWNUM <= #end# ]]>
+		)
+		where rn>#start#
+	</select>
+
+
+
+
+
+	<select id="getTerminalFrunCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1) from rtb_qt1tblterminal
+		where 1=1
+		<isNotEmpty property="startCode">
+			and substr(terminalCode, 0, 15) >=substr(#startCode#,0,15)
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(terminalCode, 0, 15)   <![CDATA[ <=   ]]>substr(#endCode#,0,15)
+		</isNotEmpty>
+	</select>
+
+	<select id="getTerminalFrun" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		select terminalCode , getagencynamebyid(agencyid) agencyId,
+		CASE WHEN TERMINALSTATUS='0' THEN '未激活'
+		WHEN TERMINALSTATUS='1' THEN '已激活'
+		WHEN TERMINALSTATUS='2' THEN '冻结'
+		WHEN TERMINALSTATUS='3' THEN '回拨'
+		WHEN TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr
+		from
+		(select t.*,rownum rn from
+		(select *
+		from rtb_qt1tblterminal
+		where 1=1
+		<isNotEmpty property="startCode">
+			and substr(terminalCode, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(terminalCode, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+		) t
+		where  <![CDATA[   ROWNUM <= #end# ]]>
+		)
+		where rn>#start#
+	</select>
+
+	<!-- 添加终端数据 -->
+
+	<insert id="addTerminalImport" parameterClass="java.util.Map">
+
+		insert into rtb_qt1tblterminal
+		(terminalcode,
+		terminatypeid,
+		agencyid,
+		terminalstatus,
+		createid,
+		createdt,
+		systemsource,
+		onlycode)
+		select
+		psamid,#terminalTypeId#,#agencyId#,0,#agencyId#,#createDt#,#systemSource#,psamid
+		from qtfr3.rtb_paypsam p
+		where 1=1
+		<isNotEmpty property="startCode">
+			and substr(PSAMID, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(PSAMID, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+	</insert>
+
+	<!-- 添加TaCard终端数据 -->
+
+	<insert id="addTaCardTerminalImport" parameterClass="java.util.Map">
+
+		insert into qt1tblterminal
+		(terminalcode,
+		terminatypeid,
+		agencyid,
+		terminalstatus,
+		createid,
+		createdt,
+		systemsource,
+		onlycode)
+		select
+		taaccount,#terminalTypeId#,#agencyId#,0,#agencyId#,#createDt#,#systemSource#,taaccount
+		from qtpay.tbv_card p
+		where 1=1 and p.type='0'
+		<isNotEmpty property="startCode">
+			and substr(taaccount, 0, 15) >=#startCode#
+		</isNotEmpty>
+		<isNotEmpty property="endCode">
+			and substr(taaccount, 0, 15)   <![CDATA[ <=   ]]>#endCode#
+		</isNotEmpty>
+	</insert>
+
+
+
+
+	<!-- 终端交易查询 -->
+	<select id="queryDealTerminal" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		SELECT DISTINCT D.TERMINAL_ONLYCODE ONLYCODE
+		FROM qt1tbldeal D
+		WHERE 1=1
+		<isNotEmpty property="up">
+						<![CDATA[  AND D.AGENCYID   <> #agencyId# ]]>
+			and to_char(D.deal_data,'yyyyMM')=#date#
+		</isNotEmpty>
+		<isNotEmpty property="down">
+			AND D.AGENCYID = #agencyId#
+			and to_char(D.deal_data,'yyyyMM')=#date#
+		</isNotEmpty>
+		AND D.TERMINAL_ONLYCODE IN ($terminalCode$)
+
+	</select>
+
+	<!-- 终端交易查询 -->
+	<select id="queryDealTerminals" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		SELECT DISTINCT D.TERMINAL_ONLYCODE ONLYCODE
+		FROM qt1tbldeal D
+		WHERE
+		to_char(d.deal_data,'yyyyMM')=#date# and
+		exists (select 1 from rtb_qt1tblterminal t where
+		t.AGENCYID=#agencyId#
+		AND t.TERMINALSTATUS='0'
+		AND t.SYSTEMSOURCE=#systemId#
+		AND t.TERMINALCODE between $startTerminalCode$ and $endTerminalCode$
+		AND
+		D.TERMINAL_ONLYCODE=t.TERMINALCODE
+		)
+
+	</select>
+
+	<!-- 更改终端的交易 -->
+	<update id="updatedealTerminal" parameterClass="java.util.Map">
+		UPDATE QT1TBLDEAL D
+		SET D.AGENCYID=#agencyId#
+		WHERE D.TERMINAL_ONLYCODE in ($terminalCode$) and
+		to_char(d.deal_data,'yyyyMM')=#date#
+	</update>
+
+	<!-- 批量更改终端的交易 -->
+	<update id="updateDealTerminalBatchIssued" parameterClass="java.util.Map">
+		UPDATE QT1TBLDEAL D
+		SET D.AGENCYID = #agencyId#
+		WHERE to_char(d.deal_data, 'yyyyMM') = #date#
+		and exists
+		(select 1
+		from rtb_qt1tblterminal
+		t
+		where t.AGENCYID = #parentAgencyId#
+		AND t.TERMINALSTATUS = '0'
+		AND t.SYSTEMSOURCE = #systemId#
+		AND t.TERMINALCODE between $startCode$ and $endCode$
+		AND D.TERMINAL_ONLYCODE = t.TERMINALCODE)
+
+	</update>
+	<select id="queryAgencyCount" resultClass="java.lang.Integer">
+		SELECT COUNT(1) FROM rtb_qt1tblagency
+	</select>
+	<select id="queryAgencyList" resultClass="java.lang.String" parameterClass="java.util.Map">
+		SELECT T.AGENCY_ID FROM (SELECT QT.AGENCY_ID,ROWNUM RN FROM
+		rtb_qt1tblagency QT WHERE  <![CDATA[ ROWNUM<=#endNum# ]]>)
+		T WHERE RN>#startNum#
+	</select>
+	<select id="getTerminalList" resultClass="com.compass.terminalmanage.model.TerminalCountBean" parameterClass="java.util.Map">
+		SELECT AGE.COMPANYNAME AS AGENCYNAME,
+		AGE.AGENCY_ID AS AGENCYID,
+		CASE
+		WHEN A.CO IS NULL THEN
+		0
+		ELSE
+		A.CO
+		END AS SELFCOUNT,
+		CASE
+		WHEN A.SSU IS NULL THEN
+		0
+		ELSE
+		A.SSU
+		END AS SELFCOUNTACTIVITY,
+		CASE
+		WHEN B.CO IS NULL
+		THEN
+		0
+		ELSE
+		B.CO
+		END CHILDCOUNT,
+		CASE
+		WHEN B.SSU IS NULL THEN
+		0
+		ELSE
+		B.SSU
+		END AS CHILDCOUNTACTIVITY
+		FROM (SELECT T.AGENCY_ID, T.COMPANYNAME
+		FROM rtb_qt1tblagency T
+		WHERE T.AGENCY_ID IN ($agencyId$)) AGE
+		LEFT
+		JOIN (SELECT T.AGENCYID, COUNT(1) CO, SUM(SU) SSU
+		FROM (SELECT AGENCYID,
+		CASE
+		WHEN TERMINALSTATUS = '1' THEN
+		1
+		ELSE
+		NULL
+		END SU
+		FROM rtb_qt1tblterminal
+		WHERE 1 = 1
+		<isNotEmpty property="startDate">
+			and substr(createdt,1,10)>=#startDate#
+		</isNotEmpty>
+		<isNotEmpty property="endDate">
+			AND <![CDATA[ substr(createdt,1,10) <= #endDate# ]]>
+		</isNotEmpty>
+		) T
+		WHERE T.AGENCYID IN ($agencyId$)
+		GROUP BY T.AGENCYID) A
+		ON AGE.AGENCY_ID = A.AGENCYID
+		LEFT JOIN (SELECT T2.AGENCYID, COUNT(1) CO, SUM(SU) SSU
+		FROM (SELECT TA.ROOT_AGENCY_ID AS AGENCYID,
+		CASE
+		WHEN
+		TERMINALSTATUS = '1' THEN
+		1
+		ELSE
+		NULL
+		END SU,
+		ta.ROOT_AGENCY_ID
+		FROM rtb_qt1tblterminal TM
+		LEFT JOIN (SELECT AGENCY_ID, ROOT_AGENCY_ID
+		FROM (SELECT A.AGENCY_ID,
+		CONNECT_BY_ROOT AGENCY_ID AS ROOT_AGENCY_ID
+		FROM rtb_qt1tblagency A
+		START WITH A.AGENCY_ID IN
+		($agencyId$)
+		CONNECT BY PRIOR A.AGENCY_ID =
+		A.ONLINECHANNEL) AG
+		WHERE AG.AGENCY_ID != AG.ROOT_AGENCY_ID) TA
+
+		ON TM.AGENCYID = TA.AGENCY_ID
+		WHERE 1 = 1
+		<isNotEmpty property="startDate">
+			and substr(tm.createdt,1,10)>=#startDate#
+		</isNotEmpty>
+		<isNotEmpty property="endDate">
+			and <![CDATA[ substr(createdt,1,10) <= #endDate# ]]>
+		</isNotEmpty>
+		) T2
+		GROUP BY T2.AGENCYID) B
+		ON A.AGENCYID = B.AGENCYID
+
+	</select>
+
+	<!-- 终端绑定查询 -->
+	<select id="queryPayterminalCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1) from rtb_payterminal
+		where psamid in(
+		select
+		TERMINALCODE
+		FROM rtb_qt1tblterminal
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="and" property="systemId">
+				SYSTEMSOURCE=#systemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="agencyId">
+				AGENCYID=#agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="startCode">
+				substr(TERMINALCODE, 0, 15) >= substr($startCode$, 0, 15)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endCode">
+            <![CDATA[ substr(TERMINALCODE, 0, 15) <= substr($endCode$, 0, 15) ]]>
+			</isNotEmpty>
+		</dynamic>
+		)
+	</select>
+
+	<!-- 查询指定条件第一台绑定的终端 -->
+	<select id="queryMinPayterminal" resultClass="java.lang.String" parameterClass="java.util.Map">
+		select min(substr(psamid,0,15)) from rtb_payterminal
+		where psamid in(
+		select
+		TERMINALCODE
+		FROM rtb_qt1tblterminal
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="and" property="systemId">
+				SYSTEMSOURCE=#systemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="agencyId">
+				AGENCYID=#agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="startCode">
+				substr(TERMINALCODE, 0, 15) >= substr($startCode$, 0, 15)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endCode">
+            <![CDATA[ substr(TERMINALCODE, 0, 15) <= substr($endCode$, 0, 15) ]]>
+			</isNotEmpty>
+		</dynamic>
+		)
+	</select>
+
+	<!-- 来源系统变更查询总记录数 -->
+	<select id="queryTerminalSystemCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1) from rtb_qt1tblterminal
+		<dynamic prepend="where">
+			<isNotEmpty prepend="and" property="agencyId">
+				AGENCYID = #agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="systemId">
+				SYSTEMSOURCE = #systemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="terminalStatus">
+				TERMINALSTATUS = #terminalStatus#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="startCode">
+				substr(TERMINALCODE, 0, 15) >= substr($startCode$, 0, 15)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endCode">
+			<![CDATA[ substr(TERMINALCODE, 0, 15) <= substr($endCode$, 0, 15) ]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+
+	<!-- 来源系统变更查询 -->
+	<select id="queryTerminalSystem" resultClass="TerminalManageBean" parameterClass="java.util.Map">
+		SELECT *
+		FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT
+		SYSTEMSOURCE AS systemId,
+		TERMINALCODE AS terminalCode,
+		TERMINATYPEID AS terminaltypeId,
+		GETTERMINALTYPENAMEBYID(TERMINATYPEID) AS terminaltypeName,
+		AGENCYID AS agencyId,
+		GETAGENCYNAMEBYID(AGENCYID) AS agencyName,
+		TERMINALSTATUS AS terminalStatus,
+		CASE WHEN TERMINALSTATUS='0' THEN '未激活'
+		WHEN TERMINALSTATUS='1' THEN '已激活'
+		WHEN TERMINALSTATUS='2' THEN
+		'冻结'
+		WHEN TERMINALSTATUS='3' THEN '回拨'
+		WHEN TERMINALSTATUS='4' THEN '作废'
+		END AS terminalStatusStr,
+		OPENDATE AS openDate,
+		CLIENTCODE AS clientCode,
+		SCRAPDATE AS scrapDate,
+		getUserNameById (CREATEID) AS
+		createId,
+		CREATEDT AS createDt,
+		TERMINALDESC AS terminalDesc,
+		GETSYSTEMNAMEBYID(SYSTEMSOURCE) AS systemSource,
+		ONLYCODE AS onlyCode,
+		MERCHANTCODE AS merchantCode
+		FROM
+		rtb_qt1tblterminal
+		<dynamic prepend="where">
+			<isNotEmpty prepend="and" property="agencyId">
+				AGENCYID = #agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="systemId">
+				SYSTEMSOURCE = #systemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="terminalStatus">
+				TERMINALSTATUS = #terminalStatus#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="startCode">
+				substr(TERMINALCODE, 0, 15) >= substr($startCode$, 0, 15)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endCode">
+			<![CDATA[ substr(TERMINALCODE, 0, 15) <= substr($endCode$, 0, 15) ]]>
+			</isNotEmpty>
+		</dynamic>
+		order by onlycode
+
+		) d2
+		       <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+	</select>
+
+	<!-- 终端来源系统变更 -->
+	<update id="updateSystemStatus" parameterClass="java.util.Map">
+		update rtb_qt1tblterminal
+		<dynamic prepend="set">
+			SYSTEMSOURCE = #systemSource#
+		</dynamic>
+		<dynamic prepend="where">
+			<isNotEmpty prepend="and" property="agencyId">
+				AGENCYID = #agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="systemId">
+				SYSTEMSOURCE = #systemId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="terminalStatus">
+				TERMINALSTATUS = #terminalStatus#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="startCode">
+				substr(TERMINALCODE, 0, 15) >= substr($startCode$, 0, 15)
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endCode">
+			<![CDATA[ substr(TERMINALCODE, 0, 15) <= substr($endCode$, 0, 15) ]]>
+			</isNotEmpty>
+		</dynamic>
+	</update>
+	<!-- 查询终端是否存在 -->
+	<select id="checkTerminalExist" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT
+		count(*)
+		FROM
+		rtb_qt1tblterminal
+		where substr(terminalcode,0,15) = substr(#terminalcode#,0,15)
+		and
+		agencyId=#agencyId# and terminalstatus = '0'
+	</select>
+	<!-- 查询branchid -->
+	<select id="selectBranchId" resultClass="java.lang.Object" parameterClass="java.util.Map">
+		select branchid from qtpay.PREP_CLIENT_VERSION WHERE APPUSER = #appuser#
+	</select>
+	<!-- 查询机构 -->
+	<select id="selectAgency" resultClass="com.compass.terminalmanage.model.TerminalMsgBean" parameterClass="java.util.Map">
+		select AGENCY_ID,COMPANYNAME,COMPANYPHONE,ONLINECHANNEL
+		from qtfr3.rtb_qt1tblagency qw,
+		qtfr3.users we
+		where qw.agency_id = we.agencyid
+		and we.is_admin = 1
+		and qw.agency_id = #agency_id#
+		AND ROWNUM = 1
+	</select>
+	<!-- 单条回拨终端号校验 -->
+	<select id="checkSingleTerminalExist" resultClass="int" parameterClass="java.util.Map">
+		SELECT
+		count(terminalcode)
+		FROM
+		rtb_qt1tblterminal
+		where substr(terminalcode,0,15) in ($terminalcode$)
+		and agencyId=#agencyId#
+		and terminalstatus = '0'
+	</select>
+	<!-- 校验终端号用户 -->
+	<select id="checkUserId" resultClass="int" parameterClass="java.util.Map">
+		select count(pay.userid)  from  qtpay.payuser pay
+			left join rtb_payterminal rtpay 
+				on pay.customerid= rtpay.customerid
+				where rtpay.psamid =#psamId#
+	</select>
+	<!-- 查询终端号用户手机 -->
+	<select id="selectUserId" resultClass="com.compass.terminalmanage.model.TerminalMsgBean" parameterClass="java.util.Map">
+		select pay.userid as phoneNum  from  qtpay.payuser pay
+			left join rtb_payterminal rtpay 
+				on pay.customerid= rtpay.customerid
+				where rtpay.psamid =#psamId#
+	</select>
+</sqlMap>

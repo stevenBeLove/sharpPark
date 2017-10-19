@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="PsmFee">
+  <resultMap id="BaseResultMap" class="PsmFee" >
+    <result column="ID" property="id" jdbcType="VARCHAR" />
+    <result column="PSAMID" property="psamid" jdbcType="VARCHAR" />
+    <result column="AGENCY_ID" property="agencyId" jdbcType="VARCHAR" />
+    <result column="AGENCY_NAME" property="agencyName" jdbcType="VARCHAR" />
+    <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR" />
+    <result column="SHOPNO" property="shopno" jdbcType="DECIMAL" />
+    <result column="FIX_FEE" property="fixFee" jdbcType="DECIMAL" />
+    <result column="PSAMSTATUS" property="psamstatus" jdbcType="VARCHAR" />
+    <result column="OPERDT" property="operdt" jdbcType="VARCHAR" />
+    <result column="OPER" property="oper" jdbcType="VARCHAR" />
+    <result column="REMARK" property="remark" jdbcType="VARCHAR" />
+    <result column="TERMINALSTATUS" property="terminalStatus" jdbcType="VARCHAR" />
+    <result column="TERMINALSTATUSSTR" property="terminalStatusStr" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="BusinesstMap" class="PsmFee" >
+     <result column="BUSINESS_NAME" property="businessName" jdbcType="VARCHAR" />
+     <result column="SHOPNO" property="shopno" jdbcType="DECIMAL" />
+     <result column="FIXFEE" property="fixFee" jdbcType="DECIMAL" />
+     <result column="TRANSTYPE" property="transtype" jdbcType="VARCHAR" />
+  </resultMap>
+    <resultMap id="AgencyFeeMap" class="PsmFee" >
+     <result column="AGENCY_ID" property="agencyId" jdbcType="VARCHAR" />
+     <result column="COST_RATE" property="costrate" jdbcType="DECIMAL" />
+     <result column="COST_FIX" property="costfix" jdbcType="DECIMAL" />
+     <result column="BUSINESS_TYPE" property="businessType" jdbcType="VARCHAR" />
+  </resultMap>
+
+ 	 
+ 	 
+  <sql id="Base_Column_List" >
+    ID, PSAMID, AGENCY_ID, AGENCY_NAME, BUSINESS_TYPE, SHOPNO, FIX_FEE, OPERDT, OPER, REMARK
+  </sql>
+
+	<select id="selectAllPsmFee" resultMap="BaseResultMap"
+		parameterClass="java.util.Map">
+	select * from ( select tmp_page.*, rownum row_id from (
+	select ID,
+	PSAMID,
+	AGENCY_NAME,
+	AGENCY_ID,
+	BUSINESS_TYPE,
+	SHOPNO,
+	FIX_FEE,
+	OPERDT,
+	OPER,
+	REMARK,
+	CASE
+      WHEN TERMINALSTATUS = '0' THEN '未激活'
+      WHEN TERMINALSTATUS = '1' THEN '已激活'
+      END AS TERMINALSTATUSSTR,
+     TERMINALSTATUS, 
+	decode(termStatus,'1','已绑定','0','未绑定') as PSAMSTATUS
+	from ( select t1.ID, 
+	t1.PSAMID, 
+	t5.AGENCY_ID, 
+	t4.BUSINESS_NAME as BUSINESS_TYPE, 
+	t1.FIX_FEE/100 as FIX_FEE, 
+	to_date(t1.OPERDT,'yyyy-MM-dd HH24:mi:ss') as OPERDT, 
+	t1.OPER, 
+	t1.REMARK,
+	t6.TERMINALSTATUS,
+	nvl2(t2.psamid, 1, 0) as termstatus, 
+	t3.feerate*100 as SHOPNO,
+	t5.companyname as AGENCY_NAME
+          from RTB_PSAM_FEE t1
+          left join rtb_payterminal t2
+          on t1.PSAMID = t2.psamid
+          left join qtpay.shopno_fee t3
+          on t1.shopno = t3.shopno and t3.feename like '瑞通宝%'
+          left join qtpay.tb_prd_business_type t4
+          on t1.BUSINESS_TYPE = t4.BUSINESS_TYPE
+          left join rtb_qt1tblterminal t6
+          on t1.PSAMID = t6.terminalcode 
+           left join RTB_QT1TBLAGENCY t5
+           on t6.agencyId = t5.agency_Id
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="startPsamId">
+				 substr(t1.PSAMID,0,15) <![CDATA[  >= substr(#startPsamId#,0,15) ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="endPsamId">
+				 substr(t1.PSAMID,0,15) <![CDATA[  <= substr(#endPsamId#,0,15) ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="businesstype">
+				  t1.BUSINESS_TYPE = #businesstype# 
+			</isNotEmpty>
+			 <isNotNull prepend="AND" property="agencyId">		
+           		t6.agencyId = #agencyId#
+           </isNotNull>
+			<isNotEmpty prepend="AND" property="shopno">
+				  t1.SHOPNO = (select shopno from QTPAY.SHOPNO_FEE s where s.feerate = #shopno#*0.01 and s.feename like '瑞通宝%')
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="fixFee">
+				 t1.FIX_FEE = #fixFee# * 100
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="terminalstatus">
+				 t6.TERMINALSTATUS = #terminalstatus# 
+			</isNotEmpty>
+			</dynamic>
+			)
+			<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="termstatus">
+				 #termstatus# = termstatus
+			</isNotEmpty>
+			
+		    </dynamic>
+		<isNotNull property="orderByClause">
+			order by #orderByClause#
+		</isNotNull>
+		) tmp_page where rownum <![CDATA[ <= #end# ]]>
+		) where row_id <![CDATA[  > #start# ]]>
+	</select>
+
+
+
+<select id="selectAllPsmFeeCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select count(*) 
+		from  ( select t1.*, nvl2(t2.psamid, 1, 0) as termstatus
+          from RTB_PSAM_FEE t1
+          left join rtb_payterminal t2
+          on t1.psamid = t2.psamid
+          left join rtb_qt1tblterminal t3
+          on t1.psamId = t3.terminalcode
+		<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="startPsamId">
+				 substr(t1.PSAMID,0,15) <![CDATA[  >= substr(#startPsamId#,0,15) ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="endPsamId">
+				 substr(t1.PSAMID,0,15) <![CDATA[  <= substr(#endPsamId#,0,15) ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="businesstype">
+				  t1.BUSINESS_TYPE = #businesstype# 
+			</isNotEmpty>
+			<isNotNull prepend="AND" property="agencyId">
+				t3.agencyId = #agencyId#
+			</isNotNull>
+			<isNotEmpty prepend="AND" property="shopno">
+				  t1.SHOPNO = (select shopno from QTPAY.SHOPNO_FEE s where s.feerate = #shopno#*0.01 and s.feename like '瑞通宝%')
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="fixFee">
+				 t1.FIX_FEE = #fixFee# * 100
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="terminalstatus">
+				 t3.TERMINALSTATUS = #terminalstatus# 
+			</isNotEmpty>
+			</dynamic>
+			)
+			<dynamic prepend="WHERE">
+			<isNotEmpty prepend="AND" property="termstatus">
+				 #termstatus# = termstatus
+			</isNotEmpty>
+		</dynamic>
+	</select>
+
+	<select id="selectBusnessFeebyAgencyId" resultMap="BusinesstMap" >
+		select distinct b.business_name, 0 shopno, 0 fixFee , 'fast' as TRANSTYPE
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee s
+		 where b.business_type = '3001'
+		union all
+		select distinct b.business_name, h.feerate * 100, 0  ,  'common'  
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee h
+		 where b.business_type = '3002'
+		   and h.shopno = '0050'
+		union all
+		select distinct b.business_name, h.feerate * 100, 0 ,  'weixin'  
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee h
+		 where b.business_type = '3003'
+		   and h.shopno = '0075'
+		union all
+		select distinct b.business_name, h.feerate * 100, 0 ,  'code'  
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee h
+		 where b.business_type = '3004'
+		   and h.shopno = '0075'
+		union all
+		select distinct b.business_name, h.feerate * 100, 0 ,  'HCE'  
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee h
+		 where b.business_type = '3006'
+		   and h.shopno = '0075'   
+		      union all
+		select distinct b.business_name, h.feerate * 100, 0 ,  'HCE'  
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee h
+		 where b.business_type = '3008'
+		   and h.shopno = '0075'
+       union all
+		select distinct b.business_name, h.feerate * 100, 0 ,  'HCE'  
+		  from qtpay.tb_prd_business_type b, qtpay.shopno_fee h
+		 where b.business_type = '3009'
+		   and h.shopno = '0040'
+	</select>
+
+	<!-- 设置终端费率 -->
+	<update id="UpdatePsmFeebyPsam" parameterClass="java.util.Map">
+		update RTB_PSAM_FEE p
+		set
+		p.shopno = (select shopno from
+		qtpay.shopno_fee where feerate =
+		#shopno#*0.01 and feename like
+		'瑞通宝%'),
+		p.feerate = #shopno#*0.01,
+		p.fix_fee = #fixFee#*100,
+		p.oper = #userName#,
+		p.operdt = to_char(sysdate,'yyyyMMddHH24miss')
+		<dynamic prepend="WHERE">
+		p.BUSINESS_TYPE = '3001'
+		<isNotEmpty  property="startPSAMId">
+			and substr(p.PSAMID,0,15) <![CDATA[  >= substr(#startPSAMId#,0,15) ]]>
+		</isNotEmpty>
+		<isNotEmpty  property="endPSAMId">
+			and substr(p.PSAMID,0,15) <![CDATA[  <= substr(#endPSAMId#,0,15) ]]>
+		</isNotEmpty>		
+		and
+		p.PSAMID not in (select psamId from
+		rtb_payterminal where substr(psamId,0,15) <![CDATA[  >= substr(#startPSAMId#,0,15) ]]> and substr(psamId,0,15) <![CDATA[  <= substr(#endPSAMId#,0,15) ]]> )
+		<isNotNull property="agencyId">
+		and p.PSAMID in (select terminalcode from rtb_qt1tblterminal where
+			agencyId = #agencyId#
+		)
+		</isNotNull>
+		</dynamic>
+	</update>
+	
+<!-- 	查询机构费率成本  -->
+	<select id="selectFeeByAgencyId" resultMap="AgencyFeeMap"
+		parameterClass="java.util.Map">
+		select agency_id, cost_rate*100 as cost_rate, cost_fix*0.01 as cost_fix, business_type 
+		from rtb_agency_cost
+		<dynamic prepend="WHERE">
+			<isNotNull prepend="AND" property="agencyId">
+				AGENCY_ID = #agencyId#
+			</isNotNull>
+		</dynamic>
+	</select>
+
+<!-- 	查询机构费率成本   -->
+	<select id="selectFeeByAgencyIdCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select count(*) from rtb_agency_cost
+		<dynamic prepend="WHERE">
+			<isNotNull prepend="AND" property="agencyId">
+				AGENCY_ID = #agencyId#
+			</isNotNull>
+ 		</dynamic>
+	</select>
+
+<!-- 	插入终端费率历史表   -->	
+	<insert id="insertRtb_his_psam_fee" parameterClass="java.util.Map">
+		insert into rtb_his_psam_fee h
+		(h.fid,
+		h.psamid,
+		h.agency_id,
+		h.business_type,
+		h.shopno,
+		h.fix_fee,
+		h.operdt,
+		h.oper,
+		h.disabledt)
+		select SEQ_RTB_HIS_PSAM_FEE.NEXTVAL,
+		p.psamid,
+		q.agencyid,
+		p.business_type,
+		p.shopno,
+		p.fix_fee,
+		p.operdt,
+		p.oper,
+		to_char(sysdate, 'yyyyMMddHH24mmss')
+		from rtb_psam_fee p, rtb_qt1tblterminal q
+		<dynamic prepend="WHERE">
+		 substr(p.psamId,0,15) <![CDATA[  >= substr(#startPSAMId#,0,15) ]]>
+		and substr(p.psamId,0,15) <![CDATA[  <= substr(#endPSAMId#,0,15) ]]>
+		and p.psamId = q.terminalcode
+		and q.agencyid = #agencyId#
+		and p.BUSINESS_TYPE = '3001'
+		</dynamic>
+	</insert>
+	
+	
+	<!-- 	查询终端费率最小值   -->
+	<select id="selectParamterforFeeMin" resultClass="String"
+		parameterClass="java.util.Map">
+		select PM_VALUE from rtb_paramter
+		<dynamic prepend="WHERE">
+			PM_NO='TERM001'
+ 		</dynamic>
+	</select>
+	
+		<!-- 	查询终端单笔最小值   -->
+	<select id="selectParamterforFixMin" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select PM_VALUE from rtb_paramter
+		<dynamic prepend="WHERE">
+			PM_NO='TERM003'
+ 		</dynamic>
+	</select>
+	
+		<!-- 	查询终端费率最大值   -->
+	<select id="selectParamterforFeeMax" resultClass="String"
+		parameterClass="java.util.Map">
+		select PM_VALUE from rtb_paramter
+		<dynamic prepend="WHERE">
+			PM_NO='TERM002'
+ 		</dynamic>
+	</select>
+	
+		<!-- 	查询终端单笔最大值   -->
+	<select id="selectParamterforFixMax" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select PM_VALUE from rtb_paramter
+		<dynamic prepend="WHERE">
+			PM_NO='TERM004'
+ 		</dynamic>
+	</select>
+	
+	<!-- 查询终端费率值 -->
+	<select id="selectPsamFeeFeerate" resultClass="java.math.BigDecimal" parameterClass="java.util.Map">
+		select min(feerate) from rtb_psam_fee where business_type = #businessType# and  psamid = #psamId#
+	</select>
+	
+	<!-- 查询终端交易固定值 -->
+	<select id="selectPsamFeeFixFee" resultClass="java.math.BigDecimal" parameterClass="java.util.Map">
+		select min(fix_fee) from rtb_psam_fee where business_type = #businessType# and psamid = #psamId#
+	</select>
+	
+	<!-- 查询所属机构终端费率最小值(批量) -->
+	<select id="selectAgencyFeerate" resultClass="com.compass.pasmFee.model.PsmFee" parameterClass="java.util.Map">
+		select t2.*,rownum from 
+		(select t1.feerate as costrate, substr(t1.psamid, 0, 15) as psamid
+ 		 from rtb_psam_fee t1
+ 		where business_type = #businessType#
+   		and psamid in (select TERMINALCODE
+                    FROM rtb_qt1tblterminal
+                    <dynamic prepend="WHERE">
+                   	<isNotNull prepend="AND" property="agencyId">
+					AGENCYID = #agencyId#
+					</isNotNull>
+					<isNotNull prepend="AND" property="systemSource">
+					systemsource = #systemSource#
+					</isNotNull>
+					<isNotNull prepend="AND" property="startPsamId">
+					substr(TERMINALCODE, 0, 15) <![CDATA[ >= ]]> substr($startPsamId$, 0, 15)
+					</isNotNull>
+					<isNotNull prepend="AND" property="endPsamId">
+                    substr(TERMINALCODE, 0, 15) <![CDATA[ <= ]]> substr($endPsamId$, 0, 15)
+					</isNotNull>
+                     </dynamic>
+                     ) order by t1.feerate asc) t2
+                     where rownum = 1
+	</select>
+	
+	<!-- 查询所属机构终端固定值最小值(批量) -->
+	<select id="selectAgencyFixFee" resultClass="com.compass.pasmFee.model.PsmFee" parameterClass="java.util.Map">
+		select t2.*,rownum from 
+		(select t1.fix_fee as fixFee,substr(t1.psamid, 0, 15) as psamid
+ 		 from rtb_psam_fee t1
+ 		where business_type = #businessType#
+   		and psamid in (select TERMINALCODE
+                    FROM rtb_qt1tblterminal
+                    <dynamic prepend="WHERE">
+                   	<isNotNull prepend="AND" property="agencyId">
+					AGENCYID = #agencyId#
+					</isNotNull>
+					<isNotNull prepend="AND" property="systemSource">
+					systemsource = #systemSource#
+					</isNotNull>
+					<isNotNull prepend="AND" property="startPsamId">
+					substr(TERMINALCODE, 0, 15) <![CDATA[ >= ]]> substr($startPsamId$, 0, 15)
+					</isNotNull>
+					<isNotNull prepend="AND" property="endPsamId">
+                    substr(TERMINALCODE, 0, 15) <![CDATA[ <= ]]> substr($endPsamId$, 0, 15)
+					</isNotNull>
+                     </dynamic>
+                     ) order by t1.fix_fee asc) t2
+                     where rownum = 1
+	</select>
+	<!-- 修改终端费率（闪电到账） -->
+	<update id="UpdatePsmFeebyPsamUP" parameterClass="java.util.Map">
+	 
+	 update RTB_PSAM_FEE p
+		set
+		p.shopno = (select shopno from
+		qtpay.shopno_fee where feerate =
+		#shopno#*0.01 and feename like
+		'瑞通宝%'),
+		p.feerate = #shopno#*0.01,
+		p.fix_fee = #fixFee#*100,
+		p.oper = #userName#,
+		p.operdt = to_char(sysdate,'yyyyMMddHH24miss')
+		<dynamic prepend="WHERE">
+		p.BUSINESS_TYPE = '3001'
+			and substr(p.PSAMID,0,15) <![CDATA[  = substr(#psamId#,0,15) ]]>
+		</dynamic>
+	</update>
+	<!-- 修改终端费率（普通到账） -->
+	<update id="UpdatePsmFeebyPsamUPT" parameterClass="java.util.Map">
+		 update RTB_PSAM_FEE p
+		set
+		p.shopno = (select shopno from
+		qtpay.shopno_fee where feerate =
+		#shopnop#*0.01 and feename like
+		'瑞通宝%'),
+		p.feerate = #shopnop#*0.01,
+		p.fix_fee = #fixFeep#*100,
+		p.oper = #userName#,
+		p.operdt = to_char(sysdate,'yyyyMMddHH24miss')
+		<dynamic prepend="WHERE">
+		p.BUSINESS_TYPE = '3002'
+			and substr(p.PSAMID,0,15) <![CDATA[  = substr(#psamId#,0,15) ]]>
+		</dynamic>
+	</update>
+	<!-- 查询终端所属机构 -->
+	<select id="selectBranch" resultClass="com.compass.pasmFee.model.PsmFee" parameterClass="java.util.Map">
+		  select rtp.agencyid from  rtb_qt1tblterminal rtp  where rtp.terminalcode = #psamId#
+		   
+	</select>
+	<!-- 查询选定的终端费率 -->
+	<select id="selectShopNoRate" resultClass="com.compass.pasmFee.model.PsmFee" parameterClass="java.util.Map">
+						  select t1.ID,
+                                 t1.PSAMID,
+                                 t5.AGENCY_ID,
+                                 t4.BUSINESS_NAME as BUSINESSNAME,
+                                 t1.FIX_FEE / 100 as FIXFEE,
+                                 to_date(t1.OPERDT, 'yyyy-MM-dd HH24:mi:ss') as OPERDT,
+                                 t1.OPER,
+                                 t1.REMARK,
+                                 nvl2(t2.psamid, 1, 0) as termstatus,
+                                 t3.feerate * 100 as SHOPNO,
+                                 t5.companyname as AGENCY_NAME,
+                                 t4.business_type,
+                                 case when ( t4.business_type ='3001') then 'fast'
+                                      when ( t4.business_type ='3002') then 'common'
+                                      end as transtype
+                            from RTB_PSAM_FEE t1
+                            left join rtb_payterminal t2
+                              on t1.PSAMID = t2.psamid
+                            left join qtpay.shopno_fee t3
+                              on t1.shopno = t3.shopno
+                             and t3.feename like '瑞通宝%'
+                            left join qtpay.tb_prd_business_type t4
+                              on t1.BUSINESS_TYPE = t4.BUSINESS_TYPE
+                            left join rtb_qt1tblterminal t6
+                              on t1.PSAMID = t6.terminalcode
+                            left join RTB_QT1TBLAGENCY t5
+                              on t6.agencyId = t5.agency_Id
+                             <dynamic prepend="WHERE">
+							 t6.agencyId = #agencyId#
+							and t1.PSAMID=#psamId#
+						</dynamic>
+						  order by  t4.business_type 
+	</select>
+	
+</sqlMap>

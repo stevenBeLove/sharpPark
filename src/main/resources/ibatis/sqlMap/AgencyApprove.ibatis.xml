@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="AgencyApprove">
+	
+ <resultMap id="BaseResultMap" class="AgencyApprove" >
+    <result column="AGENCY_ID" property="agencyId" jdbcType="VARCHAR" />
+    <result column="MOBILENO" property="mobileno" jdbcType="VARCHAR" />
+    <result column="USERNAME" property="username" jdbcType="VARCHAR" />
+    <result column="CUSTOMERPID" property="customerpid" jdbcType="VARCHAR" />
+    <result column="ACCOUNTNO" property="accountno" jdbcType="VARCHAR" />
+    <result column="USERID" property="userid" jdbcType="VARCHAR" />
+    <result column="APPROVEDT" property="approvedt" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+ </resultMap>
+ 
+ 
+ <resultMap id="rtbClientuserMap" class="com.compass.agency.model.Payuser">
+    <result column="userid" jdbcType="VARCHAR" property="userid" />
+    <result column="customerid" jdbcType="VARCHAR" property="customerid" />
+    <result column="viplevel" jdbcType="VARCHAR" property="viplevel" />
+    <result column="checkrange" jdbcType="VARCHAR" property="checkrange" />
+    <result column="memo" jdbcType="VARCHAR" property="memo" />
+  </resultMap>
+  
+  
+	
+ <sql id="Base_Column_List" >
+    AGENCY_ID, MOBILENO, USERNAME, CUSTOMERPID, ACCOUNTNO, USERID, APPROVEDT, STATUS
+  </sql>
+  
+  
+  <!-- 查询认证通过的代理商 -->
+  <select id="queryApproveAgency" parameterClass="string" resultMap="BaseResultMap">
+  	 select distinct
+    <include refid="Base_Column_List" />
+    from RTB_AGENCY_APPROVE where USERID = #userId#
+  </select>
+
+
+  <!-- 插入认证信息 -->	
+  <insert id="insertApproveAgency" parameterClass="AgencyApprove" >
+    insert into RTB_AGENCY_APPROVE (id,AGENCY_ID, MOBILENO, USERNAME, 
+      CUSTOMERPID, ACCOUNTNO, USERID, 
+      APPROVEDT, STATUS)
+    values (seq_rtbAgencyCostReg.Nextval, #agencyId:VARCHAR#, #mobileno:VARCHAR#, #username:VARCHAR#, 
+      #customerpid:VARCHAR#, #accountno:VARCHAR#, #userid:VARCHAR#, 
+      #approvedt:VARCHAR#, #status:CHAR#)
+  </insert>
+
+  <select id="queryRtbClientUser" resultMap="rtbClientuserMap" parameterClass="string">
+  		select * from qtpay.payuser u inner join qtpay.paycustomer c on u.customerid = c.customerid
+	where c.branchid = '00800653' and  u.userid = #userid#
+  </select>
+  
+  <select id="queryPaycustomerTag" parameterClass="string" resultClass="int">
+  		select count(*) from qtpay.paycustomer t where t.customerid = #customerid# and t.customertag='3' and t.checkrange='5'
+  </select>
+
+  <select id="queryPrepAdvanceVip" parameterClass="string" resultClass="int">
+  		select count(*) from qtpay.prep_advanced_vip t where t.customerid = #customerid# and t.status='1'
+  </select>
+  
+  <select id="queryCsBindCard" parameterClass="string" resultClass="int">
+  		 select count(*) from qtpay.cs_bindcard  c where c.status='1' and c.customerid = #customerid#
+  </select>
+  
+	
+</sqlMap>

@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="USERROLE">
+	<!-- 获取用户信息 -->
+	<select id="inquire"  resultClass="UserRoleBean" >
+		select 	distinct U.UserId    as userId,
+				U.UserName  as userName,
+				U.UserLoginName   as loginName,
+				U.UserPwd   as password,
+				U.UserPhone as phone,
+				U.UserEmail as email,
+				U.UserStatus as status ,
+				U.AGENCYID AS agencyId ,
+				U.IS_DTB_USER AS isDtbUser,
+				U.DTB_PROFIT_FLAG AS dtbProfitFlag,
+				GETPARENTAGENCYID(U.AGENCYID) as parentagencyId,
+				GETUPPERAGENCYNAMEBYID(U.AGENCYID) as agencyName,
+				U.comments as comments,
+				case when U.UserStatus='1' then '有效' else '无效' end as statusStr,
+				getUserNameById(U.CreateId) as createId,
+				U.CreateDt as createDt,
+				getUserNameById(U.ModifyId) as modifyId,
+				GETROLETYPEBUSERID(U.UserId) as roletypeId,
+				<!--  getsystemnamebyid(a.systemid) as systemsourceName, -->
+				U.ModifyDt as modifyDt ,
+				CASE WHEN R.ROLETYPEID='1' THEN '超级管理员' when R.ROLETYPEID='2' then '管理员' else '操作员' end AS roleId
+				 from users U ,USER_ROLE_RELATION M,role R,rtb_qt1tblagency a
+				 where U.USERID=M.USERID
+				 and M.ROLEID=R.ROLEID
+				  and u.agencyid=a.agency_id
+		<isNotEmpty property="userName">
+				and U.UserName like
+				'%$userName$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+		  		and U.UserStatus = #status#
+		</isNotEmpty>
+		<isNotEmpty property="parentagencyId">
+			AND U.agencyId    in  (
+									SELECT  T.AGENCY_ID
+      								  FROM rtb_qt1tblagency T
+      									 START WITH T.AGENCY_ID =#agencyId#
+   									     CONNECT BY PRIOR T.AGENCY_ID = T.ONLINECHANNEL
+   								   )
+		</isNotEmpty>
+		
+		<isNotEmpty property="agencyid">
+			and U.agencyId  =#agencyid#
+		</isNotEmpty>
+		
+		<!-- 修改为查看本级和直属下一级的用户 20141111
+		<isNotEmpty property="parentagencyid">
+			and U.agencyId  =#parentagencyid#
+		</isNotEmpty>
+		 -->
+		 <isNotEmpty property="parentagencyid">
+			and U.agencyId  in (
+										SELECT  T.AGENCY_ID
+      								  	FROM rtb_qt1tblagency T
+      								  	WHERE T.AGENCY_ID=#agencyId#
+      								  	OR T.ONLINECHANNEL=#agencyId#
+			)
+		</isNotEmpty>
+		
+		<!-- 增加按照用户登录名查询 20141028 -->
+		<isNotEmpty property="loginName">
+			and U.UserLoginName  =#loginName#
+		</isNotEmpty>
+		<!-- START WITH  agencyId =#agencyId#
+		CONNECT BY PRIOR  AGENCYID = GETPARENTAGENCYID(AGENCYID) -->
+		order by U.CreateDt desc
+	</select>
+	
+	<select id="getUserRoleCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		 select count(1)	 from users U ,USER_ROLE_RELATION M,role R,rtb_qt1tblagency a
+				 where U.USERID=M.USERID
+				 and M.ROLEID=R.ROLEID
+				  and u.agencyid=a.agency_id
+		<isNotEmpty property="userName">
+				and U.UserName like
+				'%$userName$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+		  		and U.UserStatus = #status#
+		</isNotEmpty>
+		<isNotEmpty property="parentagencyId">
+			AND U.agencyId    in  (
+									SELECT  T.AGENCY_ID
+      								  FROM rtb_qt1tblagency T
+      									 START WITH T.AGENCY_ID =#agencyId#
+   									     CONNECT BY PRIOR T.AGENCY_ID = T.ONLINECHANNEL
+   								   )
+		</isNotEmpty>
+		<isNotEmpty property="agencyid">
+			and U.agencyId  =#agencyid#
+		</isNotEmpty>
+		
+			<isNotEmpty property="selAgencyId">
+			and U.agencyId  =#selAgencyId#
+		</isNotEmpty>
+		
+		<!-- 修改为查看本级和直属下一级的用户 20141111
+		<isNotEmpty property="parentagencyid">
+			and U.agencyId  =#parentagencyid#
+		</isNotEmpty>
+		 -->
+		 <isNotEmpty property="parentagencyid">
+			and U.agencyId  in (
+										SELECT  T.AGENCY_ID
+      								  	FROM rtb_qt1tblagency T
+      								  	WHERE T.AGENCY_ID=#agencyId#
+      								  	OR T.ONLINECHANNEL=#agencyId#
+			)
+		</isNotEmpty>
+		<isNotEmpty property="datestart">
+			AND  substr(REPLACE(U.CREATEDT,'-',''),0,8)>#datestart#
+		</isNotEmpty>
+		<isNotEmpty property="dateend">
+			AND  substr(REPLACE(U.CREATEDT,'-',''),0,8)<![CDATA[<=]]>#dateend#
+		</isNotEmpty>
+		<!-- 增加按照用户登录名查询 20141028 -->
+		<isNotEmpty property="loginName">
+			and U.UserLoginName  =#loginName#
+		</isNotEmpty>
+	</select>
+	
+	<select id="getUserRoleList" resultClass="UserRoleBean" parameterClass="java.util.Map">
+	  select *
+    from (select e.*, ROWNUM rn
+            from (select   d.UserId as userId,
+                                  d.UserName as userName,
+                                  d.UserLoginName as loginName,
+                                  d.UserPhone as phone,
+                                  d.UserEmail as email,
+                                  d.UserStatus as status,
+                                  d.AGENCYID AS agencyId,
+                                  GETPARENTAGENCYID(d.AGENCYID) as parentagencyId,
+                                  GETUPPERAGENCYNAMEBYID(d.AGENCYID) as agencyName,
+                                  d.comments as comments,
+                                  case
+                                    when d.UserStatus = '1' then
+                                     '有效'
+                                    else
+                                     '无效'
+                                  end as statusStr,
+                                  getUserNameById(d.CreateId) as createId,
+                                  d.CreateDt as createDt,
+                                  getUserNameById(d.ModifyId) as modifyId,
+                                  GETROLETYPEBUSERID(d.UserId) as roletypeId,
+                                  getsystemnamebyid(d.systemid) as systemsourceName,
+                                  d.ModifyDt as modifyDt,
+                                  CASE
+                                    WHEN d.ROLETYPEID = '1' THEN
+                                     '超级管理员'
+                                    when d.ROLETYPEID = '2' then
+                                     '管理员'
+                                    else
+                                     '操作员'
+                                  end AS roleId
+                     from (select distinct U.UserId as userId,
+                                  U.UserName as userName,
+                                  U.UserLoginName as UserLoginName,
+                                  U.UserPhone as UserPhone,
+                                  U.UserEmail as UserEmail,
+                                  U.UserStatus as UserStatus,
+                                  U.AGENCYID AS agencyId,
+                                  U.AGENCYID as parentagencyId,
+                                  U.AGENCYID as agencyName,
+                                  U.comments as comments,
+                                  U.CreateId as createId,
+                                  U.CreateDt as createDt,
+                                  U.ModifyId as modifyId,
+                                   a.systemid as systemId,
+                                  U.ModifyDt as modifyDt,
+                                  R.ROLETYPEID as ROLETYPEID
+                               from users              U,
+                               USER_ROLE_RELATION M,
+                               role               R,
+                               rtb_qt1tblagency       a
+                         where U.USERID = M.USERID
+                           and M.ROLEID = R.ROLEID
+                           and u.agencyid = a.agency_id
+                           <isNotEmpty property="userName">
+                                and U.UserName like
+                                '%$userName$%'
+                            </isNotEmpty>
+                            <isNotEmpty property="status">
+                                  and U.UserStatus = #status#
+                            </isNotEmpty>
+                            <isNotEmpty property="parentagencyId">
+                              AND U.agencyId    in  (
+                                          SELECT  T.AGENCY_ID
+                                                FROM rtb_qt1tblagency T
+                                                 START WITH T.AGENCY_ID =#agencyId#
+                                                 CONNECT BY PRIOR T.AGENCY_ID = T.ONLINECHANNEL
+                                             )
+                            </isNotEmpty>
+                          		
+                            <isNotEmpty property="agencyid">
+                              and U.agencyId  =#agencyid#
+                            </isNotEmpty>
+                          		
+                            <isNotEmpty property="selAgencyId">
+                              and U.agencyId  =#selAgencyId#
+                            </isNotEmpty>
+                          		
+                           
+                             <isNotEmpty property="parentagencyid">
+                              and U.agencyId  in (
+                                            SELECT  T.AGENCY_ID
+                                                  FROM rtb_qt1tblagency T
+                                                  WHERE T.AGENCY_ID=#agencyId#
+                                                  OR T.ONLINECHANNEL=#agencyId#
+                              )
+                            </isNotEmpty>
+                          		
+                            <!-- 增加按照用户登录名查询 20141028 -->
+                            <isNotEmpty property="loginName">
+                              and U.UserLoginName  =#loginName#
+                            </isNotEmpty>
+                          		
+                            <isNotEmpty property="datestart">
+                              AND  substr(REPLACE(U.CREATEDT,'-',''),0,8)>#datestart#
+                            </isNotEmpty>
+                            <isNotEmpty property="dateend">
+                              AND  substr(REPLACE(U.CREATEDT,'-',''),0,8)<![CDATA[<=]]>#dateend#
+                            </isNotEmpty>
+                          		
+                            <!-- START WITH  agencyId =#agencyId#
+                            CONNECT BY PRIOR  AGENCYID = GETPARENTAGENCYID(AGENCYID) -->
+                         order by U.CreateDt desc) d
+           )e
+           where rownum<![CDATA[<=]]> #endNum#)
+	  where rn>#startNum#
+	</select>
+	
+	<!-- 增加用户 -->
+	<insert id="add" parameterClass="UserRoleBean">
+		INSERT INTO  users(
+			UserId ,
+			UserName ,
+			UserLoginName ,
+			UserPwd ,
+			UserEmail ,
+			UserPhone ,
+			UserStatus,
+			AGENCYID,
+			CreateId,
+			CreateDt,
+			IS_DTB_USER,
+			DTB_PROFIT_FLAG,
+			IS_ADMIN,
+			HOME_ID,
+			ISGRAB
+		)
+		   VALUES (
+		   #userId#,
+		   #userName#,
+		   #loginName#,
+		   #password#,
+		   #email#,
+		   #phone#,
+		   #status#,
+		   #agencyId#,
+		   #createId#,
+		   #createDt#,
+		   #isDtbUser#,
+		   #dtbProfitFlag#,
+		   #isAdmin#,
+		   #homeId#,
+		   #isGrab#
+		)
+	</insert>
+	
+	
+  <insert id="insertUserAddInfo" parameterClass="com.compass.userrole.model.UserAddInfo" >
+    insert into RTB_USER_ADD_INFO (HOME_ID, USERID, USERCODE_TIME, IS_APPROVE, DAYS)
+    values (#homeId:VARCHAR#, #userid:VARCHAR#, #usercodeTime:VARCHAR#, #isApprove:CHAR#,
+      #days:DECIMAL#)
+  </insert>
+	
+	<!-- 编辑用户 -->
+	<update id="update"  parameterClass ="UserRoleBean" >
+		UPDATE 
+			users 
+		SET 
+			UserName = #userName#,  
+			UserLoginName = #loginName#, 
+			UserPwd = #password#,   
+			UserEmail = #email#,  
+			UserPhone = #phone#,  
+			UserStatus = #status#,
+			USERTYPE=#usertypeId#,
+			ModifyId=#modifyId#,
+			ModifyDt=#modifyDt#
+	  
+		WHERE (
+			UserId = #userId#
+		)
+		
+	</update>
+	
+	<!-- 删除用户 -->
+	<update id="delete" >
+		UPDATE 
+			users 
+		SET 
+			UserStatus = #status#
+		WHERE 
+			UserId in($userId$)
+		
+	</update>
+	
+	
+	<!-- 通过用户编号来删除用户的角色 -->
+	<delete id="delRoleByUserId" parameterClass="java.lang.String">
+		DELETE from user_role_relation 
+		 WHERE UserId =#userId#
+	</delete>
+	
+	<!-- 为用户添加角色-->
+	<insert id="addUserRole" parameterClass="java.util.Map">
+		INSERT INTO user_role_relation 
+			  (
+			  	UserId,
+			    RoleId,
+			    CreateId,
+			    CreateDt
+			   )
+			 VALUES (
+			 	#userId#,
+			 	#roleId#,
+			 	#createId#,
+			 	#createDt#
+			 )
+		
+	</insert>
+	
+	<!-- 查询用户所拥有的权限-->
+	<select id="getRolec" parameterClass="java.lang.String" resultClass="UserRoleBean">
+		select 
+			UserId  as userId,
+			RoleId  as roleId
+		from user_role_relation
+		where UserId=#userId#
+	</select>
+	
+	<!-- 验证当前部门下的登录名称是否存在-->
+	<!-- 修改为所有用户登录名称唯一 20141029 -->
+	<select id="checkUserAdd" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT COUNT(1) FROM USERS  u
+	<!--	WHERE u.USERLOGINNAME=#loginname# AND U.AGENCYID=#agencyId# -->
+			WHERE u.USERLOGINNAME=#loginname#
+	</select>
+	
+	<!-- 检查同一机构下的用户是否重复-->
+	<!-- 修改为所有用户登录名称唯一 20141029 -->
+	<select id="checkUserEdit" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		SELECT COUNT(1) FROM USERS  u
+	<!-- 	WHERE u.USERLOGINNAME=#loginname# AND U.AGENCYID=#agencyId#  -->
+			WHERE u.USERLOGINNAME=#loginname#
+			and u.USERID!=#userId#
+	</select>
+	<!-- 验证指定机构下是否有用户存在 -->
+	<select id="getUsersByagencyId" resultClass="java.lang.Integer" parameterClass="java.lang.String">
+		select count(USERID) from users where USERSTATUS='1' and AGENCYID=#agencyId#
+	</select>
+	
+		<!-- 删除用户 -->
+	<update id="deleteUserByAgencyId" parameterClass="java.lang.String" >
+		 delete USERS   WHERE AGENCYID IN(#agencyId#) 
+	</update>
+	
+	<select id="getUserAndRoleCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+	   		select count(1) from user_role_relation ur
+				left join users u on ur.userid=u.userid
+				left join role r on r.roleid=ur.roleid
+			where 1=1
+			 <isNotEmpty property="agencyid">
+			 	 AND  U.AGENCYID=#agencyid#
+			 </isNotEmpty>
+			 <isNotEmpty property="loginname">
+			 	and  u.userloginname=#loginname#
+			 </isNotEmpty>
+			 <isNotEmpty property="roleid">
+			 	and ur.roleid=#roleid#
+			 </isNotEmpty>
+	</select>
+	<select id="getUserAndRoleList" resultClass="UserRoleBean"  parameterClass="java.util.Map">
+				
+			select b.*
+			  from (
+			        
+			        select a.*, rownum rn
+			          from (select r.rolename,
+			                        u.userid,
+			                        u.username,
+			                        u.userloginname as loginName,
+			                        u.agencyid,
+			                        ur.roleid,
+			                        getagencynamebyid(u.agencyid) as agencyName
+			                   from user_role_relation ur
+			                   inner join users u
+			                     on ur.userid = u.userid
+			                   left join role r
+			                     on r.roleid = ur.roleid
+			                    where 1=1
+								 <isNotEmpty property="agencyid">
+								 	 AND  U.AGENCYID=#agencyid#
+								 </isNotEmpty>
+								 <isNotEmpty property="loginname">
+								 	and  u.userloginname=#loginname#
+								 </isNotEmpty>
+								 <isNotEmpty property="roleid">
+								 	and ur.roleid=#roleid#
+								 </isNotEmpty>
+			                     ) a
+			    where rownum<![CDATA[<=]]> #endNum#) b
+	  where rn>#startNum#
+	</select>
+	
+	<update id="updateUserRole" parameterClass="java.util.Map">
+			 update user_role_relation r
+			 set r.roleid = #roleId#
+			 where r.userid = #userId#
+	</update>
+	
+	<update id="updateUserisDtbUser" parameterClass="java.util.Map" >
+		update users u set u.is_dtb_user = #isDtbUser# where u.userloginname = #userloginname#
+	</update>
+	
+	<update id="updateUserDtbProfitFlag" parameterClass="java.util.Map" >
+		update users u set u.dtb_profit_flag = #dtbProfitFlag# where u.userloginname = #userloginname#
+	</update>
+	
+	<update id="updateUserByMap" parameterClass="java.util.Map">
+		update users 
+		   <dynamic prepend="SET">  
+	            <isNotEmpty property="phone" prepend=",">  
+	             	<![CDATA[ 
+	                   userphone = #phone# 
+	                ]]>  
+	            </isNotEmpty>  
+	           
+	           </dynamic>
+		 WHERE userloginname = #userloginname# 
+	</update>
+	
+	<!-- 用户附加信息表查询 -->
+	<select id="queryUserAddInfo" resultClass="java.lang.Integer"  parameterClass="java.lang.String">
+		select count(1) from rtb_user_add_info where userId = #userId#
+	</select>
+	
+	<!-- 修改用户附加信息 -->
+	<update id="updateUserAddInfo" parameterClass="java.lang.String">
+		update rtb_user_add_info set is_approve = '1' where userId = #userId#
+	</update>
+</sqlMap>

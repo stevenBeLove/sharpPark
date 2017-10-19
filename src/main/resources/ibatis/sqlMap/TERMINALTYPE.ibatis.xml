@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="terminalType">
+	<!-- 获得终端类型信息-->
+	<select id="getTerminalType" resultClass="TerminalTypeBean" parameterClass="java.util.Map">
+		SELECT
+			tty.TERMINALTYPE_ID AS terminalTypeId,
+			tty.TERMINALTYPE_NAME AS terminalTypeName,
+			GETTERMINALTYPECOUNTBYID(tty.TERMINALTYPE_ID) AS terminalCount,
+			tty.TERMINALTYPE_STATUS AS terminalTypeStatus,
+		CASE WHEN tty.TERMINALTYPE_STATUS='1' THEN '有效' ELSE '无效' END AS terminalTypeStatusStr,
+			tty.TERMINALTYPE_DESC AS terminalTypeDesc,
+			<!-- 
+			tty.SYSTEMID as systemId,
+			GETSYSTEMNAMEBYID(tty.SYSTEMID) as systemName,
+			 -->
+			getUserNameById(tty.CREATEID) AS createrId,
+			tty.CREATEDT AS createDate
+		FROM QT1TBLTERMINALTYPE tty
+		where 1=1
+		<!-- 
+		<isNotEmpty property="systemId">
+			and tty.SYSTEMID=#systemId#
+		</isNotEmpty>
+		 -->
+		<isNotEmpty property="status">
+			AND tty.TERMINALTYPE_STATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="terminalTypeName">
+			AND tty.TERMINALTYPE_NAME LIKE
+			'%$terminalTypeName$%'
+		</isNotEmpty>
+		ORDER BY tty.CREATEDT DESC
+	</select>
+	
+	<!-- 获取终端类型编号-->
+	<select id="getTerminalTypeName" resultClass="TerminalTypeBean" parameterClass="java.util.Map">
+		SELECT 
+			tty.TERMINALTYPE_ID AS terminalTypeId,
+			tty.TERMINALTYPE_NAME AS terminalTypeName
+		FROM 
+			QT1TBLTERMINALTYPE tty
+		WHERE tty.TERMINALTYPE_STATUS='1'
+		<!-- 
+		<isNotEmpty property="systemId">
+			AND tty.SYSTEMID=#systemId#
+		</isNotEmpty>
+		 -->
+		
+	</select>
+	
+	<!-- 添加终端类型-->
+	<insert id="addTerminalType" parameterClass="TerminalTypeBean">
+		INSERT INTO QT1TBLTERMINALTYPE(
+			TERMINALTYPE_ID,
+		<!-- 	SYSTEMID, -->
+			TERMINALTYPE_NAME,
+			TERMINALTYPE_STATUS,
+			TERMINALTYPE_DESC,
+			CREATEID,
+			CREATEDT
+		)
+		VALUES(
+			#terminalTypeId#,
+		<!-- 	#systemId#, -->
+			#terminalTypeName#,
+			#terminalTypeStatus#,
+			#terminalTypeDesc#,
+			#createrId#,
+			#createDate#
+		)
+	</insert>
+	
+	<!-- 编辑终端类型-->
+	<update id="updateTerminalType" parameterClass="TerminalTypeBean">
+		UPDATE 
+			QT1TBLTERMINALTYPE
+		SET
+		<!-- 	SYSTEMID=#systemId#, -->
+			TERMINALTYPE_NAME=#terminalTypeName#,
+			TERMINALTYPE_STATUS=#terminalTypeStatus#,
+			TERMINALTYPE_DESC=#terminalTypeDesc#
+		WHERE
+			TERMINALTYPE_ID=#terminalTypeId#
+	</update>
+	
+	<!-- 删除终端类型-->
+	<update id="deleteTerminalType" parameterClass="java.lang.String">
+		UPDATE
+			QT1TBLTERMINALTYPE
+		SET
+			TERMINALTYPE_STATUS='0' 
+		WHERE
+			TERMINALTYPE_ID
+		IN
+			($terminalTypeIds$)	
+	</update>
+</sqlMap>
+

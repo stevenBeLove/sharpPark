@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="authority">
+	<!-- 根据条件查询菜单-->
+	<select id="getAuthority" resultClass="AuthorityBean"
+		parameterClass="java.util.Map">
+		SELECT DISTINCT  
+		           T1.MenuId as menuId,
+		           T1.MenuName as menuName,
+		           T1.MenuStatus as status,
+				   case when T1.MenuStatus='1' then '有效' else '无效' end as menuStatus,
+		           T1.MenuDesc as menuDesc,
+		           T1.Comments as comments,
+		           getUserNameById(T1.CreateId) as createId,
+				T1.CreateDt as createDt,	
+				getUserNameById(T1.ModifyId) as modifyId,
+				T1.ModifyDt as modifyDt,
+		           T1.ParentNodeId as parentNodeId,
+		CASE WHEN T2.ParentNodeId IS NULL THEN '0' ELSE '1' END AS childCode
+		FROM menu T1 left join menu T2
+	    ON
+		T1.MenuId=T2.ParentNodeId
+		where T1.PARENTNODEID!='-1'
+		<isNotEmpty property="menuName">
+			and T1.MenuName like
+			'%$menuName$%'
+		</isNotEmpty>
+		<isNotEmpty property="menuStatus">
+			and T1.MenuStatus=#menuStatus# 
+		</isNotEmpty>
+		order by T1.MenuId
+	</select>
+	
+	<!-- 获得所有菜单，生成树使用 -->
+	<select id="getAuthorityTree" resultClass="AuthorityBean">
+		SELECT DISTINCT T1.MenuId     as menuId,
+						T1.MenuName   as menuName,
+		                T1.MenuStatus as menuStatus,
+		                T1.MenuDesc   as menuDesc,
+		                T1.Comments    as comments,
+		               getUserNameById(T1.CreateId) as createId,
+				T1.CreateDt as createDt,
+				getUserNameById(T1.ModifyId) as modifyId,
+				T1.ModifyDt as modifyDt,
+		                case when T1.ParentNodeId is null then '-1' else T1.ParentNodeId end  as parentNodeId,
+		                CASE WHEN T2.ParentNodeId IS NULL THEN '0' ELSE '1' END AS childCode
+		FROM menu T1 left join menu T2 
+		ON T1.MenuId=T2.ParentNodeId
+		where T1.MenuStatus='1'
+	</select>
+	
+	<!-- 添加菜单 -->
+	<insert id="addAuthority" parameterClass="AuthorityBean">
+		insert into
+		menu(
+		MenuId,
+		parentNodeId,
+		MenuName,
+		MenuStatus,
+		MenuDesc,
+		Comments,
+		CreateId,
+		CreateDT)
+		values(
+		#menuId#,
+		#parentNodeId#,
+		#menuName#,
+		#menuStatus#,
+		#menuDesc#,
+		#comments#,
+		#createId#,
+		#createDt#
+		)
+	</insert>
+	
+	<!-- 修改菜单 -->
+	<update id="updateAuthority" parameterClass="AuthorityBean">
+		update menu set
+					MenuName=#menuName#,
+					MenuStatus=#menuStatus#,
+					MenuDesc=#menuDesc#,
+					Comments=#comment#,
+					ParentNodeId=#parentNodeId#
+		where MenuId=#menuId#
+	</update>
+	
+	<!-- 删除菜单 -->
+	<update id="deleteAuthority" parameterClass="java.lang.String">
+		update menu set
+		MenuStatus='0' where MenuId in($menuId$)
+	</update>
+	
+	<!-- 获得所有根菜单的直接子菜单 -->
+	<select id="getParentMenu" resultClass="AuthorityBean">
+		select MENUID   AS menuId,
+			   MENUNAME AS menuName,
+			   PARENTNODEID AS parentNodeId
+		from MENU 
+		WHERE (MENUSTATUS='1' AND MENUDESC is null) 
+		OR PARENTNODEID='-1'
+	</select>
+	
+	<select id ="getParamCount" resultClass="java.lang.Integer">
+    SELECT COUNT(1)
+    FROM TB_FR_PARAM
+    WHERE 1=1
+    <isNotEmpty property="paramId">
+    AND PARAMID=#paramId#
+    </isNotEmpty>
+    <isNotEmpty property="paramName">
+    AND PARAMNAME LIKE '%$paramName$%'
+    </isNotEmpty>
+    </select>
+	<select id ="getParam" resultClass="com.compass.authority.model.ParamBean">
+	SELECT PARAMID,PARAMNAME,PARAMVALUE,PARAMTYPE,PARAMDES FROM (
+	SELECT PARAMID,PARAMNAME,PARAMVALUE,PARAMTYPE,PARAMDES,ROWNUM NO
+	FROM TB_FR_PARAM
+	WHERE 1=1
+	<isNotEmpty property="paramId">
+	AND PARAMID=#paramId#
+	</isNotEmpty>
+	<isNotEmpty property="paramName">
+	AND PARAMNAME LIKE '%$paramName$%'
+	</isNotEmpty>
+	AND ROWNUM <![CDATA[<=#end#]]>
+	) WHERE NO>#start#
+	</select>
+	
+	<insert id="addParam" parameterClass="com.compass.authority.model.ParamBean">
+	INSERT INTO TB_FR_PARAM (PARAMID,PARAMVALUE,PARAMNAME,PARAMDES) VALUES(#paramId#,#paramValue#,#paramName#,#paramDes#)
+	</insert>
+	<update id="updateParam" parameterClass="com.compass.authority.model.ParamBean">
+	UPDATE TB_FR_PARAM SET PARAMNAME=#paramName#,PARAMVALUE=#paramValue#,PARAMDES=#paramDes# WHERE PARAMID=#paramId#
+	</update>
+	<update id="deleteParam" >
+    DELETE FROM  TB_FR_PARAM  WHERE PARAMID in $paramId$
+    </update>
+    
+    <select id="getParamObject"  resultClass="com.compass.authority.model.ParamBean">
+    		SELECT t.*   FROM  TB_FR_PARAM  t   WHERE   t.PARAMID = #paramId#
+    
+    </select>
+</sqlMap>

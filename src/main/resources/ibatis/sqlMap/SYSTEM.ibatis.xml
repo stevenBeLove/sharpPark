@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="system">
+	<!-- 获得系统信息 -->
+	<select id="getSystem" resultClass="SystemManageBean" parameterClass="java.util.Map">
+		  SELECT  
+				SYSTEMID AS systemId,
+				SYSTEMNAME AS systemName,
+				SYSTEMCODE AS systemCode,
+				SYSTEMSTATUS AS systemStatus,
+	  CASE WHEN SYSTEMSTATUS='1' THEN '有效' ELSE '无效' END AS systemStatusStr,
+				SYSTEMDESC AS systemDesc,
+		 		getUserNameById(CREATEID) as createrId,
+				CREATEDT AS createDate
+		   FROM QT1TBLSYSTEM 
+		  WHERE 1=1
+		<isNotEmpty property="status">
+			AND SYSTEMSTATUS=#status#
+		 </isNotEmpty>
+		 <isNotEmpty property="systemName">
+			AND SYSTEMNAME LIKE
+			'%$systemName$%'
+		</isNotEmpty>
+		order by CREATEDT desc
+	</select>
+	
+	<!-- 检查系统来源编号是否存在 -->
+	<select id="checkSysCode" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+			  SELECT   COUNT(*)  FROM QT1TBLSYSTEM T WHERE  T.SYSTEMCODE = #systemCode#
+	</select>
+	
+	<!-- 检查系统来源编号是否为特别系统,显示处理  20141106 -->
+	<select id="checkSpecSystem" parameterClass="java.lang.String" resultClass="SpecSystemBean">
+			  SELECT  t.systemid,t.levelcontrol  FROM QT1TBLSPECSYSTEM T WHERE  T.SYSTEMID = #systemId# and t.levelcontrol is not null
+	</select>
+
+	<!-- 获得所有有效的系统（下拉框使用） -->
+	<select id="getCombSystems" resultClass="SystemManageBean">
+			  SELECT  
+					SYSTEMID AS systemId,
+					SYSTEMNAME AS systemName
+			   FROM QT1TBLSYSTEM
+			  WHERE SYSTEMSTATUS='1'
+	</select>
+	<select id="getCombSystemsSin" resultClass="SystemManageBean" parameterClass="java.util.Map">
+			  SELECT  
+					SYSTEMID AS systemId,
+					SYSTEMNAME AS systemName
+			   FROM QT1TBLSYSTEM
+			  WHERE SYSTEMSTATUS='1'
+			  <isNotEmpty property="systemId">
+			  	and SYSTEMID=#systemId#
+			  </isNotEmpty>
+	</select>
+	
+	<!-- 添加系统信息 -->
+	 <insert id="addSystem" parameterClass="SystemManageBean">
+		INSERT INTO QT1TBLSYSTEM(
+				SYSTEMID,
+				SYSTEMNAME,
+				SYSTEMCODE,
+				SYSTEMSTATUS,
+				SYSTEMDESC,
+				CREATEID,
+				CREATEDT
+			  )
+		VALUES(
+				#systemId#,
+				#systemName#,
+				#systemCode#,
+				#systemStatus#,
+				#systemDesc#,
+				#createrId#,
+				#createDate#
+			  )
+	</insert>
+	
+	<!-- 编辑系统信息 -->
+	<update id="updateSystem" parameterClass="SystemManageBean">
+		UPDATE
+		QT1TBLSYSTEM SET
+			SYSTEMNAME =#systemName#,
+			SYSTEMCODE = #systemCode#,
+			SYSTEMSTATUS=#systemStatus#,
+			SYSTEMDESC=#systemDesc#
+		WHERE
+		SYSTEMID=#systemId#
+	</update>
+	
+	<!-- 删除系统信息 -->
+	<update id="deleteSystem" parameterClass="java.lang.String">
+		UPDATE
+		QT1TBLSYSTEM SET
+		SYSTEMSTATUS='0' where SYSTEMID in($systemIds$)
+	</update>
+	
+	
+	<!-- 检查系统来源编号是否显示处理  20141106 -->
+	<select id="checkOnlineSystem" parameterClass="java.lang.String" resultClass="SpecSystemBean">
+			  SELECT  t.systemid,t.onlinecontrol  FROM QT1TBLSPECSYSTEM T WHERE  T.SYSTEMID = #systemId#
+	</select>
+	
+		
+	<!-- 检查某来源系统下的机构是否为特别显示处理    -->
+	<select id="checkSpecAgency" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+			SELECT  count(1)  FROM qt1tblspecagency T 
+			WHERE  T.SYSTEMID =#systemId# and T.AGENCYID=#agencyId#
+	</select>
+	
+	<!-- 检查系统来源编号是否为分润明细下级机构归并显示, 20150422 -->
+	<select id="checkSplitControl" parameterClass="java.util.Map" resultClass="SpecSystemBean">
+			  SELECT  t.systemid,t.splitcontrol  FROM QT1TBLSPECSYSTEM T WHERE  T.SYSTEMID = #systemId# and t.splitcontrol is not null
+	</select>
+	
+</sqlMap>

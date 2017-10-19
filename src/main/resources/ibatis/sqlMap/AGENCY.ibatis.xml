@@ -1,0 +1,1038 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="AGENCY">
+<resultMap id="AgencyBeanResult" class="AgencyBean" >
+    <result column="AGENCY_ID" property="agency_id" jdbcType="VARCHAR" />
+    <result column="SYSTEMID" property="systemId" jdbcType="VARCHAR" />
+    <result column="CONTACTSNAME" property="contactsName" jdbcType="VARCHAR" />
+    <result column="COMPANYNAME" property="companyName" jdbcType="VARCHAR" />
+    <result column="COMPANYPHONE" property="companyPhone" jdbcType="VARCHAR" />
+    <result column="COMPANYEMAIL" property="companyEmail" jdbcType="VARCHAR" />
+    <result column="COMPANYADDR" property="companyAddr" jdbcType="VARCHAR" />
+    <result column="CERTIFICATES" property="certificate" jdbcType="VARCHAR" />
+    <result column="LEGAL_INFO" property="legal_info" jdbcType="VARCHAR" />
+    <result column="ORGANIZATIONCODE" property="organizationCode" jdbcType="VARCHAR" />
+    <result column="AGREEMENTCODE" property="agreementcode" jdbcType="VARCHAR" />
+    <result column="PROVINCEID" property="provinceId" jdbcType="VARCHAR" />
+    <result column="CITYID" property="cityId" jdbcType="VARCHAR" />
+    <result column="ONLINECHANNEL" property="onlinechannel" jdbcType="VARCHAR" />
+    <result column="VESTAGENCY" property="vestagencyId" jdbcType="VARCHAR" />
+    <result column="AGENCY_STATUS" property="agency_status" jdbcType="VARCHAR" />
+    <result column="ACCOUNTBANK" property="accountBank" jdbcType="VARCHAR" />
+    <result column="BANKID" property="bankId" jdbcType="VARCHAR" />
+    <result column="ACCOUNTNAME" property="accountName" jdbcType="VARCHAR" />
+    <result column="BANKCODE" property="bankcode" jdbcType="VARCHAR" />
+    <result column="CREATEID" property="createId" jdbcType="VARCHAR" />
+    <result column="CREATEDT" property="createDt" jdbcType="VARCHAR" />
+    <result column="AGENCYDESC" property="agencydesc" jdbcType="VARCHAR" />
+    <result column="COMPANYBRIEFNAME" property="companyBriefName" jdbcType="VARCHAR" />
+    <result column="VESTBRAND" property="vestBrandId" jdbcType="VARCHAR" />
+    <result column="BOUNCEDTIME" property="bouncedTime" jdbcType="VARCHAR" />
+    <result column="RENAMECOMPANYNAME" property="renameCompanyName" jdbcType="VARCHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+    <result column="USERPID" property="userpId" jdbcType="VARCHAR" />
+    <result column="SOMEONEPHONE" property="someonePhone" jdbcType="VARCHAR" />
+    <result column="SOMEONENAME" property="someoneName" jdbcType="VARCHAR" />
+  </resultMap>
+
+	<sql id="baseColumn">
+	  AGENCY_ID, SYSTEMID, CONTACTSNAME, COMPANYNAME, COMPANYPHONE, COMPANYEMAIL, COMPANYADDR,
+      CERTIFICATES, LEGAL_INFO, ORGANIZATIONCODE, AGREEMENTCODE, PROVINCEID, CITYID, ONLINECHANNEL,
+      VESTAGENCY, AGENCY_STATUS, ACCOUNTBANK, BANKID, ACCOUNTNAME, BANKCODE, CREATEID, CREATEDT,
+      AGENCYDESC, COMPANYBRIEFNAME, VESTBRAND,  BOUNCEDTIME, RENAMECOMPANYNAME,
+      STATUS,  USERPID, SOMEONEPHONE, SOMEONENAME
+	</sql>
+
+
+	<!-- 机构查询 -->
+	<select id="getAgency" resultClass="AgencyBean">
+		select DISTINCT
+		T1.AGENCY_ID as agency_id,
+		T1.COMPANYNAME as
+		companyName,
+		<!--2104.10.29 增加公司简称 -->
+		T1.COMPANYBRIEFNAME as companyBriefName,
+		T1.ContactsName AS
+		ContactsName,
+		T1.ONLINECHANNEL as upperAgencyid,
+		GETUPPERAGENCYNAMEBYID(T1.ONLINECHANNEL) as uppercompanyName,
+		T1.VESTAGENCY as vestagencyId,
+		T1.VESTBRAND as vestBrandId,
+		T1.someoneName as someoneName,
+		T1.someonePhone as someonePhone,
+		<!-- 归属机构编号根据是否为定制商区分 20141117 GETUPPERAGENCYNAMEBYID(T1.VESTAGENCY) as 
+			vestagencyName, -->
+		CASE WHEN #depagencyId#='RTB00000000' OR
+		GETPARENTAGENCYID(#depagencyId#)='RTB00000000'
+		THEN
+		GETAGENCYNAMEBYID(T1.VESTAGENCY)
+		WHEN T1.VESTBRAND IS NULL THEN
+		GETAGENCYNAMEBYID(T1.VESTAGENCY)
+		ELSE GETAGENCYNAMEBYID(T1.VESTBRAND)
+		END as vestagencyName,
+		CASE WHEN T1.VESTBRAND IS NULL THEN '1'
+		ELSE '2'
+		END as agencyType,
+		T1.COMPANYPHONE as companyPhone,
+		T1.COMPANYEMAIL as
+		companyEmail,
+		T1.COMPANYADDR as companyAddr,
+		T1.CERTIFICATES as
+		certificate,
+		T1.LEGAL_INFO as legal_info,
+		T1.ORGANIZATIONCODE as
+		organizationCode,
+		T1.AGREEMENTCODE as agreementcode,
+		T1.PROVINCEID as
+		provinceId,
+		T1.CITYID as cityId,
+		GETCITYNAMEBYID(CITYID) as cityName ,
+		GETPROVINCENAMEBYID(PROVINCEID) as provinceName,
+		T1.AGENCY_STATUS as
+		agency_status,
+		case when T1.AGENCY_STATUS='1' then '机构未激活'
+		when
+		T1.AGENCY_STATUS='2' then '机构未实名'
+		when T1.AGENCY_STATUS='3' then '机构已实名'
+		else '无效' end as agencystatusSrc,
+		T1.ACCOUNTBANK as AccountBank,
+		T1.BANKID as bankId,
+		T1.ACCOUNTNAME as accountName,
+		T1.BANKCODE as
+		bankcode,
+		GETUSERNAMEBYID(T1.CREATEID) as createId,
+		T1.CREATEDT as
+		createDt,
+		T1.SYSTEMID AS systemId,
+		GETSYSTEMNAMEBYID(T1.SYSTEMID) as
+		systemName,
+		T1.AGENCYDESC AS agencydesc,
+		case when T2.STATUS='0' then '未激活'
+        when T2.STATUS='1' then '已激活' end as status,
+        case
+        when T2.STATUS = '0' then
+        T2.REGISTER_URL
+        when T2.STATUS = '1'  then
+        '已失效' 
+        end AS REGISTERURL,
+        T2.ACT_TIME AS actTime
+		from rtb_qt1tblagency T1 left join rtb_agency_setup T2 
+		on T1.agency_id = T2.agency_id
+		where 1=1
+		<isNotEmpty property="systemId">
+			AND T1.SYSTEMID=#systemId#
+		</isNotEmpty>
+
+		<isNotEmpty property="provinceId">
+			AND T1.PROVINCEID=#provinceId#
+		</isNotEmpty>
+
+		<isNotEmpty property="cityId">
+			AND T1.CITYID=#cityId#
+		</isNotEmpty>
+
+		<isNotEmpty property="agency_id">
+			and T1.AGENCY_ID=#agency_id#
+		</isNotEmpty>
+		<isNotEmpty property="companyName">
+			and T1.COMPANYNAME like
+			'%$companyName$%'
+		</isNotEmpty>
+		<isNotEmpty property="agency_status">
+			and T1.agency_status=#agency_status#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			and T2.STATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="onlinechannel">
+			and T1.ONLINECHANNEL=#depagencyId#
+			or
+			T1.AGENCY_ID=#depagencyId#
+		</isNotEmpty>
+		<isNotEmpty property="upperAgencyid">
+			START WITH T1.AGENCY_ID =#depagencyId#
+			CONNECT BY PRIOR T1.AGENCY_ID = T1.ONLINECHANNEL
+		</isNotEmpty>
+
+	</select>
+
+
+
+	<!-- 机构查询 -->
+	<select id="getAgencyCount" resultClass="java.lang.Integer">
+		select count(1)
+		from rtb_qt1tblagency T1 left join rtb_agency_setup T2 
+		on T1.agency_id = T2.agency_id
+		where 1=1
+		<isNotEmpty property="systemId">
+			AND T1.SYSTEMID=#systemId#
+		</isNotEmpty>
+
+		<isNotEmpty property="provinceId">
+			AND T1.PROVINCEID=#provinceId#
+		</isNotEmpty>
+
+		<isNotEmpty property="cityId">
+			AND T1.CITYID=#cityId#
+		</isNotEmpty>
+
+		<isNotEmpty property="agency_id">
+			and T1.AGENCY_ID=#agency_id#
+		</isNotEmpty>
+		<isNotEmpty property="companyName">
+			and T1.COMPANYNAME like
+			'%$companyName$%'
+		</isNotEmpty>
+		<isNotEmpty property="agency_status">
+			and T1.agency_status=#agency_status#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			and T2.STATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="onlinechannel">
+			and T1.ONLINECHANNEL=#depagencyId#
+			or
+			T1.AGENCY_ID=#depagencyId#
+		</isNotEmpty>
+		<isNotEmpty property="upperAgencyid">
+			START WITH T1.AGENCY_ID =#depagencyId#
+			CONNECT BY PRIOR T1.AGENCY_ID = T1.ONLINECHANNEL
+		</isNotEmpty>
+
+	</select>
+
+	<!-- 可登陆机构用户修改资料弹框时间查询 -->
+	<select id="getAgencyObject" parameterClass="java.util.Map"
+		resultClass="com.compass.users.model.UserBean">
+		SELECT Y.BOUNCEDTIME FROM rtb_qt1tblagency Y
+		LEFT JOIN USERS S ON
+		S.AGENCYID=Y.AGENCY_ID
+		WHERE 1=1
+		<isNotEmpty property="userid">
+			AND userid=#userid#
+		</isNotEmpty>
+
+	</select>
+	<!-- 获取机构SystemId -->
+	<select id="getAgencySystemId" parameterClass="java.util.Map"
+		resultClass="com.compass.agency.model.AgencyBean">
+		SELECT SYSTEMID,AGENCY_STATUS FROM rtb_qt1tblagency 
+		WHERE 1=1
+		<isNotEmpty property="agency_id">
+			AND AGENCY_ID=#agency_id#
+		</isNotEmpty>
+	</select>
+
+	<select id="getAgencyAll" resultClass="AgencyBean">
+		select *
+		from (select b.*, rownum rn
+		from (select a.AGENCY_ID as
+		agency_id,
+		a.COMPANYNAME as companyName,
+		a.COMPANYBRIEFNAME as
+		companyBriefName,
+		a.ContactsName AS ContactsName,
+		a.ONLINECHANNEL as
+		upperAgencyid,
+		GETUPPERAGENCYNAMEBYID(a.ONLINECHANNEL) as
+		uppercompanyName,
+		a.VESTAGENCY as vestagencyId,
+		a.VESTBRAND as
+		vestBrandId,
+		CASE WHEN #depagencyId#='RTB00000000'
+		OR
+		GETPARENTAGENCYID(#depagencyId#)='RTB00000000' THEN
+		GETAGENCYNAMEBYID(a.VESTAGENCY)
+		WHEN a.VESTBRAND IS NULL THEN
+		GETAGENCYNAMEBYID(a.VESTAGENCY)
+		ELSE GETAGENCYNAMEBYID(A.VESTBRAND) END
+		as vestagencyName,
+		CASE WHEN A.VESTBRAND IS NULL THEN '1'
+		ELSE '2' END
+		as agencyType,
+		a.COMPANYPHONE as companyPhone,
+		a.COMPANYEMAIL as
+		companyEmail,
+		a.userpId,
+		a.COMPANYADDR as companyAddr,
+		a.CERTIFICATES as
+		certificate,
+		a.LEGAL_INFO as legal_info,
+		a.ORGANIZATIONCODE as
+		organizationCode,
+		a.AGREEMENTCODE as agreementcode,
+		a.PROVINCEID as
+		provinceId,
+		a.CITYID as cityId,
+		a.someonePhone,
+		a.someoneName,
+		GETCITYNAMEBYID(CITYID) as cityName,
+		GETPROVINCENAMEBYID(PROVINCEID) as provinceName,
+		a.AGENCY_STATUS as
+		agency_status,
+		case when A.AGENCY_STATUS='1' then '机构未激活'
+		when
+		A.AGENCY_STATUS='2' then '机构未实名'
+		when A.AGENCY_STATUS='3' then '机构已实名'
+		else '无效' end as agencystatusSrc,
+		a.ACCOUNTBANK as AccountBank,
+		a.BANKID as bankId,
+		a.ACCOUNTNAME as accountName,
+		a.BANKCODE as
+		bankcode,
+		GETUSERNAMEBYID(a.CREATEID) as createId,
+		a.CREATEDT as
+		createDt,
+		a.SYSTEMID AS systemId,
+		GETSYSTEMNAMEBYID(a.SYSTEMID) as
+		systemName,
+		a.AGENCYDESC AS agencydesc,
+		case
+        when a.STATUS = '0' then
+        a.REGISTERURL
+        when a.STATUS = '1'  then
+        '已失效' 
+        end AS REGISTERURL,
+        a.ACTTIME,
+        case when a.STATUS='0' then '未激活'
+        when a.STATUS='1' then '已激活' end as status
+		from (select T1.AGENCY_ID,
+		T1.COMPANYNAME,
+		T1.COMPANYBRIEFNAME,
+		T1.ContactsName,
+		T1.ONLINECHANNEL,
+		T1.VESTAGENCY,
+		T1.VESTBRAND,
+		T1.COMPANYPHONE,
+		T1.COMPANYEMAIL,
+		T1.COMPANYADDR,
+		T1.CERTIFICATES,
+		T1.LEGAL_INFO,
+		T1.ORGANIZATIONCODE,
+		T1.AGREEMENTCODE,
+		T1.PROVINCEID,
+		T1.CITYID,
+		T1.AGENCY_STATUS,
+		T1.ACCOUNTBANK as AccountBank,
+		T1.BANKID as bankId,
+		T1.ACCOUNTNAME as
+		accountName,
+		T1.BANKCODE as bankcode,
+		T1.CREATEID,
+		T1.CREATEDT as
+		createDt,
+		T1.SYSTEMID AS systemId,
+		T1.AGENCYDESC AS agencydesc,
+		T1.USERPID AS userpId,
+		T1.someoneName as someoneName,
+		T1.someonePhone as someonePhone,
+		T2.STATUS,
+        T2.REGISTER_URL AS registerUrl,
+        T2.ACT_TIME AS actTime
+		from rtb_qt1tblagency T1 left join rtb_agency_setup T2 
+		on T1.agency_id = T2.agency_id
+		where 1 = 1
+		<isNotEmpty property="systemId">
+			AND T1.SYSTEMID=#systemId#
+		</isNotEmpty>
+
+		<isNotEmpty property="provinceId">
+			AND T1.PROVINCEID=#provinceId#
+		</isNotEmpty>
+
+		<isNotEmpty property="cityId">
+			AND T1.CITYID=#cityId#
+		</isNotEmpty>
+
+		<isNotEmpty property="agency_id">
+			and T1.AGENCY_ID=#agency_id#
+		</isNotEmpty>
+		<isNotEmpty property="companyName">
+			and T1.COMPANYNAME like
+			'%$companyName$%'
+		</isNotEmpty>
+		<isNotEmpty property="agency_status">
+			and T1.agency_status=#agency_status#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			and T2.STATUS=#status#
+		</isNotEmpty>
+		<isNotEmpty property="onlinechannel">
+			and T1.ONLINECHANNEL=#depagencyId#
+			or
+			T1.AGENCY_ID=#depagencyId#
+		</isNotEmpty>
+		<isNotEmpty property="upperAgencyid">
+			START WITH T1.AGENCY_ID =#depagencyId#
+			CONNECT BY PRIOR T1.AGENCY_ID = T1.ONLINECHANNEL
+		</isNotEmpty>
+			order by T1.CREATEDT desc ) a
+		) b
+		where rownum <![CDATA[<=]]>
+		#end#)
+		where rn> #start#
+
+	</select>
+
+
+
+	<select id="existAgency" resultClass="java.lang.Integer"
+		parameterClass="java.lang.String">
+		select count(AGENCY_ID) from rtb_qt1tblagency where
+		AGENCY_ID=#agencyId#
+	</select>
+	<select id="getAgencyCheck" resultClass="AgencyBean">
+		select DISTINCT
+		T1.AGENCY_ID as agency_id,
+		T1.COMPANYNAME as
+		companyName,
+		<!--2104.10.29 增加公司简称 -->
+		T1.COMPANYBRIEFNAME as companyBriefName,
+		T1.ContactsName AS
+		ContactsName,
+		T1.ONLINECHANNEL as upperAgencyid,
+		GETUPPERAGENCYNAMEBYID(T1.ONLINECHANNEL) as uppercompanyName,
+		T1.VESTAGENCY as vestagencyId,
+		GETUPPERAGENCYNAMEBYID(T1.VESTAGENCY) as
+		vestagencyName,
+		T1.COMPANYPHONE as companyPhone,
+		T1.COMPANYEMAIL as
+		companyEmail,
+		T1.COMPANYADDR as companyAddr,
+		T1.CERTIFICATES as
+		certificate,
+		T1.LEGAL_INFO as legal_info,
+		T1.ORGANIZATIONCODE as
+		organizationCode,
+		T1.AGREEMENTCODE as agreementcode,
+		T1.PROVINCEID as
+		provinceId,
+		T1.CITYID as cityId,
+		GETCITYNAMEBYID(CITYID) as cityName ,
+		GETPROVINCENAMEBYID(PROVINCEID) as provinceName,
+		T1.AGENCY_STATUS as
+		agency_status,
+		case when T1.AGENCY_STATUS='1' then '待审核'
+		when
+		T1.AGENCY_STATUS='2' then '审核通过'
+		when T1.AGENCY_STATUS='3' then '审核未通过'
+		else '无效' end as agencystatusSrc,
+		T1.ACCOUNTBANK as AccountBank,
+		T1.BANKID as bankId,
+		T1.ACCOUNTNAME as accountName,
+		T1.BANKCODE as
+		bankcode,
+		GETUSERNAMEBYID(T1.CREATEID) as createId,
+		T1.CREATEDT as
+		createDt,
+		T1.AGENCYDESC AS agencydesc,
+		T1.SYSTEMID AS systemId,
+		GETSYSTEMNAMEBYID(T1.SYSTEMID) as systemName
+		from rtb_qt1tblagency T1
+		where
+		ONLINECHANNEL=#depagencyId#
+		and T1.AGENCY_STATUS !='0'
+		<isNotEmpty property="systemId">
+			and SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agency_id">
+			and T1.AGENCY_ID=#agency_id#
+		</isNotEmpty>
+		<isNotEmpty property="companyName">
+			and T1.COMPANYNAME like
+			'%$companyName$%'
+		</isNotEmpty>
+		<isNotEmpty property="agency_status">
+			and T1.AGENCY_STATUS=#agency_status#
+		</isNotEmpty>
+
+	</select>
+
+	<!-- 用于生成树型的机构树 -->
+	<select id="getAgencytree" resultClass="AgentreeBean"
+		parameterClass="java.util.Map">
+		SELECT DISTINCT T1.AGENCY_ID as agencyId,
+		T1.COMPANYNAME as agencyName,
+		case when T1.ONLINECHANNEL is null then '-1' else T1.ONLINECHANNEL end
+		isparent,
+		case when T2.AGENCY_ID is null then '0' else '1' end as
+		ischild
+		FROM
+		(
+		select t.AGENCY_ID,
+		t.COMPANYNAME,
+		t.ONLINECHANNEL
+		from
+		rtb_qt1tblagency t
+		<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="systemId">
+			t.SYSTEMID=#systemId#
+		</isNotEmpty>
+
+		<isNotEmpty prepend="AND" property="flag1">
+			t.ONLINECHANNEL=#agencyId#
+			OR
+			t.AGENCY_ID =#agencyId#
+		</isNotEmpty>
+		</dynamic>
+		<isNotEmpty property="flag2">
+			START WITH t.AGENCY_ID =#agencyId#
+			CONNECT BY PRIOR t.AGENCY_ID = t.ONLINECHANNEL
+		</isNotEmpty>
+		) T1
+		LEFT JOIN
+		(
+		select t.AGENCY_ID,
+		t.COMPANYNAME,
+		t.ONLINECHANNEL
+		from
+		rtb_qt1tblagency t
+		<dynamic prepend="WHERE">
+		<isNotEmpty prepend="AND" property="systemId">
+			t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		</dynamic>
+		START WITH t.AGENCY_ID =#agencyId#
+		CONNECT BY PRIOR t.AGENCY_ID =
+		t.ONLINECHANNEL
+		) T2
+		ON
+		T1.AGENCY_ID=T2.ONLINECHANNEL
+		order by isparent
+	</select>
+
+	<!-- 根据机构编号获得自己直接的子机构 -->
+	<select id="getChildAgencyList" resultClass="AgencyBean"
+		parameterClass="java.util.Map">
+		SELECT TA1.AGENCY_ID,ta1.COMPANYNAME,
+		CASE
+		WHEN TA2.ONLINECHANNEL IS
+		NULL THEN
+		'0'
+		WHEN TA2.ONLINECHANNEL IS NOT NULL THEN
+		'1'
+		ELSE
+		'0'
+		END AS
+		ISPARENT
+		FROM rtb_qt1tblagency TA1
+		LEFT JOIN (SELECT DISTINCT ONLINECHANNEL
+		FROM rtb_qt1tblagency) TA2
+		ON TA1.AGENCY_ID = TA2.ONLINECHANNEL
+		where
+		ta1.onlinechannel = #agencyId# 
+		<isNotEmpty property="systemId">
+			AND ta1.SYSTEMID=#systemId#
+		</isNotEmpty>
+	</select>
+
+	<!--14.11.03新需求 获取最上级的机构 -->
+	<select id="getSuperiorAgencyList" resultClass="AgencyBean"
+		parameterClass="java.util.Map">
+		SELECT
+		AGENCY_ID,
+		COMPANYNAME,
+		AGENCY_STATUS
+		FROM rtb_qt1tblagency
+		WHERE
+		AGENCY_STATUS >='2'   <!-- 2 表示该机构已经审核通过 -->
+		AND AGENCY_ID =#agencyId#
+		<isNotEmpty property="systemId">
+			AND SYSTEMID=#systemId#
+		</isNotEmpty>
+	</select>
+
+
+	<!-- 修改机构 -->
+	<update id="editAgency" parameterClass="AgencyBean">
+		update rtb_qt1tblagency
+		<dynamic prepend="set">
+		<isNotEmpty prepend="," property="systemId" >
+		SYSTEMID=#systemId#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="companyName" >
+		companyName=#companyName#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="companyBriefName" >
+		COMPANYBRIEFNAME=#companyBriefName#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="companyEmail" >
+		COMPANYEMAIL=#companyEmail#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="companyAddr" >
+		COMPANYADDR=#companyAddr#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="certificate" >
+		CERTIFICATES=#certificate#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="legal_info" >
+		LEGAL_INFO=#legal_info#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="organizationCode" >
+		ORGANIZATIONCODE=#organizationCode#
+      	</isNotEmpty>
+		<isNotEmpty prepend="," property="agreementcode" >
+		AGREEMENTCODE=#agreementcode#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="provinceId" >
+		PROVINCEID=#provinceId#
+      	</isNotEmpty>
+		<isNotEmpty prepend="," property="cityId" >
+		CITYID=#cityId#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="vestagencyId" >
+		VESTAGENCY=#vestagencyId#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="accountBank" >
+		ACCOUNTBANK=#accountBank#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="bankId" >
+		BANKID=#bankId#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="accountName" >
+		ACCOUNTNAME=#accountName#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="bankcode" >
+		BANKCODE=#bankcode#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="bouncedTime" >
+		BOUNCEDTIME=#bouncedTime#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="agency_status" >
+		agency_status=#agency_status#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="someoneName" >
+		someoneName=#someoneName#
+      	</isNotEmpty>
+      	<isNotEmpty prepend="," property="someonePhone" >
+		someonePhone=#someonePhone#
+      	</isNotEmpty>
+		</dynamic>
+		where AGENCY_ID=#agency_id#
+	</update>
+
+	<!-- 添加机构 -->
+	<insert id="addAgency" parameterClass="AgencyBean">
+		insert into rtb_qt1tblagency(
+		AGENCY_ID,
+		SYSTEMID,
+		CONTACTSNAME,
+		COMPANYNAME,
+		<!--2104.10.29 增加公司简称 -->
+		COMPANYBRIEFNAME,
+		COMPANYPHONE,
+		COMPANYEMAIL,
+		COMPANYADDR,
+		CERTIFICATES,
+		LEGAL_INFO,
+		ORGANIZATIONCODE,
+		AGREEMENTCODE,
+		PROVINCEID,
+		CITYID,
+		ONLINECHANNEL,
+		VESTAGENCY,
+		AGENCY_STATUS,
+		ACCOUNTBANK,
+		BANKID,
+		ACCOUNTNAME,
+		BANKCODE,
+		CREATEID,
+		CREATEDT,
+		VESTBRAND,
+		someoneName,
+		someonePhone,
+		userpId
+		)values(
+		#agency_id#,
+		#systemId#,
+		#contactsName#,
+		#companyName#,
+		#companyBriefName#,
+		#companyPhone#,
+		#companyEmail#,
+		#companyAddr#,
+		#certificate#,
+		#legal_info#,
+		#organizationCode#,
+		#agreementcode#,
+		#provinceId#,
+		#cityId#,
+		#upperAgencyid#,
+		#vestagencyId#,
+		#agency_status#,
+		#accountBank#,
+		#bankId#,
+		#accountName#,
+		#bankcode#,
+		#createId#,
+		#createDt#,
+		#vestBrandId#,
+		#someoneName#,
+		#someonePhone#,
+		#userpId#
+		)
+	</insert>
+	<!-- 生成机构编号 -->
+	<select id="getMaxagencyId" parameterClass="java.lang.String"
+		resultClass="java.lang.String">
+		select ids from (
+		select SUBSTR(AGENCY_ID, 5, 5) ids from
+		rtb_qt1tblagency
+		where AGENCY_ID LIKE '$agencyId$%'
+		order by length(ids)
+		desc,ids DESC
+		) where rownum=1
+
+	</select>
+
+	<!-- 机构审核 -->
+	<update id="checkagency" parameterClass="java.util.Map">
+		update rtb_qt1tblagency
+		set
+		AGENCY_STATUS=#agencystatus#,
+		AGENCYDESC=#agencydesc#
+		where
+		AGENCY_ID=#agencyid#
+	</update>
+
+	<!-- 获取所有省的信息 -->
+	<select id="getProvince" resultClass="AgencyBean">
+		select
+		PROVINCEID,PROVINCENAME from qtfr2.PROVINCEINFO
+	</select>
+
+	<!-- 根据省编号来查看市 -->
+	<select id="getCity" resultClass="AgencyBean" parameterClass="java.lang.String">
+		select CITYID, CITYNAME from qtfr2.CITYINFO where PROVINCEID=#provinceId#
+	</select>
+
+	<select id="getArea" resultClass="AgencyBean" parameterClass="java.lang.String">
+		select areaid CITYID,areaname CITYNAME from areainfo where
+		cityid=#provinceId#
+	</select>
+
+	<!-- 删除机构（物理删除） -->
+	<update id="delAgency" parameterClass="java.lang.String">
+		delete rtb_qt1tblagency
+		where
+		AGENCY_ID in (#agencyIds#)
+	</update>
+
+	<!-- 获取当前机构的直接子机构 -->
+	<select id="getChilAgency" resultClass="java.util.HashMap"
+		parameterClass="java.lang.String">
+		select AGENCY_ID as AGENCYID,
+		COMPANYNAME AS AGENCYNAME
+		from rtb_qt1tblagency
+		where ONLINECHANNEL=#agencyId#
+	</select>
+
+	<!-- 检查机构下面是否有终端 -->
+	<select id="checkAgencyTerminal" resultClass="java.lang.Integer"
+		parameterClass="java.lang.String">
+		SELECT
+		COUNT (ONLYCODE)
+		FROM rtb_QT1TBLTERMINAL
+		WHERE AGENCYID
+		=#agencyId#
+	</select>
+
+	<!-- 检查机构下面是否有子机构 -->
+	<select id="checkHasChild" resultClass="java.lang.Integer"
+		parameterClass="java.lang.String">
+		SELECT COUNT (AGENCY_ID)
+		FROM rtb_qt1tblagency
+		WHERE
+		ONLINECHANNEL=#agencyId#
+		  <![CDATA[AND AGENCY_STATUS <>'0']]>
+	</select>
+
+	<!-- 根据机构编号获得机构级别 -->
+	<select id="getAgencyLevel" resultClass="java.lang.String"
+		parameterClass="java.util.Map">
+		SELECT levelCode
+		FROM (SELECT LEVEL levelCode,
+		T.AGENCY_ID, T.ONLINECHANNEL
+		FROM rtb_qt1tblagency T
+		START WITH T.AGENCY_ID
+		= #startAgency#
+		CONNECT BY PRIOR T.AGENCY_ID = T.ONLINECHANNEL) C
+		WHERE
+		C.AGENCY_ID = #agencyId#
+
+	</select>
+	<select id="getAgencyone" resultClass="java.util.HashMap"
+		parameterClass="java.util.Map">
+		select A.AGENCY_ID AS agencyId,A.COMPANYNAME as
+		agencyName from rtb_qt1tblagency A where A.AGENCY_ID=#agencyId#
+	</select>
+
+	<!-- 递归更新定制商归属机构编码 20141117 -->
+	<update id="updateVestBrand" parameterClass="java.util.Map">
+		UPDATE rtb_qt1tblagency
+		SET VESTBRAND=#vestBrand#
+		WHERE AGENCY_ID IN (
+		SELECT T.AGENCY_ID FROM
+		rtb_qt1tblagency T
+		START WITH T.AGENCY_ID = #agencyId#
+		CONNECT BY PRIOR
+		T.AGENCY_ID = T.ONLINECHANNEL
+		)
+	</update>
+
+	<select id="getTreeList" resultClass="TreeNodesBean"
+		parameterClass="java.util.Map">
+		select to_number(a.agency_id) as id,
+		case when
+		a.onlinechannel=#agencyId# then 0
+		else to_number(a.onlinechannel) end
+		as pId,a.companyname as name,
+		case when b.onlinechannel is not null
+		then 1
+		else 0 end isParent, 0 as open
+		from (select * from rtb_qt1tblagency a
+		where a.agency_status >='2'
+		and a.ONLINECHANNEL =#agencyId#
+		) a
+		left join (
+		select distinct onlinechannel from rtb_qt1tblagency where
+		agency_status >='2'
+		START WITH AGENCY_ID =#agencyId#
+		CONNECT BY PRIOR
+		AGENCY_ID = ONLINECHANNEL) b on a.agency_id=b.onlinechannel
+		order by
+		pid
+
+	</select>
+
+	<!-- 根据机构号获取顶级机构 -->
+	<select id="getVestagencyByAgencyid" parameterClass="java.lang.String"
+		resultClass="java.lang.String">
+		select a.vestagency from rtb_qt1tblagency a where a.agency_id
+		= #agencyId#
+	</select>
+	
+	<select id="getAgencyBean" parameterClass="String" resultMap="AgencyBeanResult">
+		select 
+		<include refid="baseColumn"/>
+		from rtb_qt1tblagency q where q.agency_id =  #agencyId#	
+	</select>
+	
+	<update id="updateMyAgency" parameterClass="AgencyBean">
+		update rtb_qt1tblagency
+		set RENAMECOMPANYNAME=#renameCompanyName#, CONTACTSNAME =#contactsName#, COMPANYEMAIL = #companyEmail#,COMPANYPHONE = #companyPhone#, BOUNCEDTIME = #bouncedTime#
+		where agency_id =  #agency_id#	
+	</update>
+	
+	
+	
+	<select id="getAgencyComb" resultClass="AgencyBean" parameterClass="java.util.Map">
+	 select * from ( select tmp_page.*, rownum row_id from ( 
+		select T1.AGENCY_ID,
+		T1.COMPANYNAME
+		from
+		rtb_qt1tblagency T1
+		<dynamic prepend="WHERE">  
+	        <isNotNull prepend="or" property="agency_id">   
+	                       T1.AGENCY_ID like '%$agency_id$%'
+	        </isNotNull>
+	        <isNotNull prepend="or" property="companyName">   
+	                       T1.COMPANYNAME like '%$companyName$%'
+	        </isNotNull>
+	        <isNotNull prepend="and" property="ownAgencyId">   
+	                       T1.AGENCY_ID <![CDATA[ <> ]]> #ownAgencyId#
+	        </isNotNull>
+        </dynamic>
+		START WITH T1.AGENCY_ID =#depagencyId#
+		CONNECT BY PRIOR T1.AGENCY_ID = T1.ONLINECHANNEL
+	) tmp_page where rownum <![CDATA[ <= #end# ]]>  ) where row_id <![CDATA[  > #start# ]]>
+	</select>
+
+<!-- 机构查询 -->
+	<select id="getAgencyCombCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1)
+		from rtb_qt1tblagency T1
+		<dynamic prepend="WHERE">  
+	        <isNotNull prepend="or" property="agency_id">   
+	                       T1.AGENCY_ID like '%$agency_id$%'
+	        </isNotNull>
+	        <isNotNull prepend="or" property="companyName">   
+	                       T1.COMPANYNAME like '%$companyName$%'
+	        </isNotNull>
+	        <isNotNull prepend="and" property="ownAgencyId">   
+	                       T1.AGENCY_ID <![CDATA[ <> ]]> #ownAgencyId#
+	        </isNotNull>
+        </dynamic>
+		START WITH T1.AGENCY_ID =#depagencyId#
+		CONNECT BY PRIOR T1.AGENCY_ID = T1.ONLINECHANNEL
+	</select>
+	
+	<!-- 机构下级查询 -->
+	<select id="getAgencyCombChild" resultClass="AgencyBean" parameterClass="java.util.Map">
+	 select * from ( select tmp_page.*, rownum row_id from ( 
+		select T1.AGENCY_ID,
+		T1.COMPANYNAME
+		from
+		rtb_qt1tblagency T1
+		<dynamic prepend="WHERE">  
+	        <isNotNull prepend="or" property="agency_id">   
+	                       (T1.AGENCY_ID like '%$agency_id$%'
+	        </isNotNull>
+	        <isNotNull prepend="or" property="companyName">   
+	                       T1.COMPANYNAME like '%$companyName$%')
+	        </isNotNull>
+	        <isNotNull prepend="and" property="ownAgencyId">   
+	                       T1.AGENCY_ID <![CDATA[ <> ]]> #ownAgencyId#
+	        </isNotNull>
+	        <isNotNull prepend="and" property="depagencyId">   
+	                       T1.ONLINECHANNEL =#depagencyId#
+	        </isNotNull>
+        </dynamic>
+		
+	) tmp_page where rownum <![CDATA[ <= #end# ]]>  ) where row_id <![CDATA[  > #start# ]]>
+	</select>
+
+	<!-- 机构下级查询 -->
+	<select id="getAgencyCombChildCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+		select count(1)
+		from rtb_qt1tblagency T1
+		<dynamic prepend="WHERE">  
+	        <isNotNull prepend="or" property="agency_id">   
+	                       T1.AGENCY_ID like '%$agency_id$%'
+	        </isNotNull>
+	        <isNotNull prepend="or" property="companyName">   
+	                       T1.COMPANYNAME like '%$companyName$%'
+	        </isNotNull>
+	        <isNotNull prepend="and" property="ownAgencyId">   
+	                       T1.AGENCY_ID <![CDATA[ <> ]]> #ownAgencyId#
+	        </isNotNull>
+	        <isNotNull prepend="and" property="depagencyId">   
+	                       T1.ONLINECHANNEL =#depagencyId#
+	        </isNotNull>
+        </dynamic>
+	</select>
+	
+	<!-- 实名认证查询 -->
+  	<select id="queryCertification" parameterClass="java.lang.String"
+		resultClass="AgencyBean">
+  		select * from rtb_qt1tblagency where agency_id = #agencyid# 
+  	</select>
+  
+	<!-- 实名认证 -->
+	<update id="updateCertification" parameterClass="AgencyBean">
+		update RTB_QT1TBLAGENCY t
+       	set t.contactsname = #contactsName#,
+       	t.userpid = #userpId#,
+       	t.companyemail = #companyEmail#,
+       	t.agency_status = '3'
+ 		where t.agency_id = #agency_id#
+	</update>
+	
+	<!-- 根据登录名查询是否是一级机构 -->
+	<select id="queryAgencyOnlinechannelCount" parameterClass="java.lang.String" resultClass="int">
+		select count(1) from rtb_qt1tblagency T1 
+			where T1.onlinechannel = 'RTB00000000' 
+			and T1.agency_id = (select distinct agencyid from users t1 where t1.userloginname = #loginName#)
+	</select>
+	
+	<!-- 查询机构名是否重复 -->
+	<select id="queryCompanyNamelCount" parameterClass="java.lang.String" resultClass="int">
+		select count(1) from rtb_qt1tblagency T1 where T1.companyName = #companyName#
+	</select>
+	
+	<!-- 通过手机号查询实名认证 -->
+	<select id="getAgencyBeanWithMap" parameterClass="java.lang.String" resultClass="AgencyBean">
+		select agency_id,COMPANYNAME companyName,RENAMECOMPANYNAME renameCompanyName,CONTACTSNAME contactsName,COMPANYEMAIL companyEmail,COMPANYPHONE companyPhone, 
+		BOUNCEDTIME bouncedTime, onlinechannel,	userpid userpId, agency_status   
+		from rtb_qt1tblagency q where q.companyphone = #companyphone# and q.contactsname is not null and q.userpid is not null and rownum = 1 order by q.createdt desc 
+	</select>
+	
+	<!-- 更新机构  -->
+   <update id="updateByPrimaryKey" parameterClass="AgencyBean" >
+    update RTB_QT1TBLAGENCY
+    <dynamic prepend="set">
+     <isNotEmpty prepend="," property="companyPhone" >
+        COMPANYPHONE= #companyPhone:VARCHAR#
+      </isNotEmpty>
+      
+      <isNotEmpty prepend="," property="contactsName" >
+        CONTACTSNAME = #contactsName:VARCHAR#
+      </isNotEmpty>
+      
+       <isNotEmpty prepend="," property="userpId" >
+        USERPID = #userpId:VARCHAR#
+      </isNotEmpty>
+      
+       <isNotEmpty prepend="," property="agency_status" >
+        AGENCY_STATUS = #agency_status:VARCHAR#
+      </isNotEmpty>
+      
+      <isNotEmpty prepend="," property="companyEmail" >
+        COMPANYEMAIL = #companyEmail:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="companyAddr" >
+        COMPANYADDR = #companyAddr:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="certificate" >
+        CERTIFICATES = #certificate:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="legal_info" >
+        LEGAL_INFO = #legal_info:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="organizationCode" >
+        ORGANIZATIONCODE = #organizationCode:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="agreementcode" >
+        AGREEMENTCODE = #agreementcode:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="provinceId" >
+        PROVINCEID = #provinceId:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="cityId" >
+        CITYID = #cityId:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="accountBank" >
+        ACCOUNTBANK = #accountBank:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="bankId" >
+        BANKID = #bankId:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="accountName" >
+        ACCOUNTNAME = #accountName:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="bankcode" >
+        BANKCODE = #bankcode:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="agencydesc" >
+        AGENCYDESC = #agencydesc:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="companyBriefName" >
+        COMPANYBRIEFNAME = #companyBriefName:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="renameCompanyName" >
+        RENAMECOMPANYNAME = #renameCompanyName:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="someonePhone" >
+        SOMEONEPHONE = #someonePhone:VARCHAR#
+      </isNotEmpty>
+      <isNotEmpty prepend="," property="someoneName" >
+        SOMEONENAME = #someoneName:VARCHAR#
+      </isNotEmpty>
+    </dynamic>
+    where AGENCY_ID = #agency_id#
+  </update>
+  
+  <!-- 添加注册信息 -->
+   <insert id="addAgencySetup" parameterClass="AgencySetup" >
+    insert into RTB_AGENCY_SETUP (AGENCY_ID, SET_DATE, SET_TIME, REGISTER_URL, STATUS, AGENCYMAC,
+      IS_NOTE, ACT_TIME, IS_NOTE_PARENT, IS_NOTE_LOGIN)
+    values (#agencyId:VARCHAR#, #setDate:VARCHAR#, #setTime:VARCHAR#, #registerUrl:VARCHAR#,
+      #status:CHAR#, #agencymac:VARCHAR#, #isNote:CHAR#, #actTime:VARCHAR#, #isNoteParent:CHAR#,
+      #isNoteLogin:CHAR#)
+  </insert>
+  
+  
+	
+	
+</sqlMap>
+

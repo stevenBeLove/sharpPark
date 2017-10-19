@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="terminalChange">
+
+	<insert id="insertTerminalChange" parameterClass="TerminalChange">
+		insert into RTB_FR_TERM_CHANGE (BATCHNO, BEGIN_TERMID, END_TERMID,
+		CHANGE_TYPE, OLD_AGENCYID, NEW_AGENCYID, termNums,
+		APPLY_TIME, APPLY_USERID,
+		DEAL_USERID,
+		DEAL_TIME, BATCH_STATE)
+		values (#batchno#, #beginTermid#, #endTermid#,
+		#changeType#, #oldAgencyid#, #newAgencyid#, #termNums#,
+		#applyTime#, #applyUserid#, #dealUserid#,
+		#dealTime#,
+		#batchState#)
+	</insert>
+	<!-- 终端回拨记录表入库 -->
+	<insert id="saveTerminalCallBack" parameterClass="java.util.Map">
+		insert into rtb_qt1tblterminal_back
+		(begin_terminaid,
+		agencyid,
+		oldagencyid,
+		terminaltypeid,
+		terminaldesc,
+		createid,
+		createdt,
+		batchno,
+		status,
+		end_terminaid
+		)
+		select substr(t.terminalcode,0,15),
+		#agencyId#,
+		#oldAgencyId#,
+		t.terminaTypeId,
+		t.terminalDesc,
+		#createId#,
+		#createDt#,
+		SEQ_TERMINAL_BACK.NEXTVAL,
+		'0',
+		substr(t.terminalcode,0,15)
+		from
+		rtb_qt1tblterminal t where
+		substr(t.terminalcode,0,15) in ($terminalIds$) and t.agencyId = #oldAgencyId# and t.terminalstatus = '0'
+	</insert>
+	<!-- 获得终端回拨记录条数 -->
+	<select id="getTerminalBackAllCount" resultClass="java.lang.Integer">
+		SELECT
+		count(*)
+		FROM rtb_qt1tblterminal_back ql
+		<dynamic prepend="where">
+			<isNotEmpty prepend="and" property="beginTerminalId">
+				ql.begin_terminaid = #beginTerminalId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="agencyId">
+				ql.oldAgencyId = #agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endTerminaId">
+				ql.end_terminaid = #endTerminaId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="terminalTypeId">
+				ql.terminalTypeId = #terminalTypeId#
+			</isNotEmpty>
+			<isNotEmpty property="yearmonthdatestart" prepend="and">
+				substr(replace(ql.createdt,'-',''),1,8) >=#yearmonthdatestart#
+			</isNotEmpty>
+			<isNotEmpty property="yearmonthdateend" prepend="and">
+		<![CDATA[ substr(replace(ql.createdt,'-',''),1,8)  <=#yearmonthdateend# ]]>
+			</isNotEmpty>
+			<isNotEmpty property="checkDateStart" prepend="and">
+				substr(replace(ql.checkdt,'-',''),1,8) >=#checkDateStart#
+			</isNotEmpty>
+			<isNotEmpty property="checkDateEnd" prepend="and">
+		<![CDATA[ substr(replace(ql.checkdt,'-',''),1,8) <=#checkDateEnd# ]]>
+			</isNotEmpty>
+		</dynamic>
+	</select>
+	<!-- 获取终端回拨记录审核列表 -->
+	<select id="getTerminalBackAll" resultClass="TerminalBack">
+		SELECT *
+		FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT ql.begin_terminaid as beginTerminalId,
+		GETAGENCYNAMEBYID(ql.agencyid) AS agencyName,
+		ql.agencyid as agencyId,
+		GETAGENCYNAMEBYID(ql.oldagencyid) AS
+		oldAgencyName,
+		ql.oldagencyid as oldAgencyId,
+		GETTERMINALTYPENAMEBYID(ql.TERMINALTYPEID) AS terminalTypeName,
+		ql.terminalTypeId as terminalTypeId,
+		ql.terminaldesc as
+		terminalDesc,
+		ql.createdt as createDt,
+		ql.createid as createId,
+		ql.checkid as checkId,
+		ql.checkdt as checkDt,
+		ql.batchno as batchNo,
+		ql.status as status,
+		CASE WHEN ql.status='0' THEN '回拨申请'
+		WHEN ql.status='1' THEN '回拨审核通过'
+		WHEN ql.status='2'
+		THEN '回拨审核拒绝'
+		END AS statusDesc,
+		ql.end_terminaid as endTerminaId,
+		ql.reason as
+		reason,
+		ql.backReason as backReason
+		from rtb_qt1tblterminal_back ql
+
+		<dynamic prepend="where">
+			<isNotEmpty prepend="and" property="beginTerminalId">
+				ql.begin_terminaid = #beginTerminalId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="agencyId">
+				ql.oldAgencyId = #agencyId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="endTerminaId">
+				ql.end_terminaid = #endTerminaId#
+			</isNotEmpty>
+			<isNotEmpty prepend="and" property="terminalTypeId">
+				ql.terminalTypeId = #terminalTypeId#
+			</isNotEmpty>
+			<isNotEmpty property="yearmonthdatestart" prepend="and">
+				substr(replace(ql.createdt,'-',''),1,8) >=#yearmonthdatestart#
+			</isNotEmpty>
+			<isNotEmpty property="yearmonthdateend" prepend="and">
+		<![CDATA[ substr(replace(ql.createdt,'-',''),1,8)  <=#yearmonthdateend# ]]>
+			</isNotEmpty>
+			<isNotEmpty property="checkDateStart" prepend="and">
+				substr(replace(ql.checkdt,'-',''),1,8) >=#checkDateStart#
+			</isNotEmpty>
+			<isNotEmpty property="checkDateEnd" prepend="and">
+		<![CDATA[ substr(replace(ql.checkdt,'-',''),1,8)  <=#checkDateEnd# ]]>
+			</isNotEmpty>
+		</dynamic>
+		order by ql.status,ql.createdt DESC
+		) d2
+		       <![CDATA[ WHERE ROWNUM <= #end# ]]>
+		)
+		WHERE RN > #start#
+	</select>
+	<!-- 修改终端回拨后状态值 -->
+	<update id="updateTerminalSuggestStatus" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal ql SET ql.agencyId = #agencyId#
+		WHERE substr(ql.terminalCode,0,15)
+		&lt;=substr($endTerminalIds$,0,15) and
+		substr(ql.terminalcode,0,15)&gt;=substr($beginTerminalIds$,0,15)
+		and ql.TERMINALSTATUS = '0'
+		AND ql.agencyId
+		IN (SELECT AGENCY_ID FROM rtb_qt1tblagency t
+		WHERE t.ONLINECHANNEL=#agencyId# and
+		t.agency_Id
+		= #oldAgencyId#)
+	</update>
+
+	<!-- 增加终端回拨表的评审意见 -->
+	<update id="saveTerminalSuggest" parameterClass="java.util.Map">
+		UPDATE
+		rtb_qt1tblterminal_back t SET t.checkId = #checkId#,t.checkDt = #checkDt#,t.status = #status#
+		WHERE t.oldAgencyId =
+		#oldAgencyId# and
+		t.batchNo in ($batchNos$)
+	</update>
+	<!-- 批量终端回拨记录表入库 -->
+	<insert id="saveTerminalBackMore" parameterClass="java.util.Map">
+		insert into rtb_qt1tblterminal_back
+		(begin_terminaid,
+		agencyid,
+		oldagencyid,
+		terminaltypeid,
+		terminaldesc,
+		createid,
+		createdt,
+		batchno,
+		status,
+		end_terminaid
+		)
+		values (
+		#terminalCode#,
+		#oldAgencyId#,
+		#agencyId#,
+		#terminaltypeId#,
+		'',
+		#createId#,
+		#createDt#,
+		SEQ_TERMINAL_BACK.NEXTVAL,
+		'0',
+		#terminalCodeEnd#
+		)
+	</insert>
+	<!-- 获取用户未审核的终端数量 -->
+	<select id="getNoCheckTerminalBackCount" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+		select count(*) from rtb_qt1tblterminal_back qt where qt.oldAgencyId = #agencyId# and qt.status = '0'
+	</select>
+	<!-- 查询终端审批列表中的记录数 -->
+	<select id="selectPageCountByParam" resultClass="java.lang.Integer">
+		select count(*)
+		from rtb_qt1tblterminal qt,(select r.begin_terminaid, r.end_terminaid
+		from rtb_qt1tblterminal_back r
+		where r.batchno = #batchNo#) s
+		where substr(qt.terminalcode,0,15) >= s.begin_terminaid
+		and <![CDATA[ substr(qt.terminalcode,0,15) <= s.end_terminaid ]]>
+		and qt.agencyId = #agencyId#
+	</select>
+
+	<!-- 分页查询批次详情信息 -->
+	<select id="selectPageByParam" parameterClass="java.util.Map" resultClass="TerminalBack">
+		SELECT *
+		FROM
+
+		(SELECT d2.*,
+		qw.companyname as oldAgencyName,
+		qe.companyname as agencyName,
+		ROWNUM RN
+		FROM (select s.batchno as batchNo,
+		qt.terminalcode as terminalCode,
+		qt.terminalStatus as terminalStatus,
+		s.oldagencyid as oldAgencyId,
+		s.agencyId as agencyId,
+		s.status as status,
+		CASE
+		WHEN s.status = '0' THEN
+		'回拨申请'
+		WHEN s.status = '1' THEN
+		'回拨审核通过'
+		WHEN s.status = '2' THEN
+		'回拨审核拒绝'
+		end as statusDesc,
+		s.createdt as createDt,
+		s.reason as reason
+		from rtb_qt1tblterminal qt	,
+		(select *
+		from rtb_qt1tblterminal_back r
+		where r.batchno = #batchNo#) s
+		where substr(qt.terminalcode,0,15) >= s.begin_terminaid
+                    <![CDATA[and substr(qt.terminalcode,0,15) <= s.end_terminaid]]> and qt.agencyId = #agencyId#)
+		d2
+		left join qtfr3.rtb_qt1tblagency qw
+		on d2.oldAgencyId = qw.agency_id
+		left join qtfr3.rtb_qt1tblagency qe
+		on d2.agencyId = qe.agency_id 
+         <![CDATA[ WHERE ROWNUM<= #end#]]>
+     
+    )
+		dd
+		WHERE dd.RN > #start# 
+	</select>
+
+	<insert id="addTeminalCheck" parameterClass="java.util.Map">
+		insert into QT1TBLTERMINALLINE(
+		TERMINAID,
+		AGENCYID,
+		NEWAGENCYID,
+		OLDAGENCYID,
+		TERMINALTYPEID,
+		TERMINALDESC,
+		CREATEID,
+		CREATEDT
+		)
+		select
+		t.terminalcode,#agencyId#,#agencyId#,#oldAgencyId#,'','回拨',#checkId#,#checkDt#
+		from rtb_qt1tblterminal t
+		where t.agencyid=#agencyId# and substr(t.terminalcode,0,15) >= $beginTerminalIds$ and
+		<![CDATA[ substr(t.terminalcode,0,15) <= $endTerminalIds$ ]]>
+		and t.terminalstatus = '0'
+	</insert>
+	<!-- 批量回拨终端个数 -->
+	<select id="countAllBack" resultClass="java.lang.Integer">
+		select count(*) from rtb_qt1tblterminal b where substr(b.terminalCode,0,15) >= substr($beginTerminalId$,0,15) and <![CDATA[ substr(b.terminalCode,0,15) <= substr($endTerminalId$,0,15)]]>
+		and b.agencyId = #oldAgencyId# and b.terminalstatus = '0'
+	</select>
+</sqlMap>

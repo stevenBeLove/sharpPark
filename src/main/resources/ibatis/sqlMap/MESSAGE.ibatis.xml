@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="message">
+	
+ 
+
+	
+  <select id="getCheckCodeCount" resultClass="java.lang.Integer" parameterClass="java.util.Map" >
+  select count(1)
+  from qt1tblmobilecheckcode m,users u
+  where  m.userid=u.userid
+  <isNotEmpty property="userName">
+  and u.userName=#userName#
+  </isNotEmpty>
+  <isNotEmpty property="userPhone">
+  and m.mobileno=#userPhone#
+  </isNotEmpty>
+  <isNotEmpty property="startTime">
+  and substr(m.efftime,0,8) >=#startTime#
+  </isNotEmpty>
+  <isNotEmpty property="endTime">
+  and #endTime#  >=  substr(m.efftime,0,8)
+  </isNotEmpty>
+  <isNotEmpty property="endTime">
+  and #endTime#  >=  substr(m.efftime,0,8)
+  </isNotEmpty>
+   <isNotEmpty property="agencyId">
+    and u.agencyid in (
+	        select distinct agency_id
+                        from rtb_qt1tblagency b
+                        start with b.agency_id = #agencyId#
+                        connect by prior b.agency_id = b.ONLINECHANNEL
+	         )  
+  </isNotEmpty>
+  </select>
+  
+ 
+  <select id="getCheckCode" resultClass="MobileCheckCode" parameterClass="java.util.Map" >
+
+		select * from (
+		select a.*,rownum no from (
+		select u.username,m.mobileno,m.checkcode,m.efftime,m.checkflag
+		from qt1tblmobilecheckcode m,users u
+		where 	 m.userid=u.userid
+		<isNotEmpty property="userName">
+		  and u.userName=#userName#
+		  </isNotEmpty>
+		  <isNotEmpty property="userPhone">
+		  and m.mobileno=#userPhone#
+		  </isNotEmpty>
+		  <isNotEmpty property="startTime">
+		  and substr(m.efftime,0,8) >=#startTime#
+		  </isNotEmpty>
+		  <isNotEmpty property="endTime">
+		  and #endTime#   >=  substr(m.efftime,0,8)
+		  </isNotEmpty>
+		<isNotEmpty property="agencyId">
+
+	          and u.agencyid in (
+	        select distinct agency_id
+                        from rtb_qt1tblagency b
+                        start with b.agency_id = #agencyId#
+                        connect by prior b.agency_id = b.ONLINECHANNEL
+	         ) 
+	    </isNotEmpty>
+		order by efftime desc
+		)a where rownum <![CDATA[<=]]> #end#      
+		) where no>#start#
+  </select>
+  		<!-- 修改验证码为已验证-->
+	<update id="updateAllToValid" parameterClass="java.util.Map">
+		update qt1tblmobilecheckcode set checkflag='1' where USERID=#userId# and MOBILENO=#userPhone#
+	</update>
+	<insert id="insertCheckCode" parameterClass="java.util.Map">
+	insert into qt1tblmobilecheckcode(userid,mobileno,checkcode,efftime,checkflag,branchid) 
+	values(#userId#,#userPhone#,#checkCode#,#effTime#,'0',#branchId#)
+	</insert>
+	<select id="queryCount" parameterClass="java.util.Map" resultClass="java.lang.Integer">
+	select count(1) from qt1tblmobilecheckcode where checkcode=#checkCode# and userid=#userId# and mobileno=#userPhone# and checkFlag='0'
+	and efftime>=#effTime#
+	</select>
+
+	<update id="updatePhone" parameterClass="java.util.Map">
+	update users set userphone=#userPhone# where userid=#userId#
+	</update>
+</sqlMap>

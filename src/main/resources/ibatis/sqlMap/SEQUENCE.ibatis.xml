@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="SEQUENCE">
+	<!-- 获取用户表的编号 -->
+	<select id="getUserId" resultClass="java.lang.Integer">
+		select  seq_userId.nextval from dual
+	</select>
+	<!-- 获取角色编号编号 -->
+	<select id="getRoleId" resultClass="java.lang.Integer">
+		select  seq_roleId.nextval from dual
+	</select>
+	<!-- 获取交易类型编号 -->
+	<select id="getDealtypeId" resultClass="java.lang.Integer">
+		select  seq_dealtypeId.nextval from dual
+	</select>
+	<!-- 获取终端类型编号 -->
+	<select id="getTerminaltypeId" resultClass="java.lang.Integer">
+		select  seq_terminaltypeId.nextval from dual
+	</select>
+		<!-- 获取终端类型编号 -->
+	<select id="getMenuId" resultClass="java.lang.Integer">
+		select  seq_menuId.nextval from dual
+	</select>
+		<!-- 获取导入数据设置编号 -->
+	<select id="getSettingId" resultClass="java.lang.Integer">
+		select  seq_settingId.nextval from dual
+	</select>
+		<!-- 获取分润规则编号 -->
+	<select id="getRuleId" resultClass="java.lang.Integer">
+		select  seq_ruleId.nextval from dual
+	</select>
+		<!-- 获取数据来源系统编号 -->
+	<select id="getSystemId" resultClass="java.lang.Integer">
+		select  seq_systemId.nextval from dual
+	</select>
+		<!-- 获取终端失败临时表编号 -->
+	<select id="getTerminalFailId" resultClass="java.lang.Integer">
+		 select  terfail_tb_seq.nextval from dual
+	</select>
+		<!-- 获取交易失败临时表编号 -->
+	<select id="getDealFailId" resultClass="java.lang.Integer">
+		select  dealfail_tb_seq.nextval from dual
+	</select>
+		<!-- 获取其他扣款表编号 -->
+	<select id="getOtherDeductId" resultClass="java.lang.Integer">
+		select  seq_othdeduct.nextval from dual
+	</select>
+		<!-- 获取模板编号编号 -->
+	<select id="getRuleNum" resultClass="java.lang.Integer">
+		select  seq_ruleNum.nextval from dual
+	</select>
+	
+		<!-- 获取系统日志编号 -->
+	<select id="getLogId" resultClass="java.lang.Integer">
+		select  seq_LogId.nextval from dual
+	</select>
+
+</sqlMap>
+

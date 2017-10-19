@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="systemlog">
+
+
+	<!-- 添加系统日志 -->
+	<insert id="addLog" parameterClass="java.util.Map">
+		insert into QT1TBLOPERLOG(
+		LOG_ID,
+		IPADDRESS,
+		OPERATETIME,
+		OPERATEAGENCYID,
+		OPERATEMANID,
+		OPERATENAME,
+		OPERATETYPE,
+		OPERATEDETAIL
+		<isNotEmpty property="operateAgency">
+			,OPERATEAGENCY,
+			OPERATEMAN
+		</isNotEmpty>
+		)values(
+		#logId#,
+		#ipAddress#,
+		#operateTime#,
+		#operateAgency#,
+		#operateId#,
+		#operateName#,
+		#operateType#,
+		#operateDetail#
+		<isNotEmpty property="operateAgency">
+			,GETAGENCYNAMEBYID(#operateAgency#),
+			GETUSERNAMEBYID(#operateId#)
+		</isNotEmpty>
+		)
+	</insert>
+
+	<select id="getSystemLogCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+
+		select count(*)
+		from QT1TBLOPERLOG WHERE 1 = 1
+
+		<isNotEmpty property="agencySelect">
+			AND OPERATEAGENCYID = #agencySelect#
+		</isNotEmpty>
+		<isNotEmpty property="operateMan">
+			AND OPERATEMAN = #operateMan#
+		</isNotEmpty>
+		<isNotEmpty property="operateName">
+			AND OPERATENAME = #operateName#
+		</isNotEmpty>
+		<isNotEmpty property="operateType">
+			AND OPERATETYPE = #operateType#
+		</isNotEmpty>
+		<isNotEmpty property="yearmonthdatestart">
+			AND to_char(replace( substr(OPERATETIME,0,10),'-') )  <![CDATA[>=]]>
+			#yearmonthdatestart#
+		</isNotEmpty>
+		<isNotEmpty property="yearmonthdateend">
+			AND to_char(replace( substr(OPERATETIME,0,10),'-') )  <![CDATA[<=]]>
+			#yearmonthdateend#
+		</isNotEmpty>
+
+	</select>
+
+	<!--查看当前机构的交易明细（限制条件:1 年月 2 机构 3 交易类型） -->
+	<select id="getSystemLogDetail" resultClass="SystemLogBean"
+		parameterClass="java.util.Map">
+		select *
+		from (
+		SELECT T. * ,ROWNUM RN
+		from (
+		select
+		IPADDRESS as
+		ipAddress,
+		OPERATETIME as operateTime,
+		to_char(OPERATETIME) AS deal_data
+		,
+		OPERATEAGENCY as operateAgency,
+		OPERATEMAN as operateMan,
+		CASE
+		WHEN
+		OPERATETYPE='1' THEN '增' WHEN OPERATETYPE='2' THEN '删' WHEN
+		OPERATETYPE='3' THEN '改'
+		WHEN OPERATETYPE='4' THEN '查' WHEN
+		OPERATETYPE='5' THEN '登录' WHEN
+		OPERATETYPE='6' THEN '退出登录'
+		WHEN
+		OPERATETYPE='7' THEN '登录失败' WHEN OPERATETYPE='8' THEN '密码重置' WHEN
+		OPERATETYPE='9' THEN '审核通过'
+		WHEN OPERATETYPE='10' THEN '导出' WHEN
+		OPERATETYPE='11' THEN '上传' WHEN
+		OPERATETYPE='12' THEN '终端下发'
+		WHEN
+		OPERATETYPE='13' THEN '终端回拨' WHEN OPERATETYPE='14' THEN '分润计算' WHEN
+		OPERATETYPE='15' THEN '分润确认'
+		WHEN OPERATETYPE='16' THEN '分配模板' WHEN
+		OPERATETYPE='17' THEN '扣款统计' WHEN
+		OPERATETYPE='18' THEN '实际扣款查询'
+		WHEN
+		OPERATETYPE='19' THEN '交易查询' WHEN OPERATETYPE='19' THEN '扣款查询'
+		END AS
+		operateType,
+		OPERATEDETAIL as operateDetail,
+		OPERATENAME as operateName
+
+		from QT1TBLOPERLOG
+
+		WHERE ROWNUM <![CDATA[<=]]>
+		#end#
+		<isNotEmpty property="agencySelect">
+			AND OPERATEAGENCYID = #agencySelect#
+		</isNotEmpty>
+		<isNotEmpty property="operateMan">
+			AND OPERATEMAN = #operateMan#
+		</isNotEmpty>
+		<isNotEmpty property="operateName">
+			AND OPERATENAME = #operateName#
+		</isNotEmpty>
+		<isNotEmpty property="operateType">
+			AND OPERATETYPE = #operateType#
+		</isNotEmpty>
+		<isNotEmpty property="yearmonthdatestart">
+			AND to_char(replace( substr(OPERATETIME,0,10),'-') )  <![CDATA[>=]]>
+			#yearmonthdatestart#
+		</isNotEmpty>
+		<isNotEmpty property="yearmonthdateend">
+			AND to_char(replace( substr(OPERATETIME,0,10),'-') )  <![CDATA[<=]]>
+			#yearmonthdateend#
+		</isNotEmpty>
+		order by operateTime,operateAgency
+		) T
+		)
+		WHERE RN > #start#
+
+	</select>
+	<select id="getOperateType" resultClass="OperateTypeBean">
+		SELECT
+		OPERATETYPE_ID AS
+		operateTypeId,
+		OPERATETYPE AS operateType
+		FROM
+		QT1TBLOPERTYPE
+		ORDER BY
+		OPERATETYPE_ID
+	</select>
+	<select id="getloginPrompt" parameterClass="java.util.Map"
+		resultClass="com.compass.systemlog.model.SystemLogBean">
+		SELECT IPADDRESS,
+		SUBSTR(OPERATETIME, 1, 4) || '年' || SUBSTR(OPERATETIME, 6, 2) || '月' ||
+		SUBSTR(OPERATETIME, 9, 3) || '日' || SUBSTR(OPERATETIME, 12, 10) AS
+		OPERATETIME,
+		OPERATEMANID,
+		OPERATEMAN
+		FROM (SELECT T.*, ROW_NUMBER() OVER (ORDER BY OPERATETIME
+		DESC) AS RNUM
+		FROM QT1TBLOPERLOG T
+		<isNotEmpty property="operateMan">
+			WHERE OPERATEMAN = #operateMan#
+		</isNotEmpty>
+		)
+		WHERE RNUM = 1
+	</select>
+
+</sqlMap>
+

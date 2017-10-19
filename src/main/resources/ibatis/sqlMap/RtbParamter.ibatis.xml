@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="RTBPARAMTER" >
+
+  <resultMap id="RtbParamterResult" class="RtbParamter" >
+    <result column="PM_NO" property="pmNo" jdbcType="VARCHAR" />
+    <result column="PM_VALUE" property="pmValue" jdbcType="DECIMAL" />
+    <result column="PM_COMMENT" property="pmComment" jdbcType="VARCHAR" />
+    <result column="CLASSNO" property="classno" jdbcType="VARCHAR" />
+    <result column="ON_OFF" property="onOff" jdbcType="CHAR" />
+    <result column="STATUS" property="status" jdbcType="CHAR" />
+  </resultMap>
+ 
+ 
+  <sql id="ParamterColumnList" >
+   	PM_NO, PM_VALUE, PM_COMMENT, CLASSNO, ON_OFF, STATUS
+  </sql>
+  
+  <!-- where条件 -->
+  <sql id="whereClause">
+		  <dynamic prepend="WHERE">  
+		     	<isNotNull prepend="AND" property="pmNo">   
+		                   PM_NO = #pmNo#     
+		        </isNotNull> 
+		        
+		        <isNotNull prepend="AND" property="pmValue">   
+		                   PM_VALUE = #pmValue#     
+		        </isNotNull> 
+		        
+		        <isNotNull prepend="AND" property="pmComment">   
+		                   PM_COMMENT = #pmComment#     
+		        </isNotNull> 
+		        
+		         <isNotNull prepend="AND" property="classno">   
+		                   CLASSNO = #classno#     
+		        </isNotNull> 
+		        
+		        <isNotNull prepend="AND" property="onOff">   
+		                   ON_OFF = #onOff#     
+		        </isNotNull>
+		        
+		        <isNotNull prepend="AND" property="status">   
+		                   STATUS = #status#     
+		        </isNotNull>
+		        
+			</dynamic>
+  </sql>
+  
+ <!-- 查询参数信息 -->
+  <select id="selectRtbParamter" resultMap="RtbParamterResult" parameterClass="RtbParamter" >
+    select 
+    	<include refid="RTBPARAMTER.ParamterColumnList" />
+    from RTB_PARAMTER
+    	<include refid="RTBPARAMTER.whereClause" />
+  </select>
+ 
+</sqlMap>

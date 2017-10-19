@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="DATA">
+	
+ 
+
+	<parameterMap id="dateMap" class="java.util.HashMap" >
+	     <parameter property="startDate" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	     <parameter property="endDate" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	</parameterMap>
+
+	<parameterMap id="dealImpMap" class="java.util.HashMap" >
+	     <parameter property="execDate" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		 <parameter property="result" jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>   
+	</parameterMap>
+	
+	<parameterMap id="fristCalMap" class="java.util.HashMap" >
+	     <parameter property="prepbranchid" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	     <parameter property="branchid" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	     <parameter property="startDate" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	     <parameter property="endDate" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		 <parameter property="result" jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>   
+	</parameterMap>
+
+  <select id="getProcLogCount" resultClass="java.lang.Integer" parameterClass="java.util.Map" >
+  	  select  count(1)
+     from qt1tbl_proc_log 
+     where 1=1
+      <isNotEmpty property="agencyId">
+    	  and   agencyid=#agencyId#
+      </isNotEmpty>
+  	   <isNotEmpty property="execDate">
+          and 	 execDate=#execDate#
+      </isNotEmpty>
+  </select>
+  
+ 
+  <select id="getProcLog" resultClass="ProcLogBean" parameterClass="java.util.Map" >
+   select   proc_name procName,
+       process_remark procRemark,
+       stime,
+       etime,
+       process_time procTime,
+       qty,
+       run_flag runFlag,
+       retcode retCode,
+       retmsg retMsg,
+       note1,
+       note2,
+       execdate execDate,
+       agencyid 
+   from 
+     (select a.*,rownum rn  from  
+       (select  *
+           from qt1tbl_proc_log 
+           where 1=1
+		     <isNotEmpty property="agencyId">
+		   		  and    agencyid=#agencyId#
+		     </isNotEmpty>
+		 	   <isNotEmpty property="execDate">
+		          and   execDate=#execDate#
+		     </isNotEmpty>
+		     order by stime desc,ETIME
+       ) a
+      where rownum <![CDATA[<=]]>  #end#)
+      where rn> #start#
+  </select>
+  
+
+
+<!-- 查询出重算申请的记录数 -->
+ <select id="getResetCount" resultClass="java.lang.Integer" parameterClass="java.util.Map" >
+  	  select  count(1)
+   			  from QT1TBLSPLIT_RESET R,
+					(SELECT A.AGENCY_ID
+           				FROM rtb_qt1tblagency A
+           					<isNotEmpty property="loginAgencyId">
+       					      START WITH A.AGENCY_ID = #loginAgencyId#
+        					  CONNECT BY PRIOR A.AGENCY_ID = A.ONLINECHANNEL
+        					</isNotEmpty>
+        			 ) A
+			     	where  R.APPLY_AGENCYID=A.AGENCY_ID
+        <isNotEmpty property="agencyId">
+   		   and    APPLY_AGENCYID=#agencyId#
+	     </isNotEmpty>
+	 	   <isNotEmpty property="applyDate">
+	          and   APPLY_DATE=#applyDate#
+	     </isNotEmpty>
+  </select>
+  
+ <!-- 查询出 重算申请的记录信息 -->
+<select  id="getReset" resultClass="ResetBean" parameterClass="java.util.Map"  > 
+  select
+	  AGENCYID agencyId,
+	 nvl2(agencyid, getagencynamebyid(AGENCYID),null) agencyName,
+       STARTDATE  ,
+       ENDDATE  ,
+       STATUS,
+       TIMESTAMP,
+       PARENTAGENCYID parentAgencyId,
+        nvl2(PARENTAGENCYID,  getagencynamebyid(PARENTAGENCYID),null) parentAgencyName,
+       APPLY_AGENCYID  applyAgencyid,
+          nvl2(APPLY_AGENCYID,   getagencynamebyid(APPLY_AGENCYID),null)  applyAgencyname,
+       APPLY_DATE
+       from 
+			(select a.*,rownum rn from 
+				(SELECT *
+				   FROM QT1TBLSPLIT_RESET R,
+					(SELECT *
+           				FROM rtb_qt1tblagency A
+           					<isNotEmpty property="loginAgencyId">
+       					      START WITH A.AGENCY_ID = #loginAgencyId#
+        					  CONNECT BY PRIOR A.AGENCY_ID = A.ONLINECHANNEL
+        					</isNotEmpty>
+        			 ) A
+			     	where  R.APPLY_AGENCYID=A.AGENCY_ID
+						 <isNotEmpty property="agencyId">
+					   		  and    APPLY_AGENCYID=#agencyId#
+					     </isNotEmpty>
+					 	   <isNotEmpty property="applyDate">
+					          and   APPLY_DATE=#applyDate#
+					     </isNotEmpty>
+					     order by timestamp desc
+			     ) a		   
+					where rownum<![CDATA[<=]]>  #end#
+			)
+   where rn> #start#
+</select>
+
+ 	<!-- 代理 商分润计算 --> 
+  <procedure id="agencyFrCal"  parameterMap="dateMap">
+        <![CDATA[ call  PROC_PROFITS_ALL(?,?)]]>
+  </procedure>
+
+
+ 	<!-- 重算申请 -->
+  	<procedure id="reset_again"   >
+        <![CDATA[ call  PROC_QT_PROFITS_RESET() ]]>
+	</procedure>
+
+	<!-- 导入交易 -->
+ 	<procedure id="dealImp"  parameterMap="dealImpMap"  >
+        <![CDATA[ call   PROC_QTFR2_SYS_DEAL(?,? )]]>
+	</procedure>
+	
+	<!-- 一级代理 商分润计算 --> 
+	<procedure id="firstCal"  parameterMap="fristCalMap"  >
+        <![CDATA[ call   PROC_QTFR2_SYS_PAY(?,?,?,?,?)]]>
+	</procedure>
+	
+	<!-- 终端激活处理  -->
+	<update id="terminalActive" >
+		UPDATE QT1TBLTERMINAL T
+        SET T.TERMINALSTATUS = '1'
+      WHERE T.TERMINALSTATUS = '0'
+        AND exists (select 1
+               from qt1tbldeal d
+              where t.onlycode = d.terminal_onlycode
+                and t.agencyid = d.agencyid)
+	</update>
+	
+	
+	
+    <select id="getfeecount"  resultClass="java.lang.Integer" parameterClass="java.util.Map" >
+            select count(1) from frunfee f
+               where 1=1
+                       <isNotEmpty property="systemid">
+                              and    f.systemid=#systemid#
+                       </isNotEmpty>
+                        <isNotEmpty property="status">
+                              and    f.status=#status#
+                       </isNotEmpty>
+                        <isNotEmpty property="dealtype">
+                              and    f.deal_type=#dealtype#
+                       </isNotEmpty>
+                        <isNotEmpty property="branchid">
+                              and    f.branchid=#branchid#
+                        </isNotEmpty>
+                       
+    </select>
+    
+    
+    <select id="getfrunfee"  resultClass="FrunFeeBean" parameterClass="java.util.Map"  >
+            select *
+                  from (select t1.*, rownum rn
+                          from (SELECT F.PREPBRANCH,
+                                       F.SYSTEMID,
+                                       S.SYSTEMNAME,
+                                       F.BRANCHID,
+                                      CASE WHEN F.BRANCHID IS  NULL THEN  NULL
+                                       ELSE B.BRANCHNAME ||'|'|| F.BRANCHID
+                                         END
+                                        BRANCHNAME,
+                                       F.DEAL_TYPE dealtype,
+                                       T.DT_NAME DTNAME,
+                                       F.FEENAME,
+                                       F.SHOPNO,
+                                       F.FEE,
+                                       F.FEE_STATUS feestatus,
+                                       case
+                                         when f.fee_status = '0' then
+                                          '点数'
+                                         when f.fee_status = '1' then
+                                          '封不'
+                                         when f.fee_status = '2' then
+                                          '封封'
+                                         else
+                                          ''
+                                       end as feeststusstr,
+                                       F.STATUS,
+                                       CASE
+                                         WHEN F.STATUS = 0 THEN
+                                          '停用'
+                                         when f.status = '1' then
+                                          '启用'
+                                         else
+                                          '停用'
+                                       end as statusstr
+                                  FROM FRUNFEE F
+                                  LEFT JOIN QT1TBLSYSTEM S
+                                    ON F.SYSTEMID = S.SYSTEMID
+                                  LEFT JOIN QT1TBLDEALTYPE T
+                                    ON F.DEAL_TYPE = T.DT_ID
+                                  LEFT JOIN QTPAY.PAYBRANCH B ON F.BRANCHID= B.BRANCHID
+                                    where 1=1
+                                    <isNotEmpty property="systemid">
+                                           and    f.systemid=#systemid#
+                                    </isNotEmpty>
+                                     <isNotEmpty property="status">
+                                           and    f.status=#status#
+                                    </isNotEmpty>
+                                    <isNotEmpty property="dealtype">
+                                          and    f.deal_type=#dealtype#
+                                   </isNotEmpty>
+                                   <isNotEmpty property="branchid">
+                                          and    f.branchid=#branchid#
+                                   </isNotEmpty>
+                                   
+                                    ) T1
+                         where rownum<![CDATA[<=]]>  #end#)
+                where rn> #start#
+            
+    </select>
+    
+    
+       <!-- 更新实际扣款信息 -->
+    <update id="updateFrunfee"  parameterClass="java.util.Map">
+          update FRUNFEE f
+             set f.fee= #fee#,f.status=#status#
+            where f.prepbranch = #prepbranch#
+            and f.deal_type = #dealtype#
+            and f.systemid= #systemid#
+            and f.fee_status =#feestatus#
+            and f.shopno=#shopno#
+              <isNotEmpty property="branchid">
+                    and f.branchid= #branchid#
+               </isNotEmpty>
+               <isEmpty  property="branchid">
+                    and f.branchid is null
+               </isEmpty>
+    </update>
+    
+    <select id="getbranch"  resultClass="FrunFeeBean" parameterClass="java.util.Map"  >
+          SELECT B.BRANCHNAME || '|' || A.BRANCHID as branchname,
+                                    A.BRANCHID as branchid
+                           FROM (select DISTINCT BRANCHID
+                                          from frunfee
+                                         where systemid = #systemid#
+                                           AND BRANCHID IS NOT NULL) A
+                          LEFT JOIN QTPAY.PAYBRANCH B ON A.BRANCHID=B.BRANCHID
+    </select>
+	
+	<select  id="getPrepbranchid" resultClass="ResetBean" > 
+		select f.prepbranch as parentAgencyId, s.systemname as parentAgencyName
+		  from frunfee f, qt1tblsystem s
+		 where f.systemid = s.systemid
+		 group by f.prepbranch, s.systemname, f.systemid
+		 order by f.systemid
+
+	</select>
+	
+	<select  id="getBranchid" resultClass="ResetBean" parameterClass="java.lang.String">
+	 select f.branchid as agencyId, s.branchname as agencyName
+   from frunfee f, paybranch s
+  where f.branchid= s.branchid
+    and f.prepbranch = #prepbranchid#
+  group by f.branchid,s.branchname ,  f.systemid
+  order by f.systemid
+ 
+ 
+	</select>
+
+</sqlMap>

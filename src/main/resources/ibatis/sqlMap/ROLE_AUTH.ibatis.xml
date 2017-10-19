@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="ROLE_AUTH">
+	<!-- 保存角色权限 -->
+	<insert id="saveAuths" parameterClass="Role_AuthBean">
+		INSERT INTO 
+		menu_role_relation 
+		(RoleId,MenuId,CreateId,CreateDt) 
+		VALUES
+		(#roleId#,#authId#,#createId#,#createDt#)
+	</insert>
+	
+	<!-- 删除角色权限 -->
+	<delete id="delAuths" parameterClass="java.lang.String">
+		DELETE 
+		from 
+		menu_role_relation 
+		WHERE 
+		RoleId = #roleId#
+	</delete>
+	
+	<!-- 获取权限生成的树 -->
+	<select id="getRoleAuthTree" resultClass="Role_AuthBean">
+		SELECT 
+			ra.RoleId AS roleId,
+			ra.MenuId AS authId,
+			a.MenuName AS powerName 
+			FROM menu_role_relation ra,
+			menu a
+			WHERE 
+			ra.MenuId = a.MenuId 
+			AND 
+			ra.RoleId = #roleId# 
+	</select>
+	
+	<!-- 获取角色权限 -->
+	<select id="getRoleAuthorityTree" resultClass="Role_AuthBean" parameterClass="java.lang.String">
+		SELECT  
+		RoleId AS roleId,
+		MenuId as authId
+		from menu_role_relation
+		where RoleId=#roleId#
+		
+	</select>
+	
+</sqlMap>

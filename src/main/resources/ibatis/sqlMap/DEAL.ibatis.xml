@@ -1,0 +1,2273 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="deal">
+	<!-- 获取交易编号总数 -->
+	<select id="getDealListCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		SELECT count(SERIALNUMBER)
+		FROM qt1tbldeal
+		WHERE 1=1
+		<!-- <isNotEmpty property="systemId"> AND SYSTEM_SOURCE=#systemId# </isNotEmpty> -->
+	</select>
+
+	<!-- 获取交易信息 -->
+	<select id="getDealList" resultClass="DealBean" parameterClass="java.util.Map">
+
+		SELECT * FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT
+		dl.DEAL_ID AS dealId ,
+		dl.MERCHANTCODE AS merchantCode ,
+		dl.SERIALNUMBER AS serialNumber ,
+		dl.TRANSACOUNT AS transacount ,
+		dl.TRANSCOST transcost ,
+		dl.TERMINAL_ID AS terminalId ,
+		to_char(dl.DEAL_DATA,'yyyymmdd') AS deal_data ,
+		substr(dl.deal_time,1,2)||':'||substr(dl.deal_time,3,2)||':'||substr(dl.deal_time,5,2)
+		AS deal_time ,
+		d1.feeamt as feeAmt,
+		dl.DEAL_STATUS AS deal_status ,
+		dl.DEALTYPE_ID AS dealtype_id ,
+		dl.DEALDESC AS dealdesc ,
+		dl.DEALREBACKCODE AS dealrebackcode ,
+		dl.CHARGE AS charge ,
+		getUserNameById(dl.CREATEID) AS createId ,
+		dl.CREATEDT AS createDt,
+		GETSYSTEMNAMEBYID(dl.SYSTEM_SOURCE) as sysSource,
+		GETDEALTYPENAMEBYID(dl.DEALTYPE_ID) AS dealTypeName
+		FROM qt1tbldeal dl
+		WHERE 1=1
+		<!-- <isNotEmpty property="systemId"> AND dl.SYSTEM_SOURCE=#systemId# </isNotEmpty> -->
+		) d2
+		WHERE ROWNUM <![CDATA[<=]]>
+		#end#
+		)
+		WHERE RN > #start#
+	</select>
+
+	<!-- 增加交易信息 -->
+	<insert id="addDeal" parameterClass="DealBean">
+
+		INSERT INTO QT1TBLDEAL
+		(
+		ONLY_CODE,
+		TERMINAL_ONLYCODE,
+		SYSTEM_SOURCE,
+		MERCHANTCODE,
+		DEAL_ID,
+		SERIALNUMBER,
+		TRANSACOUNT,
+		TRANSCOST,
+		TERMINAL_ID,
+		DEAL_DATA,
+		DEAL_TIME,
+		DEAL_STATUS,
+		DEALTYPE_ID,
+		DEALDESC,
+		DEALREBACKCODE,
+		CHARGE,
+		BANKCARDNUMBER,
+		CREATEID,
+		CREATEDT)
+		VALUES
+		(
+		#onlyCode#,
+		#terminal_OnlyCode#,
+		#sysSource#,
+		#merchantCode#,
+		#dealId#,
+		#serialNumber#,
+		#transacount#,
+		#transcost#,
+		#terminalId#,
+		TO_DATE(#deal_data#,'yyyymmdd'),
+		#deal_time#,
+		#deal_status#,
+		#dealtype_id#,
+		#dealdesc#,
+		#dealrebackcode#,
+		#charge#,
+		#bankcardNumber#,
+		#createId#,
+		#createDt#
+		)
+	</insert>
+
+	<!-- 增加交易失败信息 -->
+	<insert id="addDealFail" parameterClass="java.util.Map">
+
+		INSERT INTO QT1TBLDEALFAILTEMP
+		(
+		DEALFILEID,
+		DEALFAILDATA,
+		DEALFAILDESC,
+		CREATEDT
+		)
+		VALUES
+		(
+		#dealFailId#,
+		#failTxt#,
+		#dealFailDesc#,
+		#createDt#
+		)
+	</insert>
+	<!-- 分润汇总（当前机构下的所有交易） -->
+	<select id="getProfitone" resultClass="ProfitBean"
+		parameterClass="java.util.Map">
+		SELECT T1.AGENCY_ID as agencyId,
+		T1.ONLINECHANNEL as parentagencyId,
+		GETAGENCYNAMEBYID(T1.AGENCY_ID) as agnecyName,
+		#yearmonth# as yearmonth,
+		NVL(SUM(AMOUNT),0) as amounted , <!--分润金额 -->
+		NVL(SUM(A),0) as transCount,  <!--总交易金额 -->
+		NVL(SUM(B),0) as transCountagency,
+		NVL(SUM(C),0) as fee, <!--手续费 -->
+		NVL(SUM(D),0) as feeagency,
+		NVL(SUM(E),0) as amount,  <!--可分润金额 -->
+		NVL(SUM(F),0) as amountagency,
+		NVL(SUM(G),0) as dealCount,<!--交易笔数 -->
+		NVL(SUM(H),0) as dealCountagency
+		FROM (
+		SELECT DISTINCT
+		T1.ONLINECHANNEL,
+		t1.agency_id
+		FROM rtb_qt1tblagency T1
+		where t1.AGENCY_STATUS='2'
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t1.agency_id)
+		)T1
+		LEFT JOIN (
+
+
+		SELECT T1.AGENCY_ID,
+		SUM(T1.AMOUNT) AMOUNT,
+		0 A,
+		0 B,
+		0 C,
+		0 D,
+		0 E,
+		0 F,
+		0 G,
+		0 H
+		FROM QT1TBLLDEAL_MONTHS T1
+		WHERE T1.YEAR_MONTHS ='$yearmonth$'
+		GROUP BY T1.AGENCY_ID
+		UNION ALL
+		SELECT AGENCYID AGENCY_ID,
+		0 ,
+		SUM(TRANSACOUNT) TRANSACOUNT,
+		SUM(TRANSACOUNT1) TRANSACOUNT1,
+		SUM(CHARGE) CHARGE,
+		SUM(CHARGE1) CHARGE1,
+		SUM(COSTS) COSTS,
+		SUM(COSTS1) COSTS1,
+		SUM(DEAL_COUNT) DEAL_COUNT,
+		SUM(DEAL_COUNT1) DEAL_COUNT1
+		FROM (
+		SELECT T1.ORG_ID AGENCYID,
+		T1.ORG_ID2 ,
+		SUM(TRANSACOUNT) TRANSACOUNT,
+		SUM(CHARGE) CHARGE,
+		SUM(COSTS) COSTS,
+		SUM(DEAL_COUNT) DEAL_COUNT,
+		CASE WHEN T1.ORG_ID = T1.ORG_ID2 THEN
+		SUM(TRANSACOUNT)
+		ELSE 0 END TRANSACOUNT1,
+		CASE WHEN T1.ORG_ID = T1.ORG_ID2 THEN
+		SUM(CHARGE)
+		ELSE 0 END CHARGE1,
+		CASE WHEN T1.ORG_ID = T1.ORG_ID2 THEN
+		SUM(COSTS)
+		ELSE 0 END COSTS1,
+		CASE WHEN T1.ORG_ID = T1.ORG_ID2 THEN
+		SUM(DEAL_COUNT)
+		ELSE 0 END DEAL_COUNT1,
+		T2.DT_ID ,
+		YEAR_MONTHS
+		FROM (
+		SELECT ORG_ID , ORG_ID2 FROM QT1ORGINFONEW
+		UNION ALL
+		SELECT '1' , T.AGENCY_ID FROM rtb_qt1tblagency T
+		) T1
+		LEFT JOIN (
+		SELECT
+		T3.AGENCYID ,                                 <!--网点编码 -->
+		SUM(T1.TRANSACOUNT) TRANSACOUNT ,             <!--交易金额 -->
+		SUM(T1.CHARGE) CHARGE,                       <!--手续费 -->
+		SUM(T1.TRANSACOUNT) -SUM(T1.CHARGE) COSTS ,   <!--可分润金额 =交易金额-手续费 -->
+		COUNT(DISTINCT T1.ONLY_CODE) DEAL_COUNT,
+		T2.DT_ID ,                                    <!--交易类型编号 -->
+		TO_CHAR(T1.DEAL_DATA ,'YYYYMM') YEAR_MONTHS                               <!--交易时间 -->
+		FROM QT1TBLDEAL T1,                          <!--交易信息表 -->
+		QT1TBLDEALTYPE T2,                          <!--交易类型表 -->
+		QT1TBLTERMINAL T3                           <!--网点终端信息表 -->
+		WHERE T1.DEALREBACKCODE = '00'                      <!--返回码 -->
+		AND T1.DEALTYPE_ID = T2.DT_NAME                   <!--使用交易类型名称进行关联 -->
+		<!-- AND T1.TERMINAL_ONLYCODE=T2.ONLYCODE -->           <!--使用终端编号进行关联 -->
+		AND T1.AGENCYID=T2.AGENCYID
+		AND T1.DEAL_STATUS = '0'                          <!--交易类型=成功 -->
+		AND T2.DT_STATUS = '1'                          <!--有效状态 -->
+		AND TO_CHAR(T1.DEAL_DATA ,'YYYYMM') = #yearmonth#   <!--查询年月 -->
+		GROUP BY T3.AGENCYID , T2.DT_ID , T1.DEAL_DATA
+		) T2
+		ON T1.ORG_ID2 = T2.AGENCYID
+		WHERE T2.DT_ID IS NOT NULL
+		GROUP BY T1.ORG_ID,
+		T1.ORG_ID2 ,
+		T2.DT_ID ,
+		YEAR_MONTHS
+		) T1 GROUP BY T1.AGENCYID
+		) T2
+		ON T1.agency_id = T2.agency_id
+		GROUP BY T1.AGENCY_ID,t1.ONLINECHANNEL
+	</select>
+
+	<select id="getDealByTypeCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select count(*) from rtb_qt1tblagency T WHERE
+		T.AGENCY_STATUS='2'
+	</select>
+
+	<!-- 根据某个机构 所有类型的分润金额 -->
+	<select id="getDealByType" resultClass="ProfitBean"
+		parameterClass="java.util.Map">
+		SELECT
+
+		ONLINECHANNEL AS parentagencyId,   <!--父网点编码 -->
+		T1.AGENCY_ID AS agencyId,       <!--网点编码 -->
+		GETAGENCYNAMEBYID(T1.AGENCY_ID) as agnecyName, <!--网点名称 -->
+		GETDEALTYPENAMEBYID(T1.DEAL_TYPE) AS dealtype,       <!--交易类型 -->
+		T1.YEAR_MONTHS AS yearmonth,     <!--交易年月 -->
+		case when T1.AMOUNT is null then 0 else T1.AMOUNT end AS amounted,         <!--总分润到金额 -->
+		case when T1.TRANSACOUNT is null then 0 else T1.TRANSACOUNT end AS
+		transCount,     <!--总交易金额 -->
+		case when T1.CHARGE is null then 0 else T1.CHARGE end AS fee,          <!--总手续费 -->
+		case when T1.COSTS is null then 0 else T1.COSTS end as amount,           <!--总可分润金额 -->
+		case when T1.DEAL_COUNT is null then 0 else T1.DEAL_COUNT end as
+		dealCount   <!--总笔数 -->
+		FROM (
+		SELECT T1.ONLINECHANNEL,   <!--父网点编码 -->
+		T1.AGENCY_ID,       <!--网点编码 -->
+		T1.DEAL_TYPE,       <!--交易类型 -->
+		T1.YEAR_MONTHS,     <!--交易年月 -->
+		T1.AMOUNT ,         <!--总分润到金额 -->
+		T2.TRANSACOUNT,     <!--总交易金额 -->
+		T2.CHARGE,          <!--总手续费 -->
+		T2.COSTS,           <!--总可分润金额 -->
+		T2.DEAL_COUNT       <!--总笔数 -->
+		FROM (
+		SELECT T2.ONLINECHANNEL,
+		T1.AGENCY_ID,
+		T1.DEAL_TYPE,
+		T1.YEAR_MONTHS,
+		T1.AMOUNT
+		FROM QT1TBLLDEAL_MONTHS T1, rtb_qt1tblagency T2
+		WHERE T1.AGENCY_ID = T2.AGENCY_ID
+		AND T1.YEAR_MONTHS =#yearmonth#
+		) T1
+		LEFT JOIN (
+		SELECT
+		T3.AGENCYID ,                                  <!--网点编码 -->
+		SUM(T1.TRANSACOUNT) TRANSACOUNT ,              <!--交易金额 -->
+		SUM(T1.CHARGE) CHARGE,                        <!--手续费 -->
+		SUM(T1.TRANSACOUNT) -SUM(T1.CHARGE) COSTS ,    <!--可分润金额 =交易金额-手续费 -->
+		COUNT(DISTINCT T1.DEAL_ID) DEAL_COUNT,
+		T2.DT_ID ,                                     <!--交易类型编号 -->
+		TO_CHAR(T1.DEAL_DATA ,'YYYYMM') YEAR_MONTHS                                <!--交易时间 -->
+		FROM QT1TBLDEAL T1,                           <!--交易信息表 -->
+		QT1TBLDEALTYPE T2,                           <!--交易类型表 -->
+		QT1TBLTERMINAL T3                            <!--网点终端信息表 -->
+		WHERE T1.DEALREBACKCODE = '00'                       <!--返回码 -->
+		AND T1.DEALTYPE_ID = T2.DT_NAME                    <!--使用交易类型名称进行关联 -->
+		<!-- AND T1.TERMINAL_ONLYCODE=T2.ONLYCODE -->           <!--使用终端编号进行关联 -->
+		AND T1.AGENCYID=T2.AGENCYID
+		AND T1.DEAL_STATUS = '0'                           <!--交易类型=成功 -->
+		AND T2.DT_STATUS = '1'                           <!--有效状态 -->
+		AND TO_CHAR(T1.DEAL_DATA ,'YYYYMM') = #yearmonth#     <!--查询年月 -->
+		GROUP BY T3.AGENCYID , T2.DT_ID , T1.DEAL_DATA
+		)T2
+		ON T1.AGENCY_ID = T2.AGENCYID
+		AND T1.DEAL_TYPE = T2.DT_ID
+		AND T1.YEAR_MONTHS = T2.YEAR_MONTHS
+		UNION ALL
+		SELECT NULL ,
+		'1',
+		T2.DT_ID ,                                     <!--交易类型编号 -->
+		TO_CHAR(T1.DEAL_DATA ,'YYYYMM') YEAR_MONTHS, <!--交易时间 -->
+		0 ,
+		SUM(T1.TRANSACOUNT) TRANSACOUNT ,              <!--交易金额 -->
+		SUM(T1.CHARGE) CHARGE,                        <!--手续费 -->
+		SUM(T1.TRANSACOUNT) -SUM(T1.CHARGE) COSTS ,    <!--可分润金额 =交易金额-手续费 -->
+		COUNT(DISTINCT T1.ONLY_CODE) DEAL_COUNT
+		FROM QT1TBLDEAL T1,                           <!--交易信息表 -->
+		QT1TBLDEALTYPE T2,                           <!--交易类型表 -->
+		QT1TBLTERMINAL T3                            <!--网点终端信息表 -->
+		WHERE T1.DEALREBACKCODE = '00'                       <!--返回码 -->
+		AND T1.DEALTYPE_ID = T2.DT_NAME                    <!--使用交易类型名称进行关联 -->
+		<!-- AND T1.TERMINAL_ONLYCODE=T2.ONLYCODE -->         <!--使用终端编号进行关联 -->
+		AND T1.AGENCYID=T2.AGENCYID
+		AND T1.DEAL_STATUS = '0'                           <!--交易类型=成功 -->
+		AND T2.DT_STATUS = '1'                           <!--有效状态 -->
+		AND TO_CHAR(T1.DEAL_DATA ,'YYYYMM') = #yearmonth#   <!--查询年月 -->
+		GROUP BY T2.DT_ID , T1.DEAL_DATA
+		) T1
+		where T1.AGENCY_ID=#agencyId#
+	</select>
+
+	<!--查看当前机构的交易明细（限制条件:1 年月 2 机构 3 交易类型） -->
+	<select id="getDealdetail" resultClass="DealBean"	parameterClass="java.util.Map">
+		SELECT *
+			FROM (
+				SELECT D2. * ,ROWNUM RN
+					FROM (
+						SELECT
+							A.COMPANYNAME AGENCYNAME,
+							DT.DEAL_ID AS DEALID,
+							DT.TERMINAL_ONLYCODE AS TERMINAL_ONLYCODE,
+							DT.DEALTYPE_ID,
+							DT.SERIALNUMBER,
+							TO_CHAR(DT.DEAL_DATA, 'YYYYMMDD') AS DEAL_DATA,
+							SUBSTR(DT.DEAL_TIME, 1, 2) || ':' ||
+							SUBSTR(DT.DEAL_TIME, 3, 2) || ':' ||
+							SUBSTR(DT.DEAL_TIME, 5, 2) AS DEAL_TIME,
+							DT.FEEAMT,
+							DT.TRANSACOUNT,
+							SUBSTR(DT.BANKCARDNUMBER, 0, 6) || '******' ||
+							SUBSTR(DT.BANKCARDNUMBER,
+							LENGTH(DT.BANKCARDNUMBER) - 3, 4) AS BANKCARDNUMBER,
+							DT.DEAL_STATUS,
+							GETDEALTYPENAMEBYID(DT.DEALTYPE_ID) AS DEALTYPENAME,
+							SUBSTR(MOBLIENO, 0, 3) || '****' ||SUBSTR(MOBLIENO, LENGTH(MOBLIENO) - 3) MOBLIENO,
+							SUBSTR(CUSTOMERNAME, 0, 1) || '**' CUSTOMERNAME,
+							SUBSTR(DT.IDCARD, 0, 6) || '******' ||
+							SUBSTR(DT.IDCARD, LENGTH(DT.IDCARD) - 4, 4) AS IDCARD
+						FROM
+							(	SELECT
+									T.AGENCY_ID, T.COMPANYNAME, T.SYSTEMID
+								 FROM
+								rtb_qt1tblagency t
+								where 1=1
+								<isNotEmpty property="systemId">
+									and t.SYSTEMID=#systemId#
+								</isNotEmpty>
+								<isNotEmpty property="agencySelect">
+									and t.AGENCY_ID=#agencySelect#
+								</isNotEmpty>
+								AND EXISTS
+								       ( SELECT 1
+								          FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T3
+								          WHERE T3.AGENCY_ID=T.AGENCY_ID
+								        )
+							 ) A
+						INNER JOIN (
+							SELECT 	T1.DEAL_ID,
+									T1.TERMINAL_ONLYCODE,
+									T1.DEALTYPE_ID,
+									T1.SERIALNUMBER,
+									T1.DEAL_DATA,
+									T1.DEAL_TIME,
+									T1.FEEAMT,
+									T1.TRANSACOUNT,
+									T1.BANKCARDNUMBER,
+									T1.DEAL_STATUS,
+									T1.AGENCYID,
+									T1.MOBLIENO,
+									T1.CUSTOMERNAME,
+									T1.IDCARD
+							FROM QT1TBLDEAL T1
+						<isNotEmpty  property="typeMergeFlag">
+						      INNER JOIN  
+				                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+						               FROM QT1TBLORGSPLITTMPT M
+						              WHERE  M.MOULD_NAME = 'UUUUU'
+						                 AND M.AGENCY_ID = #typeMergeFlag#
+						              ) S
+				          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+                        </isNotEmpty>
+								WHERE <!-- T1.TERMINAL_ONLYCODE=TM.ONLYCODE -->
+								T1.DEALREBACKCODE = '00'
+								AND T1.DEAL_STATUS = '0'
+								AND T1.DEAL_DATA <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+								AND T1.DEAL_DATA <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+								<!-- AND TM.TERMINALSTATUS='1' -->
+								<isNotEmpty property="serialNumber">
+									and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+								</isNotEmpty>
+								<isNotEmpty property="dealType">
+									and T1.DEALTYPE_ID=#dealType#
+								</isNotEmpty>
+				 
+								<isNotEmpty property="terminalcode">
+									and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+								</isNotEmpty>
+								<isNotEmpty property="moblieNo">
+									and T1.MOBLIENO=#moblieNo#
+								</isNotEmpty>
+								<isNotEmpty property="customerName">
+									and T1.CUSTOMERNAME LIKE '%$customerName$%'
+								</isNotEmpty>
+								) DT
+						 ON DT.AGENCYID=A.AGENCY_ID
+					<isNotEmpty property="upperAgencyid">
+						LEFT JOIN (select * from table(query_agency.prodFunc(#upperAgencyid#)))
+						T2
+						ON T2.agency_id=A.AGENCY_ID
+					</isNotEmpty>
+					<isNotEmpty property="agecyFlag">
+						LEFT JOIN (select * from table(query_agency.prodFunc(#agecyFlag#))) T2
+						ON T2.agency_id=A.AGENCY_ID
+					</isNotEmpty>
+				) d2
+	 	    WHERE ROWNUM <![CDATA[<=]]> 	#end#
+		)
+		WHERE RN > #start#
+	</select>
+	<!--查看当前机构的历史交易明细（限制条件:1 年月 2 机构 3 交易类型） -->
+	<select id="getOldDealdetail" resultClass="DealBean" parameterClass="java.util.Map">
+		SELECT *
+			FROM (
+			SELECT D2. * ,ROWNUM RN
+				FROM (
+						SELECT
+							A.COMPANYNAME AGENCYNAME,
+							DT.DEAL_ID AS DEALID,
+							DT.TERMINAL_ONLYCODE AS TERMINAL_ONLYCODE,
+							DT.DEALTYPE_ID,
+							DT.SERIALNUMBER,
+							TO_CHAR(DT.DEAL_DATA, 'YYYYMMDD') AS DEAL_DATA,
+							SUBSTR(DT.DEAL_TIME, 1, 2) || ':'|| SUBSTR(DT.DEAL_TIME, 3, 2) || ':' ||SUBSTR(DT.DEAL_TIME, 5, 2) AS DEAL_TIME,
+							DT.FEEAMT,
+							DT.TRANSACOUNT,
+							SUBSTR(DT.BANKCARDNUMBER, 0, 6) || '******' || SUBSTR(DT.BANKCARDNUMBER,
+							LENGTH(DT.BANKCARDNUMBER) - 3, 4) AS BANKCARDNUMBER,
+							DT.DEAL_STATUS,
+							GETDEALTYPENAMEBYID(DT.DEALTYPE_ID) AS DEALTYPENAME,
+							SUBSTR(MOBLIENO, 0, 3) || '****' ||SUBSTR(MOBLIENO, LENGTH(MOBLIENO) - 3) MOBLIENO,
+							SUBSTR(CUSTOMERNAME, 0, 1) || '**' CUSTOMERNAME,
+							SUBSTR(DT.IDCARD, 0, 6) || '******' ||
+							SUBSTR(DT.IDCARD, LENGTH(DT.IDCARD) - 4, 4) AS IDCARD
+						FROM
+							( SELECT
+									T.AGENCY_ID, T.COMPANYNAME, T.SYSTEMID
+								FROM rtb_qt1tblagency t
+							  WHERE 1=1
+							<isNotEmpty property="systemId">
+								and t.SYSTEMID=#systemId#
+							</isNotEmpty>
+							<isNotEmpty property="agencySelect">
+								and t.AGENCY_ID=#agencySelect#
+							</isNotEmpty>
+							AND EXISTS
+								( SELECT 1
+									FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T3
+								  WHERE T3.AGENCY_ID=T.AGENCY_ID
+								 )
+							) A
+				INNER JOIN (
+							 SELECT T1.DEAL_ID,
+									T1.TERMINAL_ONLYCODE,
+									T1.DEALTYPE_ID,
+									T1.SERIALNUMBER,
+									T1.DEAL_DATA,
+									T1.DEAL_TIME,
+									T1.FEEAMT,
+									T1.TRANSACOUNT,
+									T1.BANKCARDNUMBER,
+									T1.DEAL_STATUS,
+									T1.AGENCYID,
+									T1.MOBLIENO,
+									T1.CUSTOMERNAME,
+									T1.IDCARD
+							   FROM TB_HIS_QT1TBLDEAL T1
+						    <isNotEmpty  property="typeMergeFlag">
+					           INNER JOIN  
+				                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+						               FROM QT1TBLORGSPLITTMPT M
+						              WHERE M.MOULD_NAME = 'UUUUU'
+						                 AND M.AGENCY_ID = #typeMergeFlag#) S
+				          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+				             </isNotEmpty>  
+							WHERE  
+								T1.DEALREBACKCODE = '00'
+								AND T1.DEAL_STATUS = '0'
+								AND T1.DEAL_DATA <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+								AND T1.DEAL_DATA <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+							<isNotEmpty property="serialNumber">
+								and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+							</isNotEmpty>
+							<isNotEmpty property="dealType">
+								<!-- 交易类型名称模糊查询改为交易类型编号精确查询 20141114 and GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) 
+									LIKE '%$dealType$%' -->
+								and T1.DEALTYPE_ID=#dealType#
+							</isNotEmpty>
+							<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+								</isNotEmpty> -->
+							<isNotEmpty property="terminalcode">
+								and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+							</isNotEmpty>
+							<isNotEmpty property="moblieNo">
+								and T1.MOBLIENO=#moblieNo#
+							</isNotEmpty>
+							<isNotEmpty property="customerName">
+								and T1.CUSTOMERNAME LIKE '%$customerName$%'
+							</isNotEmpty>
+						) DT
+					ON DT.AGENCYID=A.AGENCY_ID
+			<isNotEmpty property="upperAgencyid">
+				LEFT JOIN (SELECT * FROM TABLE(QUERY_AGENCY.PRODFUNC(#upperAgencyid#))) 	T2
+					ON T2.agency_id=A.AGENCY_ID
+			</isNotEmpty>
+			<isNotEmpty property="agecyFlag">
+				LEFT JOIN (select * from table(query_agency.prodFunc(#agecyFlag#))) T2
+				    ON T2.agency_id=A.AGENCY_ID
+			</isNotEmpty>
+				) D2
+			WHERE ROWNUM <![CDATA[<=]]>#end#
+		)
+		WHERE RN > #start#
+
+	</select>
+	<select id="getDealdetailAll" resultClass="DealBean"
+		parameterClass="java.util.Map">
+		SELECT
+		A.sysSource,
+		DT.merchantCode,
+		<isNotEmpty property="parentAgencyid">
+			A.agencyName,
+		</isNotEmpty>
+		<isNotEmpty property="upperAgencyid">
+			case when T2.PARENTAGENCYID is null then A.agencyName
+			else GETAGENCYNAMEBYID(T2.PARENTAGENCYID)
+			end as agencyName,
+		</isNotEmpty>
+		DT.dealtype_id,
+		DT.serialNumber,
+		to_char(DT.DEAL_DATA,'yyyymmdd') AS deal_data ,
+		substr(DT.deal_time,1,2)||':'||substr(DT.deal_time,3,2)||':'||substr(DT.deal_time,5,2)
+		AS deal_time ,
+		DT.feeamt as feeAmt,
+		DT.transacount,
+		DT.dealrebackcode,
+		DT.charge,
+		DT.dealdesc,
+		substr(DT.BANKCARDNUMBER,0,6)||'******'||substr(DT.BANKCARDNUMBER,length(DT.BANKCARDNUMBER)-3,4)
+		as bankcardNumber,
+		DT.deal_status,
+		DT.dealTypeName
+		FROM
+		(SELECT
+		AGENCY_ID AS AGENCYID,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		FROM
+		rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+		INNER JOIN (
+
+		select
+		T1.MERCHANTCODE AS merchantCode,
+		T1.DEALTYPE_ID AS dealtype_id,
+		T1.SERIALNUMBER AS serialNumber,
+		T1.DEAL_DATA AS deal_data,
+		T1.DEAL_TIME AS deal_time,
+		T1.FEEAMT AS feeamt,
+		T1.TRANSACOUNT AS transacount,
+		T1.DEALREBACKCODE AS dealrebackcode,
+		T1.CHARGE AS charge,
+		T1.DEALDESC AS dealdesc,
+		T1.BANKCARDNUMBER AS bankcardNumber,
+		T1.DEAL_STATUS AS deal_status,
+		TM.AGENCYID AS AGENCYID,
+		GETDEALTYPENAMEBYID(T1.dealtype_id) AS dealTypeName
+		from qt1tbldeal T1,QT1TBLTERMINAL TM
+		WHERE <!-- T1.TERMINAL_ONLYCODE=TM.ONLYCODE -->
+		T1.AGENCYID=TM.AGENCYID
+		AND T1.DEAL_DATA <![CDATA[>=]]>
+		TO_DATE( '$yearmonthdatestart$','YYYY/MM/DD')
+		AND T1.DEAL_DATA <![CDATA[<=]]>
+		TO_DATE( '$yearmonthdateend$','YYYY/MM/DD')
+		<!-- AND TM.TERMINALSTATUS='1' -->
+		<isNotEmpty property="systemId">
+			<!-- and T1.SYSTEM_SOURCE=#systemId# -->
+			and TM.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+
+		) DT
+		ON DT.AGENCYID=A.AGENCYID
+		LEFT JOIN QT1TBLDEALTYPE T ON T.DT_ID=DT.dealtype_id
+		<isNotEmpty property="upperAgencyid">
+			LEFT JOIN ( SELECT * FROM TABLE(query_agency.prodFunc(#upperAgencyid#)) )
+			T2
+			ON T2.agency_id=A.AGENCY_ID
+		</isNotEmpty>
+	</select>
+
+
+	<!-- 得到交易类型详细的总条数 -->
+
+	<select id="getDealtypedetail" resultClass="DealBean"
+		parameterClass="java.util.Map">
+		SELECT * FROM
+		(
+		SELECT d2. * ,ROWNUM RN
+		FROM
+		(
+		SELECT DISTINCT
+		T3.COMPANYNAME as agencyName,
+		T1.DEAL_ID as dealId,
+		T1.DEALTYPE_ID as dealtype_id,
+		T1.SERIALNUMBER as serialNumber,
+		T1.TRANSACOUNT as transacount,
+		T1.TERMINAL_ID as terminalId,
+		T1.DEAL_DATA as deal_data,
+		T1.DEAL_TIME as deal_time,
+		T1.DEAL_STATUS as deal_status,
+		T1.DEALDESC as dealdesc,
+		T1.DEALREBACKCODE as ,
+		T1.CHARGE as charge,
+		T1.TRANSACOUNT-T1.CHARGE as cost,
+		T1.SYSTEM_SOURCE as sysSource,
+		T1.ONLY_CODE as onlyCode
+		FROM
+		qt1tbldeal T1
+		INNER join
+		QT1TBLTERMINAL T2
+		ON  <!-- T1.TERMINAL_ONLYCODE=T2.ONLYCODE -->
+		T1.AGENCYID=T2.AGENCYID
+		INNER JOIN
+		rtb_qt1tblagency T3
+		ON T2.AGENCYID=T3.AGENCY_ID
+		INNER JOIN QT1TBLDEALTYPE DT
+		ON DT.DT_NAME=T1.DEALTYPE_ID
+		WHERE to_char( T1.DEAL_DATA,'yyyymm')=#yearmonth#
+		AND DT_STATUS='1'
+		AND T3.AGENCY_STATUS='2'
+		and T1.DEALTYPE_ID=#dealtype#
+		AND T3.AGENCY_ID=#agencyId#
+		) d2
+		WHERE ROWNUM <![CDATA[<=]]>
+		#end#
+		)
+		WHERE RN > #start#
+
+	</select>
+
+	<select id="getDealtypedetailAll" resultClass="DealBean"
+		parameterClass="java.util.Map">
+		SELECT DISTINCT
+		T3.COMPANYNAME as agencyName,
+		T1.DEAL_ID as dealId,
+		T1.DEALTYPE_ID as dealtype_id,
+		T1.SERIALNUMBER as serialNumber,
+		T1.TRANSACOUNT as transacount,
+		T1.TERMINAL_ID as terminalId,
+		to_char(T1.DEAL_DATA,'yyyymmdd') AS deal_data ,
+		substr(T1.deal_time,1,2)||':'||substr(T1.deal_time,3,2)||':'||substr(T1.deal_time,5,2)
+		AS deal_time ,
+		T1.feeamt as feeAmt,
+		T1.DEAL_STATUS as deal_status,
+		T1.DEALDESC as dealdesc,
+		T1.DEALREBACKCODE as ,
+		T1.CHARGE as charge,
+		T1.TRANSACOUNT-T1.CHARGE as cost,
+		T1.SYSTEM_SOURCE as sysSource,
+		T1.ONLY_CODE as onlyCode
+		FROM
+		qt1tbldeal T1
+		INNER join
+		QT1TBLTERMINAL T2
+		ON  <!-- T1.TERMINAL_ONLYCODE=T2.ONLYCODE -->
+		T1.AGENCYID=T2.AGENCYID
+		INNER JOIN
+		rtb_qt1tblagency T3
+		ON T2.AGENCYID=T3.AGENCY_ID
+		INNER JOIN QT1TBLDEALTYPE DT
+		ON DT.DT_NAME=T1.DEALTYPE_ID
+		WHERE to_char( T1.DEAL_DATA,'yyyymm')=#yearmonth#
+		AND DT_STATUS='1'
+		AND T3.AGENCY_STATUS='2'
+		and T1.DEALTYPE_ID=#dealtype#
+		AND T3.AGENCY_ID=#agencyId#
+
+	</select>
+
+	<!-- 获取当前机构下的交易总条数 -->
+	<select id="getDealdetailCount" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+           CASE
+             WHEN SUM(DT.TRANSACOUNT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.TRANSACOUNT)
+           END AS ACCOUNTCOUNT,
+           CASE
+             WHEN SUM(DT.FEEAMT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.FEEAMT)
+           END AS FEEAMTCOUNT
+      FROM (SELECT T1.TRANSACOUNT AS TRANSACOUNT,
+                   T1.CHARGE      AS CHARGE,
+                   T1.FEEAMT      AS FEEAMT,
+                   T1.AGENCYID    AS AGENCYID
+              FROM QT1TBLDEAL T1
+       <isNotEmpty  property="typeMergeFlag">
+         	INNER JOIN  
+                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+		               FROM QT1TBLORGSPLITTMPT M
+		              WHERE  M.MOULD_NAME = 'UUUUU'
+		                 AND M.AGENCY_ID = #typeMergeFlag#) S
+          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+         </isNotEmpty>  
+		    WHERE T1.DEAL_DATA  <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+			  AND T1.DEAL_DATA  <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+			<isNotEmpty property="serialNumber">
+				and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+			</isNotEmpty>
+			<isNotEmpty property="dealType">
+				<!-- 交易类型名称模糊查询改为交易类型编号精确查询 20141114 and GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) 
+					LIKE '%$dealType$%' -->
+				and T1.DEALTYPE_ID=#dealType#
+			</isNotEmpty>
+			<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+				</isNotEmpty> -->
+			<isNotEmpty property="terminalcode">
+				and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+			</isNotEmpty>
+			<isNotEmpty property="moblieNo">
+				and T1.MOBLIENO=#moblieNo#
+			</isNotEmpty>
+			<isNotEmpty property="customerName">
+				and T1.CUSTOMERNAME LIKE '%$customerName$%'
+			</isNotEmpty>
+				AND EXISTS
+				 	( SELECT 1
+					      FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T2
+					   WHERE T2.AGENCY_ID=T1.AGENCYID 
+						<isNotEmpty property="agencySelect">
+							and T2.AGENCY_ID=#agencySelect#
+						</isNotEmpty>
+					)
+		) DT
+	</select>
+	<!-- 获取当前机构下的历史交易总条数 -->
+	<select id="getOldDealdetailCount" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+	         CASE
+	           WHEN SUM(DT.TRANSACOUNT) IS NULL THEN
+	            0
+	           ELSE
+	            SUM(DT.TRANSACOUNT)
+	         END AS ACCOUNTCOUNT,
+	         CASE
+	           WHEN SUM(DT.FEEAMT) IS NULL THEN
+	            0
+	           ELSE
+	            SUM(DT.FEEAMT)
+	         END AS FEEAMTCOUNT
+	    FROM (SELECT T1.TRANSACOUNT AS TRANSACOUNT,
+	                 T1.CHARGE      AS CHARGE,
+	                 T1.FEEAMT      AS FEEAMT,
+	                 T1.AGENCYID    AS AGENCYID
+	            FROM TB_HIS_QT1TBLDEAL T1
+		     <isNotEmpty  property="typeMergeFlag">
+	         	INNER JOIN  
+	                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+			               FROM QT1TBLORGSPLITTMPT M
+			              WHERE  M.MOULD_NAME = 'UUUUU'
+			                 AND M.AGENCY_ID = #typeMergeFlag#) S
+	          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+	         </isNotEmpty> 
+				WHERE T1.DEAL_DATA  <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+				  AND T1.DEAL_DATA  <![CDATA[<=]]>to_date('$yearmonthdateend$','yyyymmdd')
+				<isNotEmpty property="serialNumber">
+					and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+				</isNotEmpty>
+				<isNotEmpty property="dealType">
+					and T1.DEALTYPE_ID=#dealType#
+				</isNotEmpty>
+				<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+					</isNotEmpty> -->
+				<isNotEmpty property="terminalcode">
+					and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+				</isNotEmpty>
+				<isNotEmpty property="moblieNo">
+					and T1.MOBLIENO=#moblieNo#
+				</isNotEmpty>
+				<isNotEmpty property="customerName">
+					and T1.CUSTOMERNAME LIKE '%$customerName$%'
+				</isNotEmpty>
+					AND EXISTS
+				 	( SELECT 1
+					      FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T2
+					   WHERE T2.AGENCY_ID=T1.AGENCYID 
+						<isNotEmpty property="agencySelect">
+							and T2.AGENCY_ID=#agencySelect#
+						</isNotEmpty>
+					)
+				) DT
+	</select>
+	<!-- 得到交易类型详细的总条数 -->
+	<select id="getDealtypedetailCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select count(*)
+		from
+		(SELECT DISTINCT
+		T3.COMPANYNAME as agencyName,
+		T1.DEALTYPE_ID as dealtype_id,
+		T1.SERIALNUMBER as serialNumber,
+		T1.TRANSACOUNT as transacount,
+		T1.TERMINAL_ID as terminalId,
+		T1.DEAL_DATA as deal_data,
+		T1.DEAL_TIME as deal_time,
+		T1.DEAL_STATUS as deal_status,
+		T1.DEALDESC as dealdesc,
+		T1.DEALREBACKCODE as dealrebackcode,
+		T1.CHARGE as charge,
+		T1.SYSTEM_SOURCE as sysSource,
+		T1.ONLY_CODE as onlyCode
+		FROM
+		qt1tbldeal T1
+		INNER join
+		QT1TBLTERMINAL T2
+		ON  <!-- T1.TERMINAL_ONLYCODE=T2.ONLYCODE -->
+		T1.AGENCYID=T2.AGENCYID
+		INNER JOIN
+		rtb_qt1tblagency T3
+		ON T2.AGENCYID=T3.AGENCY_ID
+		INNER JOIN QT1TBLDEALTYPE DT
+		ON DT.DT_NAME=T1.DEALTYPE_ID
+		WHERE to_char( T1.DEAL_DATA,'yyyymm')=#yearmonth#
+		AND DT_STATUS='1'
+		AND T3.AGENCY_STATUS='2'
+		and T1.DEALTYPE_ID=#dealtype#
+		AND T3.AGENCY_ID=#agencyId#
+		) y
+
+	</select>
+
+	<!-- 获取当前机构下的交易统计总条数 -->
+	<select id="getDealStatCount" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+	         CASE
+	           WHEN SUM(GP.TRANSSUM) IS NULL THEN
+	            0
+	           ELSE
+	            SUM(GP.TRANSSUM)
+	         END AS ACCOUNTCOUNT,
+	         CASE
+	           WHEN SUM(GP.TRANSCOUNT) IS NULL THEN
+	            0
+	           ELSE
+	            SUM(GP.TRANSCOUNT)
+	         END AS FEEAMTCOUNT
+	    FROM ( SELECT DT.DEALTYPE_ID AS DEALTYPEID,
+	                 GETDEALTYPENAMEBYID(DT.DEALTYPE_ID) AS DEALTYPENAME,
+	                 COUNT(1) AS TRANSCOUNT,
+	                 SUM(DT.TRANSACOUNT) AS TRANSSUM
+		          FROM ( SELECT AGENCY_ID AS AGENCYID,
+		                         COMPANYNAME AS agencyName,
+		                         GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		                    FROM rtb_qt1tblagency t
+		                   where 1=1
+						<isNotEmpty property="systemId">
+							and t.SYSTEMID=#systemId#
+						</isNotEmpty>
+						<isNotEmpty property="agencySelect">
+							AND EXISTS
+							        ( SELECT 1
+							            FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencySelect#)) t2
+							           WHERE T2.AGENCY_ID=T.AGENCY_ID)
+						</isNotEmpty>
+						<isEmpty property="agencySelect">
+							AND EXISTS
+							        ( SELECT 1
+							            FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencyId#)) t2
+								       WHERE T2.AGENCY_ID=T.AGENCY_ID)
+						</isEmpty>
+					   ) A
+				  INNER JOIN (
+								SELECT
+									T1.DEALTYPE_ID AS DEALTYPE_ID,
+									T1.SERIALNUMBER AS SERIALNUMBER,
+									T1.DEAL_DATA AS DEAL_DATA,
+									T1.TRANSACOUNT AS TRANSACOUNT,
+									T1.DEALREBACKCODE AS DEALREBACKCODE,
+									T1.CHARGE AS CHARGE,
+									T1.FEEAMT AS FEEAMT,
+									T1.DEAL_STATUS AS DEAL_STATUS,
+									T1.AGENCYID AS AGENCYID
+								FROM QT1TBLDEAL T1
+						<isNotEmpty  property="typeMergeFlag">
+				                INNER JOIN  
+				                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+						               FROM QT1TBLORGSPLITTMPT M
+						              WHERE  M.MOULD_NAME = 'UUUUU'
+						                 AND M.AGENCY_ID = #typeMergeFlag#) S
+				          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+            			</isNotEmpty>  
+						      WHERE
+									T1.DEAL_DATA  <![CDATA[>=]]>to_date('$yearmonthdatestart$', 'yyyyMMdd')
+								AND T1.DEAL_DATA  <![CDATA[<=]]> to_date( '$yearmonthdateend$', 'yyyyMMdd')
+ 							) DT
+					ON DT.AGENCYID=A.AGENCYID
+			GROUP BY DT.dealtype_id
+		) GP
+	</select>
+	<!-- 获取当前机构下的历史交易统计总条数 -->
+	<select id="getOldDealStatCount" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+		         CASE
+		           WHEN SUM(GP.TRANSSUM) IS NULL THEN
+		            0
+		           ELSE
+		            SUM(GP.TRANSSUM)
+		         END AS ACCOUNTCOUNT,
+		         CASE
+		           WHEN SUM(GP.TRANSCOUNT) IS NULL THEN
+		            0
+		           ELSE
+		            SUM(GP.TRANSCOUNT)
+		         END AS FEEAMTCOUNT
+		    FROM (SELECT DT.DEALTYPE_ID AS DEALTYPEID,
+		                 GETDEALTYPENAMEBYID(DT.DEALTYPE_ID) AS DEALTYPENAME,
+		                 COUNT(1) AS TRANSCOUNT,
+		                 SUM(DT.TRANSACOUNT) AS TRANSSUM
+		            FROM (SELECT AGENCY_ID AS AGENCYID,
+		                         COMPANYNAME AS AGENCYNAME,
+		                         GETSYSTEMNAMEBYID(SYSTEMID) AS SYSSOURCE
+		                    FROM rtb_qt1tblagency T
+		                   WHERE 1=1
+						<isNotEmpty property="systemId">
+							and t.SYSTEMID=#systemId#
+						</isNotEmpty>
+						<isNotEmpty property="agencySelect">
+							and exists
+							(select 1
+							from table( query_agency.prodFunc(#agencySelect#)) t2
+							where t2.agency_id=t.agency_id)
+						</isNotEmpty>
+						<isEmpty property="agencySelect">
+							AND EXISTS
+									( SELECT 1
+										FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencyId#)) t2
+										WHERE T2.AGENCY_ID=T.AGENCY_ID
+									)
+						</isEmpty>
+				  ) A
+			 INNER JOIN (
+				          SELECT
+								T1.DEALTYPE_ID AS DEALTYPE_ID,
+								T1.SERIALNUMBER AS SERIALNUMBER,
+								T1.DEAL_DATA AS DEAL_DATA,
+								T1.TRANSACOUNT AS TRANSACOUNT,
+								T1.DEALREBACKCODE AS DEALREBACKCODE,
+								T1.CHARGE AS CHARGE,
+								T1.FEEAMT AS FEEAMT,
+								T1.DEAL_STATUS AS DEAL_STATUS,
+								T1.AGENCYID AS AGENCYID
+						   FROM TB_HIS_QT1TBLDEAL T1
+					   <isNotEmpty  property="typeMergeFlag">
+			               INNER JOIN  
+				                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+						               FROM QT1TBLORGSPLITTMPT M
+						              WHERE M.MOULD_NAME = 'UUUUU'
+						                 AND M.AGENCY_ID = #typeMergeFlag#) S
+				          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+			            </isNotEmpty>  
+							WHERE T1.DEAL_DATA   <![CDATA[>=]]> to_date('$yearmonthdatestart$', 'yyyyMMdd')
+						      AND T1.DEAL_DATA   <![CDATA[<=]]> to_date( '$yearmonthdateend$', 'yyyyMMdd')
+						) DT
+				ON DT.AGENCYID=A.AGENCYID
+			GROUP BY DT.dealtype_id
+		) GP
+	</select>
+
+	<!-- 查看当前机构的交易统计报表（限制条件:1 年月 2 机构 3 交易类型） -->
+	<select id="getDealStat" resultClass="DealBean" parameterClass="java.util.Map">
+		SELECT *
+		  FROM (SELECT D2. *, ROWNUM RN
+		          FROM (SELECT GP.DEALTYPEID AS DEALTYPE_ID,
+		                       GETDEALTYPENAMEBYID(GP.DEALTYPEID) AS DEALTYPENAME,
+		                       COUNT(1) AS TRANSCOST,
+		                       SUM(TRANSACOUNT) AS TRANSACOUNT
+		                  FROM (SELECT DT.DEALTYPE_ID AS DEALTYPEID, DT.TRANSACOUNT
+		                          FROM (SELECT AGENCY_ID AS AGENCYID
+		                                  FROM rtb_qt1tblagency T
+		                                 WHERE 1=1
+										<isNotEmpty property="systemId">
+											and t.SYSTEMID=#systemId#
+										</isNotEmpty>
+										<isNotEmpty property="agencySelect">
+											AND EXISTS
+													( SELECT 1
+												        FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencySelect#)) t2
+													   WHERE T2.AGENCY_ID=T.AGENCY_ID)
+										</isNotEmpty>
+										<isEmpty property="agencySelect">
+											AND EXISTS
+											        ( SELECT 1
+											   		     FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencyId#)) t2
+														WHERE T2.AGENCY_ID=T.AGENCY_ID)
+										</isEmpty>
+								) A
+						 INNER JOIN (
+						 			 SELECT T1.DEALTYPE_ID AS DEALTYPE_ID,
+											T1.TRANSACOUNT AS TRANSACOUNT,
+											T1.AGENCYID AS AGENCYID
+									    FROM QT1TBLDEAL T1
+								   <isNotEmpty  property="typeMergeFlag">
+						               INNER JOIN  
+						                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+								               FROM QT1TBLORGSPLITTMPT M
+								              WHERE M.MOULD_NAME = 'UUUUU'
+								                 AND M.AGENCY_ID = #typeMergeFlag#) S
+						          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+						           </isNotEmpty>  
+									 WHERE  T1.DEALREBACKCODE = '00'
+										AND T1.DEAL_STATUS = '0'
+										AND T1.DEAL_DATA <![CDATA[>=]]> TO_DATE( '$yearmonthdatestart$','yyyymmdd')
+										AND T1.DEAL_DATA <![CDATA[<=]]> TO_DATE( '$yearmonthdateend$','yyyymmdd')
+									) DT
+							ON DT.AGENCYID = A.AGENCYID
+						) GP
+					GROUP BY dealTypeId
+				) d2
+			WHERE ROWNUM <![CDATA[<=]]> #end#
+			)
+		WHERE RN > #start#
+
+
+	</select>
+
+	<!-- 查看当前机构的历史交易统计报表（限制条件:1 年月 2 机构 3 交易类型） -->
+	<select id="getOldDealStat" resultClass="DealBean" 	parameterClass="java.util.Map">
+		SELECT *
+	    	FROM (
+	    	       SELECT D2. *, ROWNUM RN
+		              FROM ( 
+		                     SELECT GP.DEALTYPEID AS DEALTYPE_ID,
+									GETDEALTYPENAMEBYID(GP.DEALTYPEID) AS DEALTYPENAME,
+									COUNT(1) AS TRANSCOST,
+									SUM(TRANSACOUNT) AS TRANSACOUNT
+						 		FROM (
+						 		       SELECT 
+						 		             DT.DEALTYPE_ID AS DEALTYPEID,
+											 DT.TRANSACOUNT
+									   FROM (
+									   		  SELECT AGENCY_ID AS AGENCYID
+												FROM rtb_qt1tblagency T
+											  WHERE 1=1
+										<isNotEmpty property="systemId">
+											  AND t.SYSTEMID=#systemId#
+										</isNotEmpty>
+										<isNotEmpty property="agencySelect">
+											  AND EXISTS
+													( SELECT 1
+														FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencySelect#)) T2
+													  WHERE T2.AGENCY_ID=T.AGENCY_ID)
+										</isNotEmpty>
+										<isEmpty property="agencySelect">
+											AND EXISTS
+													( SELECT 1
+														FROM TABLE( QUERY_AGENCY.PRODFUNC(#agencyId#)) T2
+													  WHERE T2.AGENCY_ID=T.AGENCY_ID)
+										</isEmpty>
+												) A
+									INNER JOIN (
+												 SELECT T1.DEALTYPE_ID AS DEALTYPE_ID,
+														T1.TRANSACOUNT AS TRANSACOUNT,
+														T1.AGENCYID AS AGENCYID
+												   FROM TB_HIS_QT1TBLDEAL T1
+									   		 <isNotEmpty  property="typeMergeFlag">
+									              INNER JOIN  
+									                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+											               FROM QT1TBLORGSPLITTMPT M
+											              WHERE M.MOULD_NAME = 'UUUUU'
+											                 AND M.AGENCY_ID = #typeMergeFlag#) S
+									          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+									         </isNotEmpty>  
+												  WHERE T1.DEALREBACKCODE = '00'
+													AND T1.DEAL_STATUS = '0'
+													AND T1.DEAL_DATA <![CDATA[>=]]> TO_DATE( '$yearmonthdatestart$','yyyymmdd')
+													AND T1.DEAL_DATA <![CDATA[<=]]> TO_DATE( '$yearmonthdateend$','yyyymmdd')
+												) DT
+									ON DT.AGENCYID = A.AGENCYID
+									) GP
+							GROUP BY dealTypeId
+						) D2
+				WHERE ROWNUM <![CDATA[<=]]> #end#
+			 )
+		WHERE RN > #start#
+	</select>
+
+	<!-- 获取交易扣款总条数 -->
+	<select id="getDealDeductCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		SELECT
+		COUNT(*)
+		FROM (
+		select
+		AGENCY_ID AS AGENCYID,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		from rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+
+		INNER JOIN (
+		select
+		T1.SERIALNUMBER AS serialNumber,
+		T1.TRANSACOUNT AS transacount,
+		T1.TERMINAL_ID AS terminalId,
+		T1.DEAL_DATE AS dealDate,
+		substr(T1.DEAL_TIME,1,2)||':'||substr(T1.DEAL_TIME,3,2)||':'||substr(T1.DEAL_TIME,5,2)
+		AS dealTime,
+		T1.DEALTYPE_ID AS dealTypeId,
+		T1.ONLY_CODE AS onlyCode,
+		substr(T1.BANKCARDNUMBER,0,6)||'******'||substr(T1.BANKCARDNUMBER,length(T1.BANKCARDNUMBER)-3,4)
+		AS bankCardNumber,
+		T1.TERMINAL_ONLYCODE AS terminalOnlyCode,
+		TM.AGENCYID AS agencyId,
+		T1.DEDUCTTYPE AS deductType,
+		T1.DEDUCTMONEY AS deductMoney,
+		T1.DEDUCTDATE AS deductDate,
+		T1.DEALFLAG AS dealFlag,
+		T1.CREATEID AS createId,
+		T1.CREATEDT AS createDt,
+		T1.COMMENTS AS comments,
+
+		GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) AS dealTypeName,
+		GETDEALDEDUCTTYPENAMEBYID(T1.DEDUCTTYPE) AS deductTypeName,
+		case when T1.DEALFLAG='0' then '未处理'
+		when T1.DEALFLAG='1' then '已处理'
+		else '无效' end as dealFlagStr
+		from QT1TBLDEALDEDUCT T1,QT1TBLTERMINAL TM
+		WHERE <!-- T1.TERMINAL_ONLYCODE=TM.ONLYCODE -->
+		T1.AGENCYID=TM.AGENCYID
+		AND T1.DEAL_DATE  <![CDATA[>=]]>
+		#datestart#
+		AND T1.DEAL_DATE  <![CDATA[<=]]>
+		#dateend#
+		<!-- AND TM.TERMINALSTATUS='1' -->
+		<isNotEmpty property="systemId">
+			and TM.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="serialNumber">
+			and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+		</isNotEmpty>
+		<isNotEmpty property="dealType">
+			and GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) LIKE '%$dealType$%'
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			and TM.TERMINALCODE LIKE '%$terminalCode$%'
+		</isNotEmpty>
+		<isNotEmpty property="dealFlag">
+			and T1.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+		) DT
+		ON DT.AGENCYID=A.AGENCYID
+
+		<isNotEmpty property="upperAgencyId">
+			LEFT JOIN ( SELECT * FROM TABLE(query_agency.prodFunc(#upperAgencyid#)))
+			T2
+			ON T2.agency_id=A.AGENCYID
+		</isNotEmpty>
+	</select>
+
+	<!--获取当前机构的交易扣款明细（限制条件:1 日期 2 机构 3 交易类型） -->
+	<select id="getDealDeduct" resultClass="DealDeductBean"
+		parameterClass="java.util.Map">
+		select *
+		from (
+		SELECT d2. * ,ROWNUM RN
+		FROM (
+		select
+		A.sysSource,
+		<isNotEmpty property="parentAgencyId">
+			A.agencyName,
+		</isNotEmpty>
+		<isNotEmpty property="upperAgencyId">
+			case when T2.PARENTAGENCYID is null then A.agencyName
+			else GETAGENCYNAMEBYID(T2.PARENTAGENCYID)
+			end as agencyName,
+		</isNotEmpty>
+		DT.serialNumber,
+		DT.transacount,
+		DT.terminalId,
+		DT.dealDate,
+		DT.dealTime,
+		DT.onlyCode,
+		DT.bankCardNumber,
+		DT.terminalOnlyCode,
+		DT.dealTypeId,
+		DT.deductType,
+		DT.dealTypeName,
+		DT.deductTypeName,
+		DT.deductMoney,
+		DT.deductDate,
+		DT.dealFlag,
+		DT.dealFlagStr,
+		DT.createId ,
+		DT.createDt,
+		DT.comments
+		from (
+		SELECT
+		AGENCY_ID AS agencyId,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		FROM rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+
+		INNER JOIN (
+		select
+		T1.SERIALNUMBER AS serialNumber,
+		T1.TRANSACOUNT AS transacount,
+		T1.TERMINAL_ID AS terminalId,
+		T1.DEAL_DATE AS dealDate,
+		T1.DEAL_TIME AS dealTime,
+		<!-- substr(T1.DEAL_TIME,1,2)||':'||substr(T1.DEAL_TIME,3,2)||':'||substr(T1.DEAL_TIME,5,2) 
+			AS dealTime, -->
+		T1.DEALTYPE_ID AS dealTypeId,
+		T1.ONLY_CODE AS onlyCode,
+		substr(T1.BANKCARDNUMBER,0,6)||'******'||substr(T1.BANKCARDNUMBER,length(T1.BANKCARDNUMBER)-3,4)
+		AS bankCardNumber,
+		SUBSTR(T1.TERMINAL_ONLYCODE, 0, 4) || '****' ||
+		SUBSTR(T1.TERMINAL_ONLYCODE, LENGTH(T1.TERMINAL_ONLYCODE) - 4) AS terminalOnlyCode,
+		TM.AGENCYID AS agencyId,
+		T1.DEDUCTTYPE AS deductType,
+		T1.DEDUCTMONEY AS deductMoney,
+		T1.DEDUCTDATE AS deductDate,
+		T1.DEALFLAG AS dealFlag,
+		T1.CREATEID AS createId,
+		T1.CREATEDT AS createDt,
+		T1.COMMENTS AS comments,
+		GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) AS dealTypeName,
+		GETDEALDEDUCTTYPENAMEBYID(T1.DEDUCTTYPE) AS deductTypeName,
+		case when T1.DEALFLAG='0' then '未处理'
+		when T1.DEALFLAG='1' then '已处理'
+		else '无效' end as dealFlagStr
+		from QT1TBLDEALDEDUCT T1,QT1TBLTERMINAL TM
+		WHERE <!-- T1.TERMINAL_ONLYCODE=TM.ONLYCODE -->
+		T1.AGENCYID=TM.AGENCYID
+		AND T1.DEAL_DATE  <![CDATA[>=]]>
+		'$datestart$'
+		AND T1.DEAL_DATE  <![CDATA[<=]]>
+		'$dateend$'
+		<!-- AND TM.TERMINALSTATUS='1' -->
+		<isNotEmpty property="systemId">
+			and TM.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="serialNumber">
+			and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+		</isNotEmpty>
+		<isNotEmpty property="dealType">
+			and GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) LIKE '%$dealType$%'
+		</isNotEmpty>
+		<isNotEmpty property="terminalCode">
+			and TM.TERMINALCODE LIKE '%$terminalCode$%'
+		</isNotEmpty>
+		<isNotEmpty property="dealFlag">
+			and T1.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+		) DT
+		ON DT.AGENCYID=A.AGENCYID
+
+		<isNotEmpty property="upperAgencyId">
+			LEFT JOIN ( SELECT * FROM T2
+			ON T2.agency_id=A.AGENCYID
+		</isNotEmpty>
+
+		) d2
+		WHERE ROWNUM <![CDATA[<=]]>
+		#end#
+		)
+		WHERE RN > #start#
+
+	</select>
+
+	<!-- 获得扣款类型 -->
+	<select id="getDeductType" resultClass="DeductTypeBean"
+		parameterClass="java.util.Map">
+		SELECT
+		t.DEDUCTCLASS AS deductClass,
+		t.DEDUCTTYPE AS deductType,
+		t.DEDUCTNAME AS deductName,
+		t.STATUS AS status,
+		t.CREATEID AS createId,
+		t.CREATEDT AS createDt,
+		t.COMMENTS AS comments,
+
+		case when t.DEDUCTCLASS='1' then '交易'
+		when t.DEDUCTCLASS='2' then '其他'
+		else '未知' end as deductClassName,
+		case when t.STATUS='0' then '有效'
+		when t.STATUS='1' then '无效'
+		else '无效' end as statusName
+		FROM QT1TBLDEDUCTTYPE t
+		WHERE 1=1
+		<isNotEmpty property="deductClass">
+			AND t.DEDUCTCLASS=#deductClass#
+		</isNotEmpty>
+		<isNotEmpty property="deductTypeName">
+			AND t.DEDUCTNAME LIKE '%$deductTypeName$%'
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			AND t.STATUS=#status#
+		</isNotEmpty>
+	</select>
+
+	<!-- 获取其他扣款总条数 -->
+	<select id="getOtherDeductCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		SELECT
+		COUNT(*)
+		FROM (
+		select
+		AGENCY_ID AS AGENCYID,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		from rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+		INNER JOIN QT1TBLOTHDEDUCT T1
+		ON T1.AGENCY_ID=A.AGENCYID
+		AND T1.DEDUCTDATE  <![CDATA[>=]]>
+		'$datestart$'
+		AND T1.DEDUCTDATE  <![CDATA[<=]]>
+		'$dateend$'
+		<isNotEmpty property="dealFlag">
+			AND T1.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+
+		<isNotEmpty property="upperAgencyId">
+			LEFT JOIN (SELECT * FROM TABLE(query_agency.prodFunc(#upperAgencyid#)))
+			T2
+			ON T2.agency_id=A.AGENCYID
+		</isNotEmpty>
+	</select>
+
+	<!--获取当前机构的其他扣款明细（限制条件:1 日期 2 机构） -->
+	<select id="getOtherDeduct" resultClass="OtherDeductBean"
+		parameterClass="java.util.Map">
+		select *
+		from (
+		SELECT d2. * ,ROWNUM RN
+		FROM (
+		select
+		A.sysSource,
+		<isNotEmpty property="parentAgencyId">
+			A.agencyName,
+		</isNotEmpty>
+		<isNotEmpty property="upperAgencyId">
+			case when T2.PARENTAGENCYID is null then A.agencyName
+			else GETAGENCYNAMEBYID(T2.PARENTAGENCYID)
+			end as agencyName,
+		</isNotEmpty>
+		A.agencyId,
+		DT.id as id,
+		DT.transacount as transacount,
+		DT.deductType as deductType,
+		DT.deductMoney as deductMoney,
+		DT.deductDate as deductDate,
+		DT.dealFlag as dealFlag,
+		DT.createId as createId,
+		DT.createDt as createDt,
+		DT.comments as comments,
+
+		GETDEALDEDUCTTYPENAMEBYID(DT.deductType) as deductTypeName,
+		case when DT.DEALFLAG='0' then '未处理'
+		when DT.DEALFLAG='1' then '已处理'
+		else '无效' end as dealFlagStr
+		from (
+		SELECT
+		AGENCY_ID AS agencyId,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		FROM rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+
+		INNER JOIN QT1TBLOTHDEDUCT DT
+		ON DT.AGENCY_ID=A.AGENCYID
+		AND DT.DEDUCTDATE  <![CDATA[>=]]>
+		'$datestart$'
+		AND DT.DEDUCTDATE  <![CDATA[<=]]>
+		'$dateend$'
+		<isNotEmpty property="dealFlag">
+			AND DT.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+
+		<isNotEmpty property="upperAgencyid">
+			LEFT JOIN (select * from table(query_agency.prodFunc(#upperAgencyId#)))
+			T2
+			ON T2.agency_id=A.AGENCYID
+		</isNotEmpty>
+
+
+		) d2
+		WHERE ROWNUM <![CDATA[<=]]>
+		#end#
+		)
+		WHERE RN > #start#
+
+	</select>
+
+	<!--按照机构和扣款类型统计交易扣款 -->
+	<select id="getDeductStat" resultClass="RealDeductBean"
+		parameterClass="java.util.Map">
+		SELECT
+		agencyId,
+		GETAGENCYNAMEBYID(agencyId) as agencyName,
+		deductType,
+		GETDEALDEDUCTTYPENAMEBYID(d1.deductType) AS deductTypeName,
+		SUM(transacount) as transacount,
+		SUM(deductMoney) as deductMoney
+		FROM(
+		select
+		A.sysSource,
+		<isNotEmpty property="thisAgencyId">
+			#agencyId# as agencyId,
+		</isNotEmpty>
+		<isEmpty property="thisAgencyId">
+			<isNotEmpty property="parentAgencyId">
+				A.agencyId,
+			</isNotEmpty>
+			<isNotEmpty property="upperAgencyId">
+				case when T2.PARENTAGENCYID is null then A.agencyId
+				else T2.PARENTAGENCYID
+				end as agencyId,
+			</isNotEmpty>
+		</isEmpty>
+		DT.serialNumber,
+		DT.transacount,
+		DT.terminalId,
+		DT.dealDate,
+		DT.dealTime,
+		DT.onlyCode,
+		DT.bankCardNumber,
+		DT.terminalOnlyCode,
+		DT.dealTypeId,
+		DT.deductType,
+		DT.dealTypeName,
+		DT.deductTypeName,
+		DT.deductMoney,
+		DT.deductDate,
+		DT.dealFlag,
+		DT.dealFlagStr,
+		DT.createId ,
+		DT.createDt,
+		DT.comments
+		from (
+		SELECT
+		AGENCY_ID AS agencyId,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		FROM rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+
+		INNER JOIN (
+		select
+		T1.SERIALNUMBER AS serialNumber,
+		T1.TRANSACOUNT AS transacount,
+		SUBSTR(T1.TERMINAL_ID, 0, 4) || '****' ||
+		SUBSTR(T1.TERMINAL_ID, LENGTH(T1.TERMINAL_ID) - 4)
+		AS terminalId,
+		T1.DEAL_DATE AS dealDate,
+		T1.DEAL_TIME AS dealTime,
+		T1.DEALTYPE_ID AS dealTypeId,
+		T1.ONLY_CODE AS onlyCode,
+		substr(T1.BANKCARDNUMBER,0,6)||'******'||substr(T1.BANKCARDNUMBER,length(T1.BANKCARDNUMBER)-3,4)
+		AS bankCardNumber,
+		SUBSTR(T1.TERMINAL_ONLYCODE, 0, 4) || '****' ||
+		SUBSTR(T1.TERMINAL_ONLYCODE, LENGTH(T1.TERMINAL_ONLYCODE) - 4) AS terminalOnlyCode,
+		TM.AGENCYID AS agencyId,
+		T1.DEDUCTTYPE AS deductType,
+		T1.DEDUCTMONEY AS deductMoney,
+		T1.DEDUCTDATE AS deductDate,
+		T1.DEALFLAG AS dealFlag,
+		T1.CREATEID AS createId,
+		T1.CREATEDT AS createDt,
+		T1.COMMENTS AS comments,
+
+		GETDEALTYPENAMEBYID(T1.DEALTYPE_ID) AS dealTypeName,
+		GETDEALDEDUCTTYPENAMEBYID(T1.DEDUCTTYPE) AS deductTypeName,
+		case when T1.DEALFLAG='0' then '未处理'
+		when T1.DEALFLAG='1' then '已处理'
+		else '无效' end as dealFlagStr
+		from QT1TBLDEALDEDUCT T1,QT1TBLTERMINAL TM
+		WHERE T1.TERMINAL_ONLYCODE=TM.ONLYCODE
+		AND T1.DEAL_DATE  <![CDATA[>=]]>
+		'$datestart$'
+		AND T1.DEAL_DATE  <![CDATA[<=]]>
+		'$dateend$'
+		<!-- AND TM.TERMINALSTATUS='1' -->
+		<isNotEmpty property="systemId">
+			and TM.SYSTEMSOURCE=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="dealFlag">
+			and T1.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+		) DT
+		ON DT.AGENCYID=A.AGENCYID
+
+		<isEmpty property="thisAgencyId">
+			<isNotEmpty property="upperAgencyId">
+				LEFT JOIN (select b.agency_id AS , a.agency_id AS PARENTAGENCYID
+				from (select a.agency_id
+				from rtb_qt1tblagency a
+				where a.onlinechannel =#upperAgencyId# ) a,
+				rtb_qt1tblagency b
+				where b.agency_id in
+				(select b.agency_id
+				from rtb_qt1tblagency b
+				START WITH b.AGENCY_ID =
+				a.agency_id
+				CONNECT BY PRIOR b.AGENCY_ID =
+				b.ONLINECHANNEL)) T2
+				ON T2.agency_id=A.AGENCYID
+			</isNotEmpty>
+		</isEmpty>
+		) d1
+		GROUP BY d1.agencyId,d1.deductType
+
+		UNION ALL
+		SELECT
+		agencyId,
+		GETAGENCYNAMEBYID(agencyId) as agencyName,
+		deductType,
+		GETDEALDEDUCTTYPENAMEBYID(d1.deductType) AS deductTypeName,
+		SUM(transacount) as transacount,
+		SUM(deductMoney) as deductMoney
+		FROM(
+		select
+		A.sysSource,
+		<isNotEmpty property="thisAgencyId">
+			#agencyId# as agencyId,
+		</isNotEmpty>
+		<isEmpty property="thisAgencyId">
+			<isNotEmpty property="parentAgencyId">
+				A.agencyId,
+			</isNotEmpty>
+			<isNotEmpty property="upperAgencyId">
+				case when T2.PARENTAGENCYID is null then A.agencyId
+				else T2.PARENTAGENCYID
+				end as agencyId,
+			</isNotEmpty>
+		</isEmpty>
+		DT.id as id,
+		DT.transacount as transacount,
+		DT.deductType as deductType,
+		DT.deductMoney as deductMoney,
+		DT.deductDate as deductDate,
+		DT.dealFlag as dealFlag,
+		DT.createId as createId,
+		DT.createDt as createDt,
+		DT.comments as comments,
+
+		GETDEALDEDUCTTYPENAMEBYID(DT.deductType) as deductTypeName,
+		case when DT.DEALFLAG='0' then '未处理'
+		when DT.DEALFLAG='1' then '已处理'
+		else '无效' end as dealFlagStr
+		from (
+		SELECT
+		AGENCY_ID AS agencyId,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		FROM rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+
+		INNER JOIN QT1TBLOTHDEDUCT DT
+		ON DT.AGENCY_ID=A.AGENCYID
+		AND DT.DEDUCTDATE  <![CDATA[>=]]>
+		'$datestart$'
+		AND DT.DEDUCTDATE  <![CDATA[<=]]>
+		'$dateend$'
+		<isNotEmpty property="dealFlag">
+			AND DT.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+
+		<isEmpty property="thisAgencyId">
+			<isNotEmpty property="upperAgencyId">
+				LEFT JOIN (select b.agency_id AS , a.agency_id AS PARENTAGENCYID
+				from (select a.agency_id
+				from rtb_qt1tblagency a
+				where a.onlinechannel =#upperAgencyId# ) a,
+				rtb_qt1tblagency b
+				where b.agency_id in
+				(select b.agency_id
+				from rtb_qt1tblagency b
+				START WITH b.AGENCY_ID =
+				a.agency_id
+				CONNECT BY PRIOR b.AGENCY_ID =
+				b.ONLINECHANNEL)) T2
+				ON T2.agency_id=A.AGENCYID
+			</isNotEmpty>
+		</isEmpty>
+		) d1
+		GROUP BY d1.agencyId,d1.deductType
+
+	</select>
+
+	<!--获取实际扣款明细 -->
+	<select id="getRealDeduct" resultClass="RealDeductBean"
+		parameterClass="java.util.Map">
+		SELECT d1.*, GETAGENCYNAMEBYID(d1.agencyId) as agencyName
+		FROM (
+		select
+		A.sysSource,
+		<isNotEmpty property="thisAgencyId">
+			#agencyId# as agencyId,
+		</isNotEmpty>
+		<isEmpty property="thisAgencyId">
+			<isNotEmpty property="parentAgencyId">
+				A.agencyId,
+			</isNotEmpty>
+			<isNotEmpty property="upperAgencyId">
+				case when T2.PARENTAGENCYID is null then A.agencyId
+				else T2.PARENTAGENCYID
+				end as agencyId,
+			</isNotEmpty>
+		</isEmpty>
+		DT.id as id,
+		DT.transacount as transacount,
+		DT.deductType as deductType,
+		DT.deductMoney as deductMoney,
+		DT.deductMonth as deductMonth,
+		DT.realDeductMonth as realDeductMonth,
+		DT.dealFlag as dealFlag,
+		DT.createId as createId,
+		DT.createDt as createDt,
+		DT.comments as comments,
+
+		GETDEALDEDUCTTYPENAMEBYID(DT.deductType) as deductTypeName,
+		case when DT.DEALFLAG='0' then '未处理'
+		when DT.DEALFLAG='1' then '已处理'
+		else '无效' end as dealFlagStr
+		from (
+		SELECT
+		AGENCY_ID AS agencyId,
+		COMPANYNAME AS agencyName,
+		GETSYSTEMNAMEBYID(SYSTEMID) as sysSource
+		FROM rtb_qt1tblagency t
+		where 1=1
+		<isNotEmpty property="systemId">
+			and t.SYSTEMID=#systemId#
+		</isNotEmpty>
+		<isNotEmpty property="agencySelect">
+			and t.AGENCY_ID=#agencySelect#
+		</isNotEmpty>
+		and exists
+		(select 1
+		from table( query_agency.prodFunc(#agencyId#)) t2
+		where t2.agency_id=t.agency_id)
+		) A
+
+		INNER JOIN QT1TBLREALDEDUCT DT
+		ON DT.AGENCY_ID=A.AGENCYID
+		<isEmpty property="real">
+			AND (DT.DEDUCTMONTH=SUBSTR('$datestart$',1,6) OR
+			DT.DEDUCTMONTH=SUBSTR('$dateend$',1,6))
+		</isEmpty>
+		<isNotEmpty property="real">
+			AND (DT.REALDEDUCTMONTH=SUBSTR('$datestart$',1,6) OR
+			DT.REALDEDUCTMONTH=SUBSTR('$dateend$',1,6))
+		</isNotEmpty>
+		<isNotEmpty property="dealFlag">
+			AND DT.DEALFLAG=#dealFlag#
+		</isNotEmpty>
+
+		<isEmpty property="thisAgencyId">
+			<isNotEmpty property="upperAgencyId">
+				LEFT JOIN (select b.agency_id AS , a.agency_id AS PARENTAGENCYID
+				from (select a.agency_id
+				from rtb_qt1tblagency a
+				where a.onlinechannel =#upperAgencyId# ) a,
+				rtb_qt1tblagency b
+				where b.agency_id in
+				(select b.agency_id
+				from rtb_qt1tblagency b
+				exists
+				(select 1
+				from table( query_agency.prodFunc(a.agency_id)) t2
+				where t2.agency_id=b.agency_id)
+				)) T2
+				ON T2.agency_id=A.AGENCYID
+			</isNotEmpty>
+		</isEmpty>
+		) d1
+
+	</select>
+
+	<!-- 交易扣款增加前检查 -->
+	<select id="checkDealDeductAdd" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		SELECT COUNT(*) FROM QT1TBLDEALDEDUCT
+		WHERE SERIALNUMBER=#serialNumber#
+		AND DEAL_DATE=#dealDate#
+		AND DEAL_TIME=#dealTime#
+	</select>
+
+	<!-- 获取下一个扣款类型值 -->
+	<select id="getNextDeductType" resultClass="java.lang.Integer">
+		select
+		nvl(max(DEDUCTTYPE),0) from QT1TBLDEDUCTTYPE
+	</select>
+
+	<!-- 获取下实际扣款编号最大值 -->
+	<select id="getRealDeductId" resultClass="java.lang.Integer">
+		select nvl(max(ID),0)+1
+		from QT1TBLREALDEDUCT
+	</select>
+
+	<!-- 增加扣款类型信息 -->
+	<insert id="addDeductType" parameterClass="DeductTypeBean">
+		INSERT INTO
+		QT1TBLDEDUCTTYPE
+		(
+		DEDUCTCLASS,
+		DEDUCTNAME,
+		DEDUCTTYPE,
+		STATUS,
+		CREATEID,
+		CREATEDT,
+		COMMENTS
+		)
+		VALUES
+		(
+		#deductClass#,
+		#deductName#,
+		#deductType#,
+		#status#,
+		#createId#,
+		#createDt#,
+		#comments#
+		)
+	</insert>
+
+	<!-- 增加交易扣款信息 -->
+	<insert id="addDealDeduct" parameterClass="DealDeductBean">
+		INSERT INTO
+		QT1TBLDEALDEDUCT
+		(
+		DEAL_ID,
+		SERIALNUMBER,
+		TRANSACOUNT,
+		TERMINAL_ID,
+		DEAL_DATE,
+		DEAL_TIME,
+		DEALTYPE_ID,
+		ONLY_CODE,
+		BANKCARDNUMBER,
+		TERMINAL_ONLYCODE,
+		MOBILEPHONE,
+		DEDUCTTYPE,
+		DEDUCTMONEY,
+		DEDUCTDATE,
+		DEALFLAG,
+		CREATEID,
+		CREATEDT,
+		COMMENTS
+		)
+		VALUES
+		(
+		#dealId#,
+		#serialNumber#,
+		#transacount#,
+		#terminalId#,
+		#dealDate#,
+		#dealTime#,
+		#dealTypeId#,
+		#onlyCode#,
+		#bankCardNumber#,
+		#terminalOnlyCode#,
+		#mobilePhone#,
+		#deductType#,
+		#deductMoney#,
+		#deductDate#,
+		#dealFlag#,
+		#createId#,
+		#createDt#,
+		#comments#
+		)
+	</insert>
+
+	<!-- 增加其他扣款信息 -->
+	<insert id="addOtherDeduct" parameterClass="OtherDeductBean">
+		INSERT INTO
+		QT1TBLOTHDEDUCT
+		(
+		ID,
+		AGENCY_ID,
+		TRANSACOUNT,
+		DEDUCTTYPE,
+		DEDUCTMONEY,
+		DEDUCTDATE,
+		DEALFLAG,
+		CREATEID,
+		CREATEDT,
+		COMMENTS
+		)
+		VALUES
+		(
+		#id#,
+		#agencyId#,
+		#transacount#,
+		#deductType#,
+		#deductMoney#,
+		#deductDate#,
+		#dealFlag#,
+		#createId#,
+		#createDt#,
+		#comments#
+		)
+	</insert>
+
+	<!-- 增加实际扣款信息 -->
+	<insert id="addRealDeduct" parameterClass="RealDeductBean">
+		INSERT INTO
+		QT1TBLREALDEDUCT
+		(
+		ID,
+		AGENCY_ID,
+		DEDUCTTYPE,
+		TRANSACOUNT,
+		DEDUCTMONEY,
+		DEDUCTMONTH,
+		REALDEDUCTMONTH,
+		DEALFLAG,
+		CREATEID,
+		CREATEDT,
+		COMMENTS
+		)
+		VALUES
+		(
+		#id#,
+		#agencyId#,
+		#deductType#,
+		#transacount#,
+		#deductMoney#,
+		#deductMonth#,
+		#realDeductMonth#,
+		#dealFlag#,
+		#createId#,
+		#createDt#,
+		#comments#
+		)
+	</insert>
+
+	<!-- 更新扣款类型信息 -->
+	<update id="updateDeductType" parameterClass="DeductTypeBean">
+		UPDATE
+		QT1TBLDEDUCTTYPE
+		SET
+		DEDUCTCLASS=#deductClass#,
+		DEDUCTNAME=#deductName#,
+		STATUS=#status#,
+		COMMENTS=#comments#
+		WHERE
+		DEDUCTTYPE=#deductType#
+	</update>
+
+	<!-- 更新交易扣款信息 -->
+	<update id="updateDealDeduct" parameterClass="DealDeductBean">
+		UPDATE
+		QT1TBLDEALDEDUCT
+		SET
+		DEAL_ID=#dealId#,
+		SERIALNUMBER=#serialNumber#,
+		TRANSACOUNT=#transacount#,
+		TERMINAL_ID=#terminalId#,
+		DEAL_DATE=#dealDate#,
+		DEAL_TIME=#dealTime#,
+		DEALTYPE_ID=#dealTypeId#,
+		ONLY_CODE=#onlyCode#,
+		BANKCARDNUMBER=#bankCardNumber#,
+		TERMINAL_ONLYCODE=#terminalOnlyCode#,
+		MOBILEPHONE=#mobilePhone#,
+		DEDUCTTYPE=#deductType#,
+		DEDUCTMONEY=#deductMoney#,
+		DEDUCTDATE=#deductDate#,
+		DEALFLAG=#dealFlag#,
+		COMMENTS=#comments#
+		WHERE
+		SERIALNUMBER=#serialNumber#
+		AND DEAL_DATE=#dealDate#
+		AND DEAL_TIME=#dealTime#
+	</update>
+
+	<!-- 更新其他扣款信息 -->
+	<update id="updateOtherDeduct" parameterClass="OtherDeductBean">
+		UPDATE
+		QT1TBLOTHDEDUCT
+		SET
+		TRANSACOUNT=#transacount#,
+		AGENCY_ID=#agencyId#,
+		DEDUCTTYPE=#deductType#,
+		DEDUCTMONEY=#deductMoney#,
+		DEDUCTDATE=#deductDate#,
+		DEALFLAG=#dealFlag#,
+		COMMENTS=#comments#
+		WHERE
+		ID=#id#
+	</update>
+
+	<!-- 更新实际扣款信息 -->
+	<update id="updateRealDeduct" parameterClass="RealDeductBean">
+		UPDATE
+		QT1TBLREALDEDUCT
+		SET
+		TRANSACOUNT=#transacount#,
+		AGENCY_ID=#agencyId#,
+		DEDUCTTYPE=#deductType#,
+		DEDUCTMONEY=#deductMoney#,
+		DEDUCTMONTH=#deductMonth#,
+		REALDEDUCTMONTH=#realDeductMonth#,
+		DEALFLAG=#dealFlag#,
+		COMMENTS=#comments#
+		WHERE
+		ID=#id#
+	</update>
+
+	<!-- 删除扣款类型信息 -->
+	<delete id="deleteDeductType" parameterClass="java.util.Map">
+		DELETE FROM QT1TBLDEDUCTTYPE
+		WHERE DEDUCTTYPE=#deductType#
+		<isNotEmpty property="deductClass">
+			AND DEDUCTCLASS=#deductClass#
+		</isNotEmpty>
+	</delete>
+
+	<!-- 删除交易扣款信息 -->
+	<delete id="deleteDealDeduct" parameterClass="java.util.Map">
+		DELETE FROM
+		QT1TBLDEALDEDUCT
+		WHERE
+		DEAL_DATE=#dealDate#
+		AND DEAL_TIME=#dealTime#
+		AND SERIALNUMBER=#serialNumber#
+	</delete>
+
+	<!-- 删除其他扣款信息 -->
+	<delete id="deleteOtherDeducts" parameterClass="java.lang.String">
+		DELETE FROM
+		QT1TBLOTHDEDUCT
+		WHERE ID in ($ids$)
+	</delete>
+
+	<!-- 删除实际扣款信息 -->
+	<delete id="deleteRealDeducts" parameterClass="java.lang.String">
+		DELETE FROM
+		QT1TBLREALDEDUCT
+		WHERE ID in ($ids$)
+	</delete>
+	<select id="getAllowedMaxNum" resultClass="java.lang.String">
+	SELECT PARAMVALUE FROM TB_FR_PARAM WHERE PARAMID = #maxNum#
+	</select>
+
+
+
+	<!-- 获取当前机构下的交易总条数 -->
+	<select id="getDealdetailReceCount" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+           CASE
+             WHEN SUM(DT.TRANSACOUNT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.TRANSACOUNT)
+           END AS ACCOUNTCOUNT,
+           CASE
+             WHEN SUM(DT.FEEAMT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.FEEAMT)
+           END AS FEEAMTCOUNT
+      FROM (SELECT T1.TRANSACOUNT AS TRANSACOUNT,
+                   T1.CHARGE      AS CHARGE,
+                   T1.FEEAMT      AS FEEAMT,
+                   T1.AGENCYID    AS AGENCYID
+              FROM QT1TBLDEAL T1
+       <isNotEmpty  property="typeMergeFlag">
+         	INNER JOIN  
+                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+		               FROM QT1TBLORGSPLITTMPT M
+		              WHERE  M.MOULD_NAME = 'UUUUU'
+		                 AND M.AGENCY_ID = #typeMergeFlag#) S
+          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+         </isNotEmpty>  
+		    WHERE T1.DEAL_DATA  <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+			  AND T1.DEAL_DATA  <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+			<isNotEmpty property="serialNumber">
+				and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+			</isNotEmpty>
+				and T1.DEALTYPE_ID IN ($dealType$)
+			<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+				</isNotEmpty> -->
+			<isNotEmpty property="terminalcode">
+				and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+			</isNotEmpty>
+			<isNotEmpty property="moblieNo">
+				and T1.MOBLIENO=#moblieNo#
+			</isNotEmpty>
+			<isNotEmpty property="customerName">
+				and T1.CUSTOMERNAME LIKE '%$customerName$%'
+			</isNotEmpty>
+			AND EXISTS
+				 	( SELECT 1
+					      FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T2
+					   WHERE T2.AGENCY_ID=T1.AGENCYID 
+						<isNotEmpty property="agencySelect">
+							and T2.AGENCY_ID=#agencySelect#
+						</isNotEmpty>
+					)
+		) DT
+	</select>
+
+	
+	<!-- 获取当前机构下的交易总条数 -->
+	<select id="getDealdetailT0Count" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+           CASE
+             WHEN SUM(DT.TRANSACOUNT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.TRANSACOUNT)
+           END AS ACCOUNTCOUNT,
+           CASE
+             WHEN SUM(DT.FEEAMT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.FEEAMT)
+           END AS FEEAMTCOUNT
+      FROM (SELECT T1.TRANSACOUNT AS TRANSACOUNT,
+                   T1.CHARGE      AS CHARGE,
+                   T1.FEEAMT      AS FEEAMT 
+              FROM QT1TBLDEAL T1
+       <isNotEmpty  property="typeMergeFlag">
+         	INNER JOIN  
+                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+		               FROM QT1TBLORGSPLITTMPT M
+		              WHERE  M.MOULD_NAME = 'UUUUU'
+		                 AND M.AGENCY_ID = #typeMergeFlag#) S
+          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+         </isNotEmpty>  
+		    WHERE T1.DEAL_DATA  <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+			  AND T1.DEAL_DATA  <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+			<isNotEmpty property="serialNumber">
+				and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+			</isNotEmpty>
+				and T1.DEALTYPE_ID = '7'
+			<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+				</isNotEmpty> -->
+			<isNotEmpty property="terminalcode">
+				and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+			</isNotEmpty>
+			<isNotEmpty property="moblieNo">
+				and T1.MOBLIENO=#moblieNo#
+			</isNotEmpty>
+			<isNotEmpty property="customerName">
+				and T1.CUSTOMERNAME LIKE '%$customerName$%'
+			</isNotEmpty>
+		 AND EXISTS
+				 	( SELECT 1
+					      FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T2
+					   WHERE T2.AGENCY_ID=T1.AGENCYID 
+						<isNotEmpty property="agencySelect">
+							and T2.AGENCY_ID=#agencySelect#
+						</isNotEmpty>
+					)
+		) DT
+	</select>
+
+
+	<!-- 获取当前机构下的交易总条数 -->
+	<select id="getOldDealdetailReceCount" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+           CASE
+             WHEN SUM(DT.TRANSACOUNT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.TRANSACOUNT)
+           END AS ACCOUNTCOUNT,
+           CASE
+             WHEN SUM(DT.FEEAMT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.FEEAMT)
+           END AS FEEAMTCOUNT
+      FROM (SELECT T1.TRANSACOUNT AS TRANSACOUNT,
+                   T1.CHARGE      AS CHARGE,
+                   T1.FEEAMT      AS FEEAMT,
+                   T1.AGENCYID    AS AGENCYID
+              FROM TB_HIS_QT1TBLDEAL T1
+       <isNotEmpty  property="typeMergeFlag">
+         	INNER JOIN  
+                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+		               FROM QT1TBLORGSPLITTMPT M
+		              WHERE  M.MOULD_NAME = 'UUUUU'
+		                 AND M.AGENCY_ID = #typeMergeFlag#) S
+          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+         </isNotEmpty>  
+		    WHERE T1.DEAL_DATA  <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+			  AND T1.DEAL_DATA  <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+			<isNotEmpty property="serialNumber">
+				and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+			</isNotEmpty>
+				and T1.DEALTYPE_ID IN ($dealType$)
+			<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+				</isNotEmpty> -->
+			<isNotEmpty property="terminalcode">
+				and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+			</isNotEmpty>
+			<isNotEmpty property="moblieNo">
+				and T1.MOBLIENO=#moblieNo#
+			</isNotEmpty>
+			<isNotEmpty property="customerName">
+				and T1.CUSTOMERNAME LIKE '%$customerName$%'
+			</isNotEmpty>
+			AND EXISTS
+				 	( SELECT 1
+					      FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T2
+					   WHERE T2.AGENCY_ID=T1.AGENCYID 
+						<isNotEmpty property="agencySelect">
+							and T2.AGENCY_ID=#agencySelect#
+						</isNotEmpty>
+					)
+		) DT
+	</select>
+
+	
+	<!-- 获取当前机构下的交易总条数 -->
+	<select id="getOldDealdetailT0Count" resultClass="DealCountBean" parameterClass="java.util.Map">
+		  SELECT COUNT(1) AS COUNTS,
+           CASE
+             WHEN SUM(DT.TRANSACOUNT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.TRANSACOUNT)
+           END AS ACCOUNTCOUNT,
+           CASE
+             WHEN SUM(DT.FEEAMT) IS NULL THEN
+              0
+             ELSE
+              SUM(DT.FEEAMT)
+           END AS FEEAMTCOUNT
+      FROM (SELECT T1.TRANSACOUNT AS TRANSACOUNT,
+                   T1.CHARGE      AS CHARGE,
+                   T1.FEEAMT      AS FEEAMT 
+              FROM TB_HIS_QT1TBLDEAL T1
+       <isNotEmpty  property="typeMergeFlag">
+         	INNER JOIN  
+                     (SELECT DISTINCT M.AGENCY_ID, M.DEAL_TYPE
+		               FROM QT1TBLORGSPLITTMPT M
+		              WHERE  M.MOULD_NAME = 'UUUUU'
+		                 AND M.AGENCY_ID = #typeMergeFlag#) S
+          	     ON  T1.DEALTYPE_ID = S.DEAL_TYPE
+         </isNotEmpty>  
+		    WHERE T1.DEAL_DATA  <![CDATA[>=]]> to_date('$yearmonthdatestart$','yyyymmdd')
+			  AND T1.DEAL_DATA  <![CDATA[<=]]> to_date('$yearmonthdateend$','yyyymmdd')
+			<isNotEmpty property="serialNumber">
+				and T1.SERIALNUMBER LIKE '%$serialNumber$%'
+			</isNotEmpty>
+				and T1.DEALTYPE_ID = '7'
+			<!--<isNotEmpty property="merchantCode"> and T1.MERCHANTCODE LIKE '%$merchantCode$%' 
+				</isNotEmpty> -->
+			<isNotEmpty property="terminalcode">
+				and T1.TERMINAL_ONLYCODE LIKE '%$terminalcode$%'
+			</isNotEmpty>
+			<isNotEmpty property="moblieNo">
+				and T1.MOBLIENO=#moblieNo#
+			</isNotEmpty>
+			<isNotEmpty property="customerName">
+				and T1.CUSTOMERNAME LIKE '%$customerName$%'
+			</isNotEmpty>
+			AND EXISTS
+				 	( SELECT 1
+					      FROM TABLE( QUERY_AGENCY.PRODFUNC(#topAgencyId#)) T2
+					   WHERE T2.AGENCY_ID=T1.AGENCYID 
+						<isNotEmpty property="agencySelect">
+							and T2.AGENCY_ID=#agencySelect#
+						</isNotEmpty>
+					)
+		) DT
+	</select>
+</sqlMap>

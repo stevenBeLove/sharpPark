@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="login">
+	<!-- 验证用户登录 -->
+	<select id="checkLogin" resultClass="UserBean" parameterClass="java.util.Map">
+			  SELECT T1.UserId AS userid,
+			       T1.UserName AS username,
+			       T1.UserLoginName AS loginname,
+			       T1.UserPwd AS PASSWORD,
+			       T1.UserEmail AS email,
+			       T1. UserPhone AS phone,
+			       T1.AGENCYID AS agencyId,
+			       T1.USERTYPE AS usertypeId,
+			       GETROLETYPEBUSERID(UserId) as roletypeId,
+			       CASE  WHEN GETPARENTAGENCYID(AGENCYID) IS NULL THEN
+			          '-1'
+			         ELSE
+			          GETPARENTAGENCYID(AGENCYID)
+			       END AS PARENTAGENCYID
+			  FROM USERS T1
+			  LEFT JOIN rtb_qt1tblagency T2
+			    ON T1.AGENCYID = T2.AGENCY_ID
+			 WHERE 
+			   T1.USERSTATUS='1'
+			   AND T1.UserLoginName =#loginname# 
+			   AND T1.UserPwd = #password#
+			   AND T1.AGENCYID = #agencyId#
+			   AND T2.AGENCY_STATUS   <![CDATA[ >= '2' ]]>  
+			 <isNotEmpty property="systemId">
+				AND T2.SYSTEMID=#systemId#
+			</isNotEmpty>
+			  
+	</select>
+
+	<update id="updatePhone" parameterClass="java.util.Map">
+	update users set userphone=#userPhone# where userid=#userId#
+	</update>
+	
+	
+
+	<!--  关联查询密码策略表及用户密码表查询该用户是否已在密码策略表中 -->
+	<select id="selectPwdStrategyAndUser" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+	    select count(1)
+	      from qtpay.TB_GROUP_pwdStrategy A
+	      left join  users B
+	        on B.UserLoginName = A.loginName
+	    where 1=1
+		 <isNotEmpty property="loginName">
+		 	 and  A.Loginname =#loginName#
+		 </isNotEmpty>
+		 <isNotEmpty property="useSystem">
+		 	and   A.usesystem=#useSystem#
+		 </isNotEmpty>
+	</select>
+	
+	 <!-- 查询该来源系统下该用户是否在密码策略表中有记录 -->
+	<select id="selectPwdStrategyCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
+	    select count(1)
+	      from qtpay.TB_GROUP_pwdStrategy A
+	    where 1=1
+		 <isNotEmpty property="loginName">
+		 	 and  A.Loginname =#loginName#
+		 </isNotEmpty>
+		 <isNotEmpty property="useSystem">
+		 	and   A.usesystem=#useSystem#
+		 </isNotEmpty>
+	</select>	
+	
+	
+		<!-- 增加初始化策略表中用户的初始时间设定 -->
+	<insert id="insertPwdStrategy" parameterClass="java.util.Map">
+
+		INSERT INTO qtpay.TB_GROUP_pwdStrategy
+		(
+		id,
+		loginName,
+		passWord,
+		oldpassword,
+		createDate,
+		createTime,
+		usesystem,
+		status
+		)
+		VALUES
+		(
+		#id#,
+		#loginName#,
+		#passWord#,
+		#oldPassWord#,		
+		#createDate#,
+		#createTime#,
+		#useSystem#,
+		#status#
+		)
+	</insert>
+	
+	
+	<!-- 查询策略表中的该来源系统下用户的记录-->
+	<select id="selectPwdStrategy"  parameterClass="java.util.Map" resultClass="PwdStrategy">
+		select 
+       id as id,     
+       loginname as  loginName,
+       password as   passWord,  
+       oldpassword as  oldPassWord,
+       usesystem as useSystem , 
+       createdate as  createDate, 
+       createtime as  createTime , 
+       status as  status 
+	 from qtpay.TB_GROUP_pwdStrategy A
+		where 1=1
+	 <isNotEmpty property="loginName">
+		 and  A.Loginname =#loginName#
+     </isNotEmpty>
+	 <isNotEmpty property="useSystem">
+	 	and   A.usesystem=#useSystem#
+	 </isNotEmpty>
+	</select>
+	
+	<!-- 获取登录密码策略表中序列的下一个序列编号-->
+	<select id="getTablePwdStrategyId" resultClass="java.lang.Integer">
+	     select qtpay.SEQ_PwdStrategy.nextval from dual
+	</select>
+	
+		<!-- 修改用户密码策略表中密码 -->
+	<update id="updatePwdStrategy" parameterClass="java.util.Map">
+		update qtpay.TB_GROUP_pwdStrategy A
+		        set A.PASSWORD=#passWord#, 
+		            A.CREATEDATE=#createDate#, 
+		            A.CREATETIME=#createTime#
+		where 
+		 <isNotEmpty property="loginName">
+			   A.Loginname = #loginName#
+	     </isNotEmpty>
+		 <isNotEmpty property="useSystem">
+		 	and   A.usesystem = #useSystem#
+		 </isNotEmpty>
+	</update>
+	
+		<!-- 密码重置时修改用户密码策略表中密码 -->
+	<update id="updateResetPwdStrategy" parameterClass="java.util.Map">
+		update qtpay.TB_GROUP_pwdStrategy A
+		        set A.PASSWORD=#passWord#,
+		            A.oldpassword=#oldPassWord#,  
+		            A.CREATEDATE=#createDate#, 
+		            A.CREATETIME=#createTime#
+		where 
+		 <isNotEmpty property="loginName">
+			   A.Loginname = #loginName#
+	     </isNotEmpty>
+		 <isNotEmpty property="useSystem">
+		 	and   A.usesystem = #useSystem#
+		 </isNotEmpty>
+	</update>
+
+
+
+	
+	 <!-- 修改密码时查找此用户 -->
+	<select id="selectUserLoginByUserId"  parameterClass="java.util.Map" resultClass="UserBean">
+	    select 
+        userid as userid, 
+        username as  username,
+        userloginname as   loginname,  
+        userpwd   as  password,
+        agencyId as  agencyId
+	   from users U
+		 where 1=1
+	 <isNotEmpty property="userId">
+		 and  U.USERID =#userId#
+     </isNotEmpty>
+	</select>
+	
+	
+<!-- 更新用户信息 -->	
+  <update id="updateByPrimaryKey" parameterClass="UserBean" >
+    update USERS
+    <dynamic prepend="set" >
+      <isNotEmpty prepend="," property="phone" >
+        USERPHONE = #phone:VARCHAR#
+      </isNotEmpty>
+    </dynamic>
+    where USERID = #userid#
+  </update>
+	
+	
+	
+	
+</sqlMap>

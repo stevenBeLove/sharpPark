@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="MENU">
+	<!-- 获取主菜单 -->
+	<select id="getmenusnew" resultClass="MenuBean" parameterClass="java.util.Map">
+
+		SELECT DISTINCT A.MENUID AS menuId,
+                A.MENUNAME AS menuName,
+                A.MENUFATHER AS menuFather,
+                A.MENUURL AS menuUrl,
+                CASE
+                  WHEN A.MENUFATHER IS NULL THEN
+                   '0'
+                  ELSE
+                   '1'
+                END AS CHILD
+			  FROM (SELECT MENUID     AS MENUID,
+			               MENUNAME   AS MENUNAME,
+			               MENUFATHER AS MENUFATHER,
+			               MENUURL    AS MENUURL
+			          FROM (SELECT DISTINCT T1.MENUID     AS MENUID,
+			                                T1.MENUNAME   AS MENUNAME,
+			                                T1.MENUFATHER AS MENUFATHER,
+			                                T1.MENUURL    AS MENUURL
+			                  FROM (SELECT MENUID       AS MENUID,
+			                               MENUNAME     AS MENUNAME,
+			                               PARENTNODEID AS MENUFATHER,
+			                               MENUDESC     AS MENUURL
+			                          FROM MENU
+			                         WHERE PARENTNODEID = #menuTreeBase#
+			                            AND MENUSTATUS = '1' ) T1,
+			                       (SELECT DISTINCT M.MENUID       AS MENUID,
+			                                        M.MENUNAME     AS MENUNAME,
+			                                        M.PARENTNODEID AS MENUFATHER,
+			                                        M.MENUDESC     AS MENUURL
+			                          FROM MENU               M,
+			                               MENU_ROLE_RELATION RM,
+			                               USER_ROLE_RELATION RU
+			                         WHERE RM.MENUID = M.MENUID
+			                           AND RM.ROLEID = RU.ROLEID
+			                           AND M.MENUID != '-1'
+			                           AND MENUSTATUS = '1'
+			                           AND RU.USERID = #userid#) T2
+			                 WHERE T1.MENUID = T2.MENUFATHER) T3
+			        UNION ALL
+			        SELECT DISTINCT M.MENUID       AS MENUID,
+			                        M.MENUNAME     AS MENUNAME,
+			                        M.PARENTNODEID AS MENUFATHER,
+			                        M.MENUDESC     AS MENUURL
+			          FROM MENU M, MENU_ROLE_RELATION RM, USER_ROLE_RELATION RU
+			         WHERE RM.MENUID = M.MENUID
+			           AND RM.ROLEID = RU.ROLEID  
+			           AND M.MENUID != '-1'
+			           AND MENUSTATUS = '1'
+			           AND RU.USERID = #userid#) A
+			 ORDER BY MENUID
+
+	</select>
+	
+
+	<!-- 获取用户原始密码 -->
+	<select id="getUserLoginPwd" resultClass="java.lang.String" parameterClass="java.util.Map">
+		select USERPWD from users where USERID=#userId#
+	</select>
+	
+	<!-- 修改用户密码 -->
+	<update id="updateUserLoginPwd" parameterClass="java.util.Map">
+		update users set USERPWD=#pwd# where USERID=#userId#
+	</update>
+</sqlMap>

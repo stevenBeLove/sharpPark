@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  
+            http://www.springframework.org/schema/beans/spring-beans.xsd  
+            http://code.alibabatech.com/schema/dubbo  
+            http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+	<dubbo:application name="rtb_consumer" />
+
+	<dubbo:registry protocol="zookeeper" address="${dubbo.registry.address}" /> 
+	<!-- check="false" 启动时检查 -->
+    <dubbo:reference id="frServer" group="localhost" interface="com.imobpay.base.services.FrServer" check="false" />    
+		
+		<dubbo:reference id="msgSendServer" group="localhost" interface="com.imobpay.base.services.MsgSendServer" check="false" />
+		
+		
+</beans>

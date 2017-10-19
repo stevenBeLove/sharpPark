@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd" >
+<sqlMap namespace="role">
+	<!-- 获取角色 -->
+	<select id="getRole" resultClass="RoleBean"
+		parameterClass="java.util.Map">
+		select  RoleId    as roleId,
+				RoleName  as roleName,
+				RoleDesc  as roleDesc,
+				ROLETYPEID AS roletypeId,
+				case WHEN ROLETYPEID='1' then '超级管理员' when ROLETYPEID='2' then '管理员' else '操作员' end  as roletypeName,
+				RoleStatus as status,
+				case when RoleStatus='1' then '有效' else '无效' end as statusStr,
+				getUserNameById(CreateId) as createId,
+				CreateDt as createDt,
+				getUserNameById(ModifyId) as modifyId,
+				ModifyDt as modifyDt,
+				getUserCountByRoleid(RoleId) AS userCount,
+				GETMENUCOUNTBYROLEID(RoleId) as menuCount
+				from role
+		where 1=1
+		<isNotEmpty property="status">
+			and RoleStatus=#status#
+		 </isNotEmpty>
+		 <isNotEmpty property="roleName">
+			and RoleName like
+			'%$roleName$%'
+		</isNotEmpty>
+		order by ModifyDt desc
+	</select>
+	<!-- 获取角色信息 -->
+	<select id="getRoleList" resultClass="RoleBean" parameterClass="java.lang.String">
+		SELECT RoleId as roleId,
+		RoleName as roleName
+		FROM
+		role
+		where RoleStatus='1'
+		and ROLETYPEID>=#roletypeId#
+	</select>
+	<!-- 增加角色 -->
+	 <insert id="addRole" parameterClass="RoleBean">
+		insert into
+		role(
+		RoleId,
+		RoleName,
+		RoleDesc,
+		RoleStatus,
+		ROLETYPEID,
+		CreateId,
+		CreateDt
+		)
+		values(
+		#roleId#,
+		#roleName#,
+		#roleDesc#,
+		#status#,
+		#roletypeId#,
+		#createId#,
+		#createDt#
+		)
+	</insert>
+	<!-- 更新角色 -->
+	<update id="updateRole" parameterClass="RoleBean">
+		update
+		role set
+		RoleName=#roleName#,
+		RoleStatus=#status#,
+		ROLETYPEID=#roletypeId#,
+		RoleDesc=#roleDesc#,
+		ModifyId=#modifyid#,
+		ModifyDt=#modifydt#
+		where
+		RoleId=#roleId#
+	</update>
+	<!-- 删除角色 -->
+	<update id="deleteRole" parameterClass="java.lang.String">
+		update
+		role set
+		RoleStatus='0' where RoleId in($roleId$)
+	</update>
+	<!-- 获取角色编号总数 -->
+	<select id="getCount" resultClass="java.lang.Integer"
+		parameterClass="java.util.Map">
+		select count(*) 
+		from role 
+		where 1=1
+		<isNotEmpty property="roleName">
+			and RoleName=#roleName#
+		</isNotEmpty>
+		<isNotEmpty property="status">
+			and RoleStatus=#status#
+		</isNotEmpty>
+		
+	</select>
+	<!-- 获取用户角色编号总数-->
+	<select id="getUserRelation" resultClass="java.lang.Integer" parameterClass="java.lang.String">
+		
+		SELECT 	COUNT(*)
+			FROM 
+			user_role_relation
+			
+			WHERE  UserId in($userId$)
+			
+	</select>
+	<!-- 查看角色类型为管理员的角色比编号 -->
+	<select id="getRoleId" resultClass="java.util.HashMap" parameterClass="java.lang.String">
+		select roleid as  ROLEID from 
+				(select roleid 
+					from role 
+					where roletypeid=#roletypeId#
+					and rolestatus='1' 
+					order by roleid asc
+				) 
+	where rownum=1
+	</select>
+	<select id="getRoleTypeId" resultClass="java.lang.String">
+		
+		SELECT A.ROLETYPEID FROM  ROLE A
+		INNER JOIN USER_ROLE_RELATION  B
+		ON A.ROLEID = B.ROLEID
+		INNER JOIN USERS C
+		ON B.USERID = C.USERID
+		AND USERLOGINNAME = #loginname#
+		AND AGENCYID = #agencyId#
+	</select>
+</sqlMap>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:jee="http://www.springframework.org/schema/jee" 
+		xmlns:tx="http://www.springframework.org/schema/tx"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xmlns:cache="http://www.springframework.org/schema/cache"
+		xmlns:context="http://www.springframework.org/schema/context"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop.xsd 
+		http://www.springframework.org/schema/jee 
+		http://www.springframework.org/schema/jee/spring-jee.xsd 
+		http://www.springframework.org/schema/cache 
+		http://www.springframework.org/schema/cache/spring-cache.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd"
+	    default-lazy-init="true">
+	    <bean id="configProperties" class="com.compass.utils.PropertyPlaceholderConfigurerExt">
+				<property name="locations">
+					<list>
+					    <value>file:/home/weblogic/etc/system.properties</value>
+					</list>
+				</property>
+		</bean>		
+		
+  <!-- 数据源定义   -->
+	<!--Weblogic and Tomcat compatible config--> 
+	<!--<jee:jndi-lookup id="dataSource" jndi-name="QTFR" resource-ref="true" />-->
+	<!--Weblogic Config-->
+    <!-- <jee:jndi-lookup id="dataSource" jndi-name="QTFR" />  -->
+	<!--Tomcat Config-->
+	<!-- <jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/qtfr" />  -->
+
+
+	<!-- C3P0 Tomcat中开发使用的数据源 -->
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${common.db.driverClassName}" />
+ 
+  
+            
+    <!-- 
+     <property name="url" value="jdbc:oracle:thin:qtpay/aaa111@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=199.58.88.150)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=199.58.88.160)(PORT=1521))(LOAD_BALANCE=yes)(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=oradb)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC)(RETRIES=180)(DELAY=5))))" />
+     
+  <property name="url" value="jdbc:oracle:thin:@192.168.1.39:1521:orcl" />
+        <property name="url" value="jdbc:oracle:thin:@10.3.10.209:1521:oradb2" /> 
+        
+              <property name="url" value="jdbc:oracle:thin:@192.168.1.39:1521:orcl" />
+          <property name="url" value="jdbc:oracle:thin:@192.168.1.39:1521:orcl" />
+      -->
+        <property name="url" value="${qtfr3.db.url}" />
+	    <property name="username" value="${qtfr3.db.username}" />
+		<property name="password" value="${qtfr3.db.password}" />	  
+		<property name="initialSize" value="${qtfr3.database.connection.idle}" />  
+		<property name="maxActive" value="${qtfr3.database.connection.max}" />
+		<property name="maxIdle" value="300" />
+		<property name="maxWait" value="60000" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="true" />
+        <!--removeAbandoned: 是否自动回收超时连接-->    
+        <property name="removeAbandoned"  value="true"/>  
+        <!--removeAbandonedTimeout: 超时时间(以秒数为单位)-->    
+        <property name="removeAbandonedTimeout" value="10"/>  
+        <!-- 在空闲连接回收器线程运行期间休眠的时间值,以毫秒为单位. -->  
+        <property name="timeBetweenEvictionRunsMillis" value="10000"/>  
+        <!--  在每次空闲连接回收器线程(如果有)运行时检查的连接数量 -->  
+        <property name="numTestsPerEvictionRun" value="10"/>  
+        <!-- 1000 * 60 * 30  连接在池中保持空闲而不被空闲连接回收器线程-->  
+        <property name="minEvictableIdleTimeMillis" value="10000"/>  
+	</bean>
+ 
+ 
+ <!-- 事务配置 -->
+   <bean id="transactionManager"  class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource" />
+   </bean>
+    
+	<!-- 事务拦截 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="REQUIRED" read-only="true"/>
+			<tx:method name="*" propagation="REQUIRED"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- 被拦截类配置
+	<aop:config>
+		<aop:pointcut id="serviceOperation" expression="execution(* com.compass..service.*Service.*(..))"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceOperation"/>
+	</aop:config> -->
+	
+	<!-- FreeMarker配置 
+	<bean id="freemarkerConfiguration" class="org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean">
+		<property name="templateLoaderPath" value="classpath:/template/"/>
+	</bean> -->
+	
+
+	
+  <!-- 抽象基类，其它Serivce不用每个都设定dao了 -->
+  <bean id="absJdbcDaoService" class="com.compass.utils.AbstractService" abstract="true">
+    <property name="dao" ref="jdbcDao"/>
+  </bean>
+
+  <!-- Service 基类-->
+  <bean id="absIbatisDaoService" class="com.compass.utils.AbstractService" abstract="true">
+    <property name="dao" ref="ibatisDao"/>
+  </bean>
+
+  <!--Ibatis设置 -->
+  <bean id="ibatisSqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+    <property name="configLocations" value="classpath*:ibatis/sqlMap.ibatis.config.xml"/>
+  </bean>
+  
+  <bean id="ibatisDao" class="com.compass.utils.dao.IbatisDao">
+    <property name="sqlMapClientTemplate" ref="ibatisTemplate"/>
+    <property name="batchSize" value="50"/>
+  </bean>
+
+  <bean id="ibatisTemplate" class="org.springframework.orm.ibatis.SqlMapClientTemplate">
+    <constructor-arg index="0" ref="dataSource"/>
+    <constructor-arg index="1" ref="ibatisSqlMapClient"/>
+  </bean>
+  
+	<!-- Application Message Bundle -->
+   <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		 <property name="basenames">
+				 <list>  
+					<value>classpath:config/properties/i18n/msg/messages</value>  
+		        </list>  
+	     	</property>
+		<property name="defaultEncoding" value="UTF-8" />
+   </bean>
+   
+   <import resource="applicationContext-dubbo.xml" />
+   <import resource="system.spring.xml" />
+   <import resource="applicationContext-job.xml" />
+   
+</beans>
