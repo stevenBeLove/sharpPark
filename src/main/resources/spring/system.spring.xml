@@ -4,10 +4,12 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 
+  <bean id="frServer" class="com.imobpay.base.services.FrServerImpl"></bean>
+
   <bean id="payCustomerService"  class="com.compass.paycustomer.service.PayCustomerService" parent="absIbatisDaoService"/>
 
   <bean id="agencyService"  class="com.compass.agency.service.AgencyService" parent="absIbatisDaoService">
-  		<property name="frServer" ref="frServer"></property>
+  		<!-- <property name="frServer" ref="frServer"></property> -->
   		<property name="rtbParamterService" ref="rtbParamterService"></property>
   		<property name="userRoleService" ref="userRoleService"></property>
   </bean>

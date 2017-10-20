@@ -71,7 +71,7 @@
   <!-- 查询瑞通宝App用户 -->
   <select id="selectPayCustomerByMobile" resultMap="PayCustomerByMobileResult" parameterClass="string" >
      select ps.CUSTOMERID, CUSTOMERNAME, CUSTOMERTYPE, USERNAME, CUSTOMERPID, CUSTOMERTAG, CHECKRANGE 
-     from qtpay.PAYCUSTOMER ps, qtpay.payuser pu
+     from PAYCUSTOMER ps, payuser pu
      where ps.customerid = pu.customerid and  pu.branchid = '00800653' and pu.userid = #mobile# 
   </select>
   

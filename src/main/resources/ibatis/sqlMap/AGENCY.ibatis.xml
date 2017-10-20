@@ -703,7 +703,7 @@
 
 	<!-- 根据省编号来查看市 -->
 	<select id="getCity" resultClass="AgencyBean" parameterClass="java.lang.String">
-		select CITYID, CITYNAME from qtfr2.CITYINFO where PROVINCEID=#provinceId#
+		select CITYID, CITYNAME from CITYINFO where PROVINCEID=#provinceId#
 	</select>
 
 	<select id="getArea" resultClass="AgencyBean" parameterClass="java.lang.String">

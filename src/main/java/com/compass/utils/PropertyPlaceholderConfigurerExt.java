@@ -36,11 +36,11 @@ public class PropertyPlaceholderConfigurerExt extends PropertyPlaceholderConfigu
     protected void processProperties(ConfigurableListableBeanFactory beanFactory, Properties props) {
         this.properties = props;
         String key = props.getProperty("common.proDesEncryptKey");
-        String pwd = props.getProperty("qtfr3.db.password");
+        String pwd = props.getProperty("park.db.password");
         key = MD5.md5(key);
         key = (key + key).substring(0, 48);
         String dec = dec(key, pwd);
-        props.setProperty("qtfr3.db.password", dec);
+        props.setProperty("park.db.password", dec);
         super.processProperties(beanFactory, props);
     }
 

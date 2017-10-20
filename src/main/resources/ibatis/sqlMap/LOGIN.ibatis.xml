@@ -41,7 +41,7 @@
 	<!--  关联查询密码策略表及用户密码表查询该用户是否已在密码策略表中 -->
 	<select id="selectPwdStrategyAndUser" resultClass="java.lang.Integer" parameterClass="java.util.Map">
 	    select count(1)
-	      from qtpay.TB_GROUP_pwdStrategy A
+	      from TB_GROUP_pwdStrategy A
 	      left join  users B
 	        on B.UserLoginName = A.loginName
 	    where 1=1
@@ -56,7 +56,7 @@
 	 <!-- 查询该来源系统下该用户是否在密码策略表中有记录 -->
 	<select id="selectPwdStrategyCount" resultClass="java.lang.Integer" parameterClass="java.util.Map">
 	    select count(1)
-	      from qtpay.TB_GROUP_pwdStrategy A
+	      from TB_GROUP_pwdStrategy A
 	    where 1=1
 		 <isNotEmpty property="loginName">
 		 	 and  A.Loginname =#loginName#
@@ -70,7 +70,7 @@
 		<!-- 增加初始化策略表中用户的初始时间设定 -->
 	<insert id="insertPwdStrategy" parameterClass="java.util.Map">
 
-		INSERT INTO qtpay.TB_GROUP_pwdStrategy
+		INSERT INTO TB_GROUP_pwdStrategy
 		(
 		id,
 		loginName,
@@ -106,7 +106,7 @@
        createdate as  createDate, 
        createtime as  createTime , 
        status as  status 
-	 from qtpay.TB_GROUP_pwdStrategy A
+	 from TB_GROUP_pwdStrategy A
 		where 1=1
 	 <isNotEmpty property="loginName">
 		 and  A.Loginname =#loginName#
@@ -118,12 +118,12 @@
 	
 	<!-- 获取登录密码策略表中序列的下一个序列编号-->
 	<select id="getTablePwdStrategyId" resultClass="java.lang.Integer">
-	     select qtpay.SEQ_PwdStrategy.nextval from dual
+	     select SEQ_PwdStrategy.nextval from dual
 	</select>
 	
 		<!-- 修改用户密码策略表中密码 -->
 	<update id="updatePwdStrategy" parameterClass="java.util.Map">
-		update qtpay.TB_GROUP_pwdStrategy A
+		update TB_GROUP_pwdStrategy A
 		        set A.PASSWORD=#passWord#, 
 		            A.CREATEDATE=#createDate#, 
 		            A.CREATETIME=#createTime#
@@ -138,7 +138,7 @@
 	
 		<!-- 密码重置时修改用户密码策略表中密码 -->
 	<update id="updateResetPwdStrategy" parameterClass="java.util.Map">
-		update qtpay.TB_GROUP_pwdStrategy A
+		update TB_GROUP_pwdStrategy A
 		        set A.PASSWORD=#passWord#,
 		            A.oldpassword=#oldPassWord#,  
 		            A.CREATEDATE=#createDate#, 

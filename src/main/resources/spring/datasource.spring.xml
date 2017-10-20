@@ -27,36 +27,14 @@
 				</property>
 		</bean>		
 		
-  <!-- 数据源定义   -->
-	<!--Weblogic and Tomcat compatible config--> 
-	<!--<jee:jndi-lookup id="dataSource" jndi-name="QTFR" resource-ref="true" />-->
-	<!--Weblogic Config-->
-    <!-- <jee:jndi-lookup id="dataSource" jndi-name="QTFR" />  -->
-	<!--Tomcat Config-->
-	<!-- <jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/qtfr" />  -->
-
-
 	<!-- C3P0 Tomcat中开发使用的数据源 -->
-
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="${common.db.driverClassName}" />
- 
-  
-            
-    <!-- 
-     <property name="url" value="jdbc:oracle:thin:qtpay/aaa111@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=199.58.88.150)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=199.58.88.160)(PORT=1521))(LOAD_BALANCE=yes)(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=oradb)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC)(RETRIES=180)(DELAY=5))))" />
-     
-  <property name="url" value="jdbc:oracle:thin:@192.168.1.39:1521:orcl" />
-        <property name="url" value="jdbc:oracle:thin:@10.3.10.209:1521:oradb2" /> 
-        
-              <property name="url" value="jdbc:oracle:thin:@192.168.1.39:1521:orcl" />
-          <property name="url" value="jdbc:oracle:thin:@192.168.1.39:1521:orcl" />
-      -->
-        <property name="url" value="${qtfr3.db.url}" />
-	    <property name="username" value="${qtfr3.db.username}" />
-		<property name="password" value="${qtfr3.db.password}" />	  
-		<property name="initialSize" value="${qtfr3.database.connection.idle}" />  
-		<property name="maxActive" value="${qtfr3.database.connection.max}" />
+        <property name="url" value="${park.db.url}" />
+	    <property name="username" value="${park.db.username}" />
+		<property name="password" value="${park.db.password}" />	  
+		<property name="initialSize" value="${park.database.connection.idle}" />  
+		<property name="maxActive" value="${park.database.connection.max}" />
 		<property name="maxIdle" value="300" />
 		<property name="maxWait" value="60000" />
 		<property name="testWhileIdle" value="true" />
@@ -135,7 +113,7 @@
 		<property name="defaultEncoding" value="UTF-8" />
    </bean>
    
-   <import resource="applicationContext-dubbo.xml" />
+<!--    <import resource="applicationContext-dubbo.xml" /> -->
    <import resource="system.spring.xml" />
    <import resource="applicationContext-job.xml" />
    

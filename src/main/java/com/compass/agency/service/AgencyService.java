@@ -29,11 +29,11 @@ import com.imobpay.base.services.FrServer;
 
 public class AgencyService extends AbstractService {
     
-    /**
-     * Dubbo分润服务
-     */
-    private FrServer frServer;
-    
+//    /**
+//     * Dubbo分润服务
+//     */
+//    private FrServer frServer;
+//    
     /**
      * 瑞通宝参数操作service
      */
@@ -549,8 +549,9 @@ public class AgencyService extends AbstractService {
         item.put(InterfaceNameConstans.SERVERJYM, InterfaceNameConstans.REAL_NAME_AUTH);
         item.put(InterfaceNameConstans.USERNAME, agency.getContactsName());
         item.put(InterfaceNameConstans.CERT_PID, agency.getUserpId());
-        String execute = frServer.execute(item.toJSONString());
-        return JSONObject.parseObject(execute);
+//        String execute = frServer.execute(item.toJSONString());
+//        return JSONObject.parseObject(execute);
+        return null;
     }
     
     /**
@@ -597,14 +598,15 @@ public class AgencyService extends AbstractService {
         item.put(InterfaceNameConstans.PROVINCE_ID, agency.getProvinceId());
         item.put(InterfaceNameConstans.CITY_ID, agency.getCityId());
         item.put(InterfaceNameConstans.COMPANY_ADDR, agency.getCompanyAddr());
-        String execute = frServer.execute(item.toJSONString());
-        return JSONObject.parseObject(execute);
+//        String execute = frServer.execute(item.toJSONString());
+//        return JSONObject.parseObject(execute);
+        return null;
     }
     
 
-    public void setFrServer(FrServer frServer) {
-        this.frServer = frServer;
-    }
+//    public void setFrServer(FrServer frServer) {
+//        this.frServer = frServer;
+//    }
     
     /**
      * 
@@ -695,8 +697,9 @@ public class AgencyService extends AbstractService {
         smsJson.put(InterfaceNameConstans.SOURCECHANNAL, InterfaceNameConstans.FR_SERVER);
         smsJson.put(InterfaceNameConstans.COMPANY_NAME, contactsName);
         smsJson.put(InterfaceNameConstans.AGENCY_ID, agencyId);
-        frServer.execute(smsJson.toString());
-        return smsJson;
+//        frServer.execute(smsJson.toString());
+//        return smsJson;
+        return null;
     }
     
     /**
