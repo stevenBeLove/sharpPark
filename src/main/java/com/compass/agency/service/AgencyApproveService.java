@@ -77,57 +77,57 @@ public class AgencyApproveService extends AbstractService {
      * 修改人:  yinghui zhang 修改描述： .<br/>
      * <p/>
      */
-    public JSONObject jmsSend(String content, String mobileno) throws Exception {
-        /** 组装发送报文 */
-        Map<String, Object> item = new HashMap<String, Object>();
-        item.put("P_TRANCODE", "DWSMS1001");
-        item.put("SMSTYPE", "1");
-        item.put("BRANCHID", "00800653");
-        item.put("TYPE", "1");
-        item.put("APPUSER", "ruitongbao");
-        item.put("CHANNEL", "瑞通宝综合管理系统");
-        item.put("CONTENT", content);//验证码【6668】
-        item.put("MOBILENO", mobileno);//mobileno
-        item.put("ORDERID", CommonDate.getDateStr());
-        Properties properties = PropertyPlaceholderConfigurerExt.getProperties();
-        if (StringUtils.isEmpty(properties.get("common.tibco.url"))) {
-            throw new QTException("验证失败！找不到队列链接[common.tibco.url]的配置信息！");
-        }
-        if (StringUtils.isEmpty(properties.get("common.tibco.user"))) {
-            throw new QTException("验证失败！找不到队列链接[common.tibco.user]的配置信息！");
-        }
-        if (StringUtils.isEmpty(properties.get("common.tibco.password"))) {
-            throw new QTException("验证失败！找不到队列链接[common.tibco.password]的配置信息！");
-        }
-        if (StringUtils.isEmpty(properties.get("common.tibco.encode"))) {
-            throw new QTException("验证失败！找不到队列链接[common.tibco.encode]的配置信息！");
-        }
-        if (StringUtils.isEmpty(properties.get("sms.tibco.sendtcp"))) {
-            throw new QTException("验证失败！找不到队列链接[sms.tibco.sendtcp]的配置信息！");
-        }
-        if (StringUtils.isEmpty(properties.get("sms.tibco.retcp"))) {
-            throw new QTException("验证失败！找不到队列链接[sms.tibco.retcp]的配置信息！");
-        }
-        String url = properties.get("common.tibco.url").toString();
-        String user = properties.get("common.tibco.user").toString();
-        String password = properties.get("common.tibco.password").toString();
-        String encode = properties.get("common.tibco.encode").toString();
-        String sendtcp = properties.get("sms.tibco.sendtcp").toString();
-        String retcp = properties.get("sms.tibco.retcp").toString();
-        JSONObject receiveJson = null;
-        int serverTimeOut = 30000;
-        try {
-            receiveJson = PubTibcoSend.sendCoreInfo(url, encode, user, password, "QueueConnectionFactory", sendtcp, retcp, serverTimeOut, item, false);
-        } catch (QTException e) {
-            log.error(e.getMessage(), e);
-            if (receiveJson == null) {
-                receiveJson = new JSONObject();
-            }
-            receiveJson.put("P_MSG_CODE", "99999");
-            receiveJson.put("P_MSG_TEXT", e.getRespMsg());
-        }
-        return receiveJson;
-    }
+//    public JSONObject jmsSend(String content, String mobileno) throws Exception {
+//        /** 组装发送报文 */
+//        Map<String, Object> item = new HashMap<String, Object>();
+//        item.put("P_TRANCODE", "DWSMS1001");
+//        item.put("SMSTYPE", "1");
+//        item.put("BRANCHID", "00800653");
+//        item.put("TYPE", "1");
+//        item.put("APPUSER", "ruitongbao");
+//        item.put("CHANNEL", "瑞通宝综合管理系统");
+//        item.put("CONTENT", content);//验证码【6668】
+//        item.put("MOBILENO", mobileno);//mobileno
+//        item.put("ORDERID", CommonDate.getDateStr());
+//        Properties properties = PropertyPlaceholderConfigurerExt.getProperties();
+//        if (StringUtils.isEmpty(properties.get("common.tibco.url"))) {
+//            throw new QTException("验证失败！找不到队列链接[common.tibco.url]的配置信息！");
+//        }
+//        if (StringUtils.isEmpty(properties.get("common.tibco.user"))) {
+//            throw new QTException("验证失败！找不到队列链接[common.tibco.user]的配置信息！");
+//        }
+//        if (StringUtils.isEmpty(properties.get("common.tibco.password"))) {
+//            throw new QTException("验证失败！找不到队列链接[common.tibco.password]的配置信息！");
+//        }
+//        if (StringUtils.isEmpty(properties.get("common.tibco.encode"))) {
+//            throw new QTException("验证失败！找不到队列链接[common.tibco.encode]的配置信息！");
+//        }
+//        if (StringUtils.isEmpty(properties.get("sms.tibco.sendtcp"))) {
+//            throw new QTException("验证失败！找不到队列链接[sms.tibco.sendtcp]的配置信息！");
+//        }
+//        if (StringUtils.isEmpty(properties.get("sms.tibco.retcp"))) {
+//            throw new QTException("验证失败！找不到队列链接[sms.tibco.retcp]的配置信息！");
+//        }
+//        String url = properties.get("common.tibco.url").toString();
+//        String user = properties.get("common.tibco.user").toString();
+//        String password = properties.get("common.tibco.password").toString();
+//        String encode = properties.get("common.tibco.encode").toString();
+//        String sendtcp = properties.get("sms.tibco.sendtcp").toString();
+//        String retcp = properties.get("sms.tibco.retcp").toString();
+//        JSONObject receiveJson = null;
+//        int serverTimeOut = 30000;
+//        try {
+//            receiveJson = PubTibcoSend.sendCoreInfo(url, encode, user, password, "QueueConnectionFactory", sendtcp, retcp, serverTimeOut, item, false);
+//        } catch (QTException e) {
+//            log.error(e.getMessage(), e);
+//            if (receiveJson == null) {
+//                receiveJson = new JSONObject();
+//            }
+//            receiveJson.put("P_MSG_CODE", "99999");
+//            receiveJson.put("P_MSG_TEXT", e.getRespMsg());
+//        }
+//        return receiveJson;
+//    }
     
     /**
      * 【方法名】    : (查询客户端用户). <br/> 

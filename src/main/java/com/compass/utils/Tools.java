@@ -2,7 +2,7 @@ package com.compass.utils;
 
 import java.util.Random;
 
-import com.imobpay.platform.utils.DateUtil;
+//import com.imobpay.platform.utils.DateUtil;
 
 /**
  * @ClassName: Tools
@@ -57,15 +57,15 @@ public class Tools {
      * @modifyDate May 4, 2014 2:58:50 PM
      * @return String 得到的唯一值 java.lang.String
      */
-    public static synchronized String getOnlyPK() {
-        String timePK = DateUtil.getDateByLong(new Long(System.currentTimeMillis()), DateUtil.yyyyMMddHHmmssSSS);
-        int min = 1000;
-        int max = 9999;
-        Random rand = new Random();
-        int tmp = Math.abs(rand.nextInt());
-        tmp = tmp % (max - min + 1) + min;
-        return timePK + tmp;
-    }
+//    public static synchronized String getOnlyPK() {
+//        String timePK = DateUtil.getDateByLong(new Long(System.currentTimeMillis()), DateUtil.yyyyMMddHHmmssSSS);
+//        int min = 1000;
+//        int max = 9999;
+//        Random rand = new Random();
+//        int tmp = Math.abs(rand.nextInt());
+//        tmp = tmp % (max - min + 1) + min;
+//        return timePK + tmp;
+//    }
 
     /**
      * 替换指定字符串中的一部分

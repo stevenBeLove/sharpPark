@@ -28,7 +28,6 @@
 		<ojdbc6.version>2.0</ojdbc6.version>
 		<quartz.version>1.5.2</quartz.version>
 		<commons-collections.version>3.2.2</commons-collections.version>
-		<tibjms.version>1.0</tibjms.version>
 		<jms-api_version>1.1-rev-1</jms-api_version>
 		<dom4j.version>1.6</dom4j.version>
 		<junit.version>4.12</junit.version>
@@ -243,25 +242,12 @@
 		  <version>1.1-rev-1</version>
 		</dependency>
 		
-		<!-- 队列 -->
-		<dependency>
-			<groupId>tibjms</groupId>
-			<artifactId>tibjms</artifactId>
-			<version>${tibjms.version}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>javax.jms</groupId>
 			<artifactId>jms-api</artifactId>
 			<version>${jms-api_version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.imobpay.base</groupId>
-			<artifactId>imob_platform</artifactId>
-			<version>2.2</version>
-		</dependency>
-		
 		<dependency>
 		  <groupId>net.sf.jxls</groupId>
 		  <artifactId>jxls-reader</artifactId>
@@ -313,18 +299,6 @@
 		    <classifier>jdk15</classifier>
 		</dependency>
 	
-		 <dependency>
-			  <groupId>com.froad.platform</groupId>
-			  <artifactId>platform_bate-1.0</artifactId>
-			  <version>1.0</version>
-		  </dependency>
-		  
-		<dependency>
-		  <groupId>com.imobpay.google</groupId>
-		  <artifactId>kaptcha</artifactId>
-		  <version>0.0.9</version>
-		</dependency>
-		
 		<dependency>
 		    <groupId>commons-httpclient</groupId>
 		    <artifactId>commons-httpclient</artifactId>

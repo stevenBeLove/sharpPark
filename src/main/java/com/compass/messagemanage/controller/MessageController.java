@@ -88,55 +88,55 @@ public class MessageController {
 		mobileCheckCode=null;
 		return AjaxReturnInfo.setTable(list == null ? 0 : count, list);
 	}
-	/**
-	 * 生成验证码并发送到指定手机
-	 * @return
-	 */
-    @RequestMapping(params = "method=sendMessage")
-    @ResponseBody
-    public AjaxReturnInfo sendMessage(@RequestParam(value = "phone") String phone, HttpServletRequest request) {
-        AjaxReturnInfo ajaxinfo = null;
-        MobileCheckCode mobileCheckCode = null;
-        log.info("查询所有符合条件的验证码");
-        // 更新phone，使其不为空
-        phone = (phone == null || "".equals(phone)) ? (String) request.getSession().getAttribute(ConstantUtils.USERPHONE) : phone;
-        request.getSession().setAttribute(ConstantUtils.USERPHONE, phone);
-        String random = Format.getRandom();
-        try {
-            String smsMsg = "尊敬的用户您好,验证码为" + random + "十分钟有效，请勿泄露";// 短信内容
-            // 判断是否是瑞通宝用户
-            /*
-             * Payuser user = agencyApproveService.queryRtbClientUser(phone); if
-             * (user == null) { ajaxinfo =
-             * AjaxReturnInfo.failed("抱歉，不存在该瑞通宝账号，请确认后重试！"); } else if
-             * (agencyApproveService.queryUserVipResult(user.getCustomerid()) <
-             * 2) { ajaxinfo = AjaxReturnInfo.failed(
-             * "抱歉，未能成功绑定！由于您的瑞通宝信用等级过低，请先在瑞通宝客户端中完善信用资料，信用等级达到2后，再进行绑定！"); }
-             * else {
-             */
-            agencyApproveService.jmsSend(smsMsg, phone);
-            // MySendMessage.getInstance().toSend(smsMsg);
-            mobileCheckCode = new MobileCheckCode();
-            mobileCheckCode.setCheckCode(random);
-            mobileCheckCode.setUserId((String) request.getSession().getAttribute(ConstantUtils.USERID));
-            mobileCheckCode.setBranchId((String) request.getSession().getAttribute(ConstantUtils.AGENCYID));
-            mobileCheckCode.setMobileNo(phone);
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.MINUTE, 10);
-            mobileCheckCode.setEffTime(new SimpleDateFormat("yyyyMMddHHmmss").format(calendar.getTime()));
-            messageService.addCheckCode(mobileCheckCode);
-            ajaxinfo = AjaxReturnInfo.success("验证码已发送，请注意查收");
-            mobileCheckCode = null;
-            // }
-        } catch (QTException e) {
-            ajaxinfo = AjaxReturnInfo.failed(e.getRespMsg());
-            log.error(e.getMessage(), e);
-        } catch (Exception e) {
-            ajaxinfo = AjaxReturnInfo.failed("验证码发送错误");
-            log.error(e.getMessage(), e);
-        }
-        return ajaxinfo;
-    }
+//	/**
+//	 * 生成验证码并发送到指定手机
+//	 * @return
+//	 */
+//    @RequestMapping(params = "method=sendMessage")
+//    @ResponseBody
+//    public AjaxReturnInfo sendMessage(@RequestParam(value = "phone") String phone, HttpServletRequest request) {
+//        AjaxReturnInfo ajaxinfo = null;
+//        MobileCheckCode mobileCheckCode = null;
+//        log.info("查询所有符合条件的验证码");
+//        // 更新phone，使其不为空
+//        phone = (phone == null || "".equals(phone)) ? (String) request.getSession().getAttribute(ConstantUtils.USERPHONE) : phone;
+//        request.getSession().setAttribute(ConstantUtils.USERPHONE, phone);
+//        String random = Format.getRandom();
+//        try {
+//            String smsMsg = "尊敬的用户您好,验证码为" + random + "十分钟有效，请勿泄露";// 短信内容
+//            // 判断是否是瑞通宝用户
+//            /*
+//             * Payuser user = agencyApproveService.queryRtbClientUser(phone); if
+//             * (user == null) { ajaxinfo =
+//             * AjaxReturnInfo.failed("抱歉，不存在该瑞通宝账号，请确认后重试！"); } else if
+//             * (agencyApproveService.queryUserVipResult(user.getCustomerid()) <
+//             * 2) { ajaxinfo = AjaxReturnInfo.failed(
+//             * "抱歉，未能成功绑定！由于您的瑞通宝信用等级过低，请先在瑞通宝客户端中完善信用资料，信用等级达到2后，再进行绑定！"); }
+//             * else {
+//             */
+//            agencyApproveService.jmsSend(smsMsg, phone);
+//            // MySendMessage.getInstance().toSend(smsMsg);
+//            mobileCheckCode = new MobileCheckCode();
+//            mobileCheckCode.setCheckCode(random);
+//            mobileCheckCode.setUserId((String) request.getSession().getAttribute(ConstantUtils.USERID));
+//            mobileCheckCode.setBranchId((String) request.getSession().getAttribute(ConstantUtils.AGENCYID));
+//            mobileCheckCode.setMobileNo(phone);
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.add(Calendar.MINUTE, 10);
+//            mobileCheckCode.setEffTime(new SimpleDateFormat("yyyyMMddHHmmss").format(calendar.getTime()));
+//            messageService.addCheckCode(mobileCheckCode);
+//            ajaxinfo = AjaxReturnInfo.success("验证码已发送，请注意查收");
+//            mobileCheckCode = null;
+//            // }
+//        } catch (QTException e) {
+//            ajaxinfo = AjaxReturnInfo.failed(e.getRespMsg());
+//            log.error(e.getMessage(), e);
+//        } catch (Exception e) {
+//            ajaxinfo = AjaxReturnInfo.failed("验证码发送错误");
+//            log.error(e.getMessage(), e);
+//        }
+//        return ajaxinfo;
+//    }
 
     /**
      * 校验验证码是否正确
