@@ -30,5 +30,5 @@
 
   <bean id="rtbParamterService"  class="com.compass.paramater.service.RtbParamterService" parent="absIbatisDaoService"/>
 	
-
+  <bean id="parkService" class="com.compass.park.service.ParkService" parent="absIbatisDaoService"></bean>
 </beans>

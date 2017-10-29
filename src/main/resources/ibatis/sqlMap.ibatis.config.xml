@@ -36,6 +36,5 @@
 	<sqlMap resource="ibatis/sqlMap/SYSTEM.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/RtbParamter.ibatis.xml" />
 	<sqlMap resource="ibatis/sqlMap/AGENCY.ibatis.xml"/>
-	
-	
+	<sqlMap resource="ibatis/sqlMap/TB_PARK_SqlMap.xml"/>
 </sqlMapConfig>
