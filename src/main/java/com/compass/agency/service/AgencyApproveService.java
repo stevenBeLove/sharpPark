@@ -1,22 +1,11 @@
 package com.compass.agency.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.StringUtils;
 
-import cn.ardu.jms.ems.exception.QTException;
-
-import com.alibaba.fastjson.JSONObject;
 import com.compass.agency.model.AgencyApprove;
 import com.compass.agency.model.Payuser;
 import com.compass.utils.AbstractService;
-import com.compass.utils.CommonDate;
-import com.compass.utils.PropertyPlaceholderConfigurerExt;
-import com.compass.utils.PubTibcoSend;
 
 /**
  * <pre>

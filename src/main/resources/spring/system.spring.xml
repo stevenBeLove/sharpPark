@@ -6,67 +6,26 @@
 
   <bean id="frServer" class="com.imobpay.base.services.FrServerImpl"></bean>
 
-  <bean id="payCustomerService"  class="com.compass.paycustomer.service.PayCustomerService" parent="absIbatisDaoService"/>
-
   <bean id="agencyService"  class="com.compass.agency.service.AgencyService" parent="absIbatisDaoService">
   		<!-- <property name="frServer" ref="frServer"></property> -->
   		<property name="rtbParamterService" ref="rtbParamterService"></property>
   		<property name="userRoleService" ref="userRoleService"></property>
   </bean>
-  
+
   <bean id="systemManageService"  class="com.compass.system.service.SystemManageService" parent="absIbatisDaoService"/>
-
-  <bean id="psmFeeService"  class="com.compass.pasmFee.service.PsmFeeService" parent="absIbatisDaoService">
-  		<property name="rtbParamterService" ref="rtbParamterService"></property>
-  		<property name="agencyCostService" ref="agencyCostService"></property>
-  </bean>
-
-  <bean id="agencyCostService"  class="com.compass.agencyCost.service.AgencyCostService" parent="absIbatisDaoService">
-  		<property name="frServer" ref="frServer"></property>
-  		<property name="rtbParamterService" ref="rtbParamterService"></property>
-  		<property name="payproductService" ref="payproductService"></property>
-  </bean>
-
-  <bean id="payproductService"  class="com.compass.agencyCost.service.PayproductService" parent="absIbatisDaoService"/>
 
   <bean id="authorityService"  class="com.compass.authority.service.AuthorityService" parent="absIbatisDaoService"/>
   
-  <bean id="dataService"  class="com.compass.dataManage.service.DataService" parent="absIbatisDaoService"/>
-  
-  <bean id="dealManageService"  class="com.compass.dealmanager.service.DealManageService" parent="absIbatisDaoService"/>
-  
-  <bean id="dealTypeManageService"  class="com.compass.dealtypemanage.service.DealTypeManageService" parent="absIbatisDaoService"/>
-  
   <bean id="usersService"  class="com.compass.users.service.UsersService" parent="absIbatisDaoService"/>
-  
-  <bean id="messageService"  class="com.compass.messagemanage.service.MessageService" parent="absIbatisDaoService"/>
   
   <bean id="role_AuthService" class="com.compass.role_auth.service.Role_AuthService" parent="absIbatisDaoService"></bean>
   
   <bean id="roleService"  class="com.compass.role.service.RoleService" parent="absIbatisDaoService"/>
   
-  <bean id="settingManageService"  class="com.compass.setting.service.SettingManageService" parent="absIbatisDaoService"/>
-  
-  <bean id="splitFeeService"  class="com.compass.splitfee.service.SplitFeeService" parent="absIbatisDaoService"/>
-  
-  <bean id="splitMouldService"  class="com.compass.splitmould.service.SplitMouldService" parent="absIbatisDaoService"/>
-  
-  <bean id="splitRuleService"  class="com.compass.splitrule.service.SplitRuleService" parent="absIbatisDaoService"/>
-  
   <bean id="systemLogService"  class="com.compass.systemlog.service.SystemLogService" parent="absIbatisDaoService"/>
-  
-  <bean id="terminalDealService" class="com.compass.dealmanager.service.TerminalDealService" parent="absIbatisDaoService"/>
- 
-  <bean id="terminalManageService"  class="com.compass.terminalmanage.service.TerminalManageService" parent="absIbatisDaoService">
-  		<property name="frServer" ref="frServer"></property>
-  </bean>
-
-  <bean id="terminalTypeService"  class="com.compass.terminaltype.service.TerminalTypeService" parent="absIbatisDaoService"/>
   
   <bean id="userRoleService"  class="com.compass.userrole.service.UserRoleService" parent="absIbatisDaoService"/>
   
-  <bean id="queryTradeProfitService"  class="com.compass.pasmFee.service.QueryTradeProfitService" parent="absIbatisDaoService"/>
-	
   <bean id="agencyApproveService"  class="com.compass.agency.service.AgencyApproveService" parent="absIbatisDaoService"/>
 
   <bean id="rtbParamterService"  class="com.compass.paramater.service.RtbParamterService" parent="absIbatisDaoService"/>

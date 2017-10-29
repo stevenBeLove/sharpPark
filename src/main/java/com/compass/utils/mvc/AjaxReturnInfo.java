@@ -6,8 +6,6 @@ import java.util.Map;
 
 import org.springframework.util.StringUtils;
 
-import com.compass.pasmFee.model.QueryTradeProfit;
-
 /**
  * @author wangLong Ajax返回值封装类
  */

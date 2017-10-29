@@ -1,4 +1,4 @@
-package cn.ardu.jms.ems.exception;
+package com.exception;
 
 /**
  * 

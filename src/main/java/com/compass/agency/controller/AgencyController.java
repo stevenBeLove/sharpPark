@@ -33,8 +33,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cn.ardu.jms.ems.exception.QTException;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.compass.agency.model.AgencyBean;
@@ -47,8 +45,6 @@ import com.compass.authority.service.AuthorityService;
 import com.compass.constans.InterfaceNameConstans;
 import com.compass.paramater.model.RtbParamter;
 import com.compass.paramater.service.RtbParamterService;
-import com.compass.paycustomer.model.PayCustomer;
-import com.compass.paycustomer.service.PayCustomerService;
 import com.compass.role.service.RoleService;
 import com.compass.system.service.SystemManageService;
 import com.compass.systemlog.service.SystemLogService;
@@ -65,6 +61,7 @@ import com.compass.utils.MD5;
 import com.compass.utils.Tools;
 import com.compass.utils.mvc.AjaxReturnInfo;
 import com.compass.utils.mvc.I18nUtils;
+import com.exception.QTException;
 
 @Controller
 @RequestMapping("/agency/agency.do")
@@ -104,9 +101,9 @@ public class AgencyController {
     private RtbParamterService rtbParamterService;
     
     
-    @Autowired
-    @Qualifier("payCustomerService")
-    private PayCustomerService payCustomerService;
+//    @Autowired
+//    @Qualifier("payCustomerService")
+//    private PayCustomerService payCustomerService;
     
     
     @Autowired
@@ -585,21 +582,21 @@ public class AgencyController {
                         }
                         
                         
-                        PayCustomer payCustomer = payCustomerService.selectPayCustomerByMobile(companyPhone);
-                        AgencyBean bean = agencyService.getAgencyBeanWithMap(companyPhone);
-                        if (payCustomer != null && InterfaceNameConstans.VALUE_3.equals(payCustomer.getCustomertag()) && InterfaceNameConstans.VALUE_5.equals(payCustomer.getCheckrange())) {
-                            agency.setUserpId(payCustomer.getCustomerpid());
-                            agency.setContactsName(payCustomer.getUsername());
-                            //查询Agency是否已经实名
-                        } else if (bean != null && bean.getAgency_status()!=null && bean.getAgency_status().equals(InterfaceNameConstans.VALUE_3)) {
-                            agency.setUserpId(bean.getUserpId());
-                            agency.setContactsName(bean.getContactsName());
-                        }  else {
-                            JSONObject jsonObj = agencyService.checkNameCertPid(agency);
-                            if (!ConstantUtils.MSG_SUCCESS.equals(jsonObj.get(ConstantUtils.MSG_CODE))) {
-                                return AjaxReturnInfo.failed((String) jsonObj.get(ConstantUtils.MSG_TEXT));
-                            }
-                        }
+//                        PayCustomer payCustomer = null;
+//                        AgencyBean bean = agencyService.getAgencyBeanWithMap(companyPhone);
+//                        if (payCustomer != null && InterfaceNameConstans.VALUE_3.equals(payCustomer.getCustomertag()) && InterfaceNameConstans.VALUE_5.equals(payCustomer.getCheckrange())) {
+//                            agency.setUserpId(payCustomer.getCustomerpid());
+//                            agency.setContactsName(payCustomer.getUsername());
+//                            //查询Agency是否已经实名
+//                        } else if (bean != null && bean.getAgency_status()!=null && bean.getAgency_status().equals(InterfaceNameConstans.VALUE_3)) {
+//                            agency.setUserpId(bean.getUserpId());
+//                            agency.setContactsName(bean.getContactsName());
+//                        }  else {
+//                            JSONObject jsonObj = null;
+//                            if (!ConstantUtils.MSG_SUCCESS.equals(jsonObj.get(ConstantUtils.MSG_CODE))) {
+//                                return AjaxReturnInfo.failed((String) jsonObj.get(ConstantUtils.MSG_TEXT));
+//                            }
+//                        }
                         agency.setAgency_status(AgencyStatus.realNamePass.getVal());
                         
                     } else {
@@ -647,7 +644,7 @@ public class AgencyController {
                             info.setDays(InterfaceNameConstans.DAYS7);
                         }
                         //发送短信通知
-                        agencyService.sendSMS(agencyid, companyPhone, agency.getContactsName());
+//                        agencyService.sendSMS(agencyid, companyPhone, agency.getContactsName());
                         userRoleService.insertUserAddInfo(info);
                         // 添加操作详情 20141203
                         String operateDetail2 = "添加用户ID为" + userId + ",机构ID为" + agencyid;
@@ -1749,58 +1746,59 @@ public class AgencyController {
     @ResponseBody
     public AjaxReturnInfo updateCertification(@RequestParam(value = "companyName") String companyName, @RequestParam(value = "contactsName") String contactsName,
             @RequestParam(value = "userpId") String userpId, @RequestParam(value = "companyEmail") String companyEmail, @RequestParam(value = "companyPhone") String companyPhone, HttpServletRequest request){
-        AjaxReturnInfo ajaxReturnInfo = AjaxReturnInfo.failed("message.auth.failed");
-        try {
-            String ipAddress = request.getRemoteAddr();
-            String userId = request.getSession().getAttribute(ConstantUtils.USERID).toString();
-            String agencyId = request.getSession().getAttribute(ConstantUtils.AGENCYID).toString();
-            AgencyBean agency = new AgencyBean();
-            agency.setAgency_id(agencyId);
-            agency.setCompanyName(companyName);
-            agency.setCompanyEmail(companyEmail);
-            
-            PayCustomer payCustomer = payCustomerService.selectPayCustomerByMobile(companyPhone);
-            AgencyBean bean = agencyService.getAgencyBeanWithMap(companyPhone);
-            if (payCustomer != null && InterfaceNameConstans.VALUE_3.equals(payCustomer.getCustomertag()) && InterfaceNameConstans.VALUE_5.equals(payCustomer.getCheckrange())) {
-                agency.setUserpId(payCustomer.getCustomerpid());
-                agency.setContactsName(payCustomer.getUsername());
-                //查询Agency是否已经实名
-            } else if (bean != null && bean.getAgency_status() != null) {
-                if (bean.getAgency_status().equals(InterfaceNameConstans.VALUE_3)) {
-                    if (StringUtils.isNotEmpty(bean.getUserpId())) {
-                        agency.setUserpId(bean.getUserpId());
-                    }
-                    if (StringUtils.isNotEmpty(bean.getContactsName())) {
-                        agency.setContactsName(bean.getContactsName());
-                    }
-                    
-                    if (StringUtils.isNotEmpty(bean.getUserpId()) && StringUtils.isNotEmpty(bean.getContactsName())) {
-                        agency.setAgency_status(AgencyStatus.realNamePass.getVal());
-                    }
-                }
-            } else {
-                agency.setUserpId(userpId);
-                agency.setContactsName(contactsName);
-                JSONObject jsonObj = agencyService.checkNameCertPid(agency);
-                if (!ConstantUtils.MSG_SUCCESS.equals(jsonObj.get(ConstantUtils.MSG_CODE))) {
-                    return AjaxReturnInfo.failed((String) jsonObj.get(ConstantUtils.MSG_TEXT));
-                }
-            }
-            int result = agencyService.updateCertification(agency, userId);
-            if (result > 0){
-                String operateDetail = "实名认证的机构为" + companyName + ",机构ID为" + agencyId;
-                // 添加进系统日志表 
-                systemLogService.addLog(ipAddress, agencyId, userId, ConstantUtils.CERTIFICATION, ConstantUtils.OPERTYPEUPD, operateDetail);
-                ajaxReturnInfo = AjaxReturnInfo.success(I18nUtils.getResourceValue("message.auth.success"));
-            }
-        } catch (QTException e) {
-            LogPay.error(e.getMessage(), e);
-            ajaxReturnInfo = AjaxReturnInfo.failed(e.getRespMsg()); 
-        } catch (Exception e) {
-            LogPay.error(e.getMessage(), e);
-            ajaxReturnInfo = AjaxReturnInfo.failed(e.getMessage()); 
-        }
-        return ajaxReturnInfo;
+//        AjaxReturnInfo ajaxReturnInfo = AjaxReturnInfo.failed("message.auth.failed");
+//        try {
+//            String ipAddress = request.getRemoteAddr();
+//            String userId = request.getSession().getAttribute(ConstantUtils.USERID).toString();
+//            String agencyId = request.getSession().getAttribute(ConstantUtils.AGENCYID).toString();
+//            AgencyBean agency = new AgencyBean();
+//            agency.setAgency_id(agencyId);
+//            agency.setCompanyName(companyName);
+//            agency.setCompanyEmail(companyEmail);
+//            
+////            PayCustomer payCustomer = payCustomerService.selectPayCustomerByMobile(companyPhone);
+////            AgencyBean bean = agencyService.getAgencyBeanWithMap(companyPhone);
+////            if (payCustomer != null && InterfaceNameConstans.VALUE_3.equals(payCustomer.getCustomertag()) && InterfaceNameConstans.VALUE_5.equals(payCustomer.getCheckrange())) {
+////                agency.setUserpId(payCustomer.getCustomerpid());
+////                agency.setContactsName(payCustomer.getUsername());
+////                //查询Agency是否已经实名
+////            } else if (bean != null && bean.getAgency_status() != null) {
+////                if (bean.getAgency_status().equals(InterfaceNameConstans.VALUE_3)) {
+////                    if (StringUtils.isNotEmpty(bean.getUserpId())) {
+////                        agency.setUserpId(bean.getUserpId());
+////                    }
+////                    if (StringUtils.isNotEmpty(bean.getContactsName())) {
+////                        agency.setContactsName(bean.getContactsName());
+////                    }
+////                    
+////                    if (StringUtils.isNotEmpty(bean.getUserpId()) && StringUtils.isNotEmpty(bean.getContactsName())) {
+////                        agency.setAgency_status(AgencyStatus.realNamePass.getVal());
+////                    }
+////                }
+//            } else {
+//                agency.setUserpId(userpId);
+//                agency.setContactsName(contactsName);
+//                JSONObject jsonObj = null;
+//                if (!ConstantUtils.MSG_SUCCESS.equals(jsonObj.get(ConstantUtils.MSG_CODE))) {
+//                    return AjaxReturnInfo.failed((String) jsonObj.get(ConstantUtils.MSG_TEXT));
+//                }
+//            }
+//            int result = agencyService.updateCertification(agency, userId);
+//            if (result > 0){
+//                String operateDetail = "实名认证的机构为" + companyName + ",机构ID为" + agencyId;
+//                // 添加进系统日志表 
+//                systemLogService.addLog(ipAddress, agencyId, userId, ConstantUtils.CERTIFICATION, ConstantUtils.OPERTYPEUPD, operateDetail);
+//                ajaxReturnInfo = AjaxReturnInfo.success(I18nUtils.getResourceValue("message.auth.success"));
+//            }
+//        } catch (QTException e) {
+//            LogPay.error(e.getMessage(), e);
+//            ajaxReturnInfo = AjaxReturnInfo.failed(e.getRespMsg()); 
+//        } catch (Exception e) {
+//            LogPay.error(e.getMessage(), e);
+//            ajaxReturnInfo = AjaxReturnInfo.failed(e.getMessage()); 
+//        }
+//        return ajaxReturnInfo;
+        return null;
     }
     
    /**
@@ -1837,7 +1835,8 @@ public class AgencyController {
             agency.setCityId(cityId);
             agency.setSomeoneName(someoneName);
             agency.setSomeonePhone(someonePhone);
-            JSONObject jsonObj = agencyService.addAgencyByDubbo(agency);
+//            JSONObject jsonObj = agencyService.addAgencyByDubbo(agency);
+            JSONObject jsonObj = null;
             if (!ConstantUtils.MSG_SUCCESS.equals(jsonObj.get(ConstantUtils.MSG_CODE))) {
                 throw new QTException((String) jsonObj.get(ConstantUtils.MSG_TEXT));
             } else {
@@ -1897,51 +1896,51 @@ public class AgencyController {
     @RequestMapping(params = "method=modifyCompanyPhone")
     @ResponseBody
     public AjaxReturnInfo modifyCompanyPhone(String phone, HttpServletRequest request) {
-        try {
-            String agencyIdS = request.getSession().getAttribute(ConstantUtils.AGENCYID).toString();
-            String userId = request.getSession().getAttribute(ConstantUtils.USERID).toString();
-            // 更新机构信息
-            AgencyBean agencyBean = new AgencyBean();
-            PayCustomer payCustomer = payCustomerService.selectPayCustomerByMobile(phone);
-            AgencyBean bean = agencyService.getAgencyBeanWithMap(phone);
-            if (payCustomer != null && InterfaceNameConstans.VALUE_3.equals(payCustomer.getCustomertag()) && InterfaceNameConstans.VALUE_5.equals(payCustomer.getCheckrange())) {
-                agencyBean.setUserpId(payCustomer.getCustomerpid());
-                agencyBean.setContactsName(payCustomer.getUsername());
-                agencyBean.setAgency_status(AgencyStatus.realNamePass.getVal());
-                // 查询Agency是否已经实名
-            } else if (bean != null && bean.getAgency_status() != null) {
-                if (bean.getAgency_status().equals(InterfaceNameConstans.VALUE_3)) {
-                    if (StringUtils.isNotEmpty(bean.getUserpId())) {
-                        agencyBean.setUserpId(bean.getUserpId());
-                    }
-                    if (StringUtils.isNotEmpty(bean.getContactsName())) {
-                        agencyBean.setContactsName(bean.getContactsName());
-                    }
-                    if (StringUtils.isNotEmpty(bean.getUserpId()) && StringUtils.isNotEmpty(bean.getContactsName())) {
-                        agencyBean.setAgency_status(AgencyStatus.realNamePass.getVal());
-                    }
-                    
-                }
-            } else {
-                agencyBean.setAgency_status(AgencyStatus.auditPass.getVal());
-            }
-            agencyBean.setAgency_id(agencyIdS);
-            agencyBean.setCompanyPhone(phone);
-            agencyBean.setSomeonePhone(phone);
-            agencyService.updateByPrimaryKey(agencyBean);
-
-            // 更新用户信息
-            UserBean user = new UserBean();
-            user.setUserid(userId);
-            user.setPhone(phone);
-            usersService.updateByPrimaryKey(user);
-
-            return AjaxReturnInfo.success(I18nUtils.getResourceValue("message.activate.success"));
-        } catch (Exception e) {
-            LogPay.error(e.getMessage(), e);
-            return AjaxReturnInfo.failed(I18nUtils.getResourceValue("message.agajx.system.error"));
-        }
-
+//        try {
+//            String agencyIdS = request.getSession().getAttribute(ConstantUtils.AGENCYID).toString();
+//            String userId = request.getSession().getAttribute(ConstantUtils.USERID).toString();
+//            // 更新机构信息
+//            AgencyBean agencyBean = new AgencyBean();
+//            PayCustomer payCustomer = payCustomerService.selectPayCustomerByMobile(phone);
+//            AgencyBean bean = agencyService.getAgencyBeanWithMap(phone);
+//            if (payCustomer != null && InterfaceNameConstans.VALUE_3.equals(payCustomer.getCustomertag()) && InterfaceNameConstans.VALUE_5.equals(payCustomer.getCheckrange())) {
+//                agencyBean.setUserpId(payCustomer.getCustomerpid());
+//                agencyBean.setContactsName(payCustomer.getUsername());
+//                agencyBean.setAgency_status(AgencyStatus.realNamePass.getVal());
+//                // 查询Agency是否已经实名
+//            } else if (bean != null && bean.getAgency_status() != null) {
+//                if (bean.getAgency_status().equals(InterfaceNameConstans.VALUE_3)) {
+//                    if (StringUtils.isNotEmpty(bean.getUserpId())) {
+//                        agencyBean.setUserpId(bean.getUserpId());
+//                    }
+//                    if (StringUtils.isNotEmpty(bean.getContactsName())) {
+//                        agencyBean.setContactsName(bean.getContactsName());
+//                    }
+//                    if (StringUtils.isNotEmpty(bean.getUserpId()) && StringUtils.isNotEmpty(bean.getContactsName())) {
+//                        agencyBean.setAgency_status(AgencyStatus.realNamePass.getVal());
+//                    }
+//                    
+//                }
+//            } else {
+//                agencyBean.setAgency_status(AgencyStatus.auditPass.getVal());
+//            }
+//            agencyBean.setAgency_id(agencyIdS);
+//            agencyBean.setCompanyPhone(phone);
+//            agencyBean.setSomeonePhone(phone);
+//            agencyService.updateByPrimaryKey(agencyBean);
+//
+//            // 更新用户信息
+//            UserBean user = new UserBean();
+//            user.setUserid(userId);
+//            user.setPhone(phone);
+//            usersService.updateByPrimaryKey(user);
+//
+//            return AjaxReturnInfo.success(I18nUtils.getResourceValue("message.activate.success"));
+//        } catch (Exception e) {
+//            LogPay.error(e.getMessage(), e);
+//            return AjaxReturnInfo.failed(I18nUtils.getResourceValue("message.agajx.system.error"));
+//        }
+ return null;
     }
     
     

@@ -1,13 +1,10 @@
 package com.compass.agency.service;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.util.StringUtils;
-
-import cn.ardu.jms.ems.exception.QTException;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -24,8 +21,7 @@ import com.compass.users.model.UserBean;
 import com.compass.utils.AbstractService;
 import com.compass.utils.CommonDate;
 import com.compass.utils.ConstantUtils;
-import com.compass.utils.mvc.I18nUtils;
-import com.imobpay.base.services.FrServer;
+import com.exception.QTException;
 
 public class AgencyService extends AbstractService {
     

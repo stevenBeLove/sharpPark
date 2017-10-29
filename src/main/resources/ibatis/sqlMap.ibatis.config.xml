@@ -5,91 +5,37 @@
 
 <sqlMapConfig>
 	<settings useStatementNamespaces="true" useColumnLabel="false"/>
+	<typeAlias alias="RoleBean" type="com.compass.role.model.RoleBean"/> 
 	<typeAlias alias="SystemManageBean" type="com.compass.system.model.SystemManageBean"/> 
 	<typeAlias alias="SpecSystemBean" type="com.compass.agency.model.SpecSystemBean"/> 
 	<typeAlias alias="AgencyBean" type="com.compass.agency.model.AgencyBean" />
 	<typeAlias alias="AgentreeBean" type="com.compass.agency.model.AgentreeBean" />
 	<typeAlias alias="TreeNodesBean" type="com.compass.agency.model.TreeNodesBean" />
-	<typeAlias alias="AgencyCost" type="com.compass.agencyCost.model.AgencyCost"/>
 	<typeAlias alias="AuthorityBean" type="com.compass.authority.model.AuthorityBean" /> 
-	<typeAlias alias="ProcLogBean" type="com.compass.dataManage.model.ProcLogBean"/> 
-	<typeAlias alias="FrunFeeBean" type="com.compass.dataManage.model.FrunFeeBean" />
-	<typeAlias alias="ResetBean" type="com.compass.splitfee.model.ResetBean"/> 
-	<typeAlias alias="MsgBean" type="com.compass.dataManage.model.MsgBean" />
-	<typeAlias alias="DealBean" type="com.compass.dealmanager.model.DealBean"/> 
-	<typeAlias alias="ProfitBean" type="com.compass.dealmanager.model.ProfitBean"/> 
-	<typeAlias alias="DealCountBean" type="com.compass.dealmanager.model.DealCountBean"/>
-	<typeAlias alias="DealDeductBean" type="com.compass.dealmanager.model.DealDeductBean"/>
-	<typeAlias alias="OtherDeductBean" type="com.compass.dealmanager.model.OtherDeductBean"/>
-	<typeAlias alias="RealDeductBean" type="com.compass.dealmanager.model.RealDeductBean"/>
-	<typeAlias alias="DeductTypeBean" type="com.compass.dealmanager.model.DeductTypeBean"/>
-	<typeAlias alias="DealTypeManageBean" type="com.compass.dealtypemanage.model.DealTypeManageBean"/> 
 	<typeAlias alias="UserBean" type="com.compass.users.model.UserBean"/> 
 	<typeAlias alias="PwdStrategy" type="com.compass.users.model.PwdStrategy"/> 
 	<typeAlias alias="MenuBean" type="com.compass.users.model.MenuBean" />
-	<typeAlias alias="MobileCheckCode" type="com.compass.messagemanage.model.MobileCheckCode"/> 
-	<typeAlias alias="PsmFee" type="com.compass.pasmFee.model.PsmFee"/>
-	<typeAlias alias="Role_AuthBean" type="com.compass.role_auth.model.Role_AuthBean"/> 
-	<typeAlias alias="RoleBean" type="com.compass.role.model.RoleBean"/> 
-	<typeAlias alias="SettingManageBean" type="com.compass.setting.model.SettingManageBean"/> 
-	<typeAlias alias="SplitFeeBean" type="com.compass.splitfee.model.SplitFeeBean"/> 
-	<typeAlias alias="SplitFeeDealType" type="com.compass.splitfee.model.SplitFeeDealType"/> 
-	<typeAlias alias="SplitFeeDealBean" type="com.compass.splitfee.model.SplitFeeDealBean"/> 
-	<typeAlias alias="TerminalCountBean" type="com.compass.terminalmanage.model.TerminalCountBean"/>
-	<typeAlias alias="SplitMouldBean" type="com.compass.splitmould.model.SplitMouldBean"/> 
-	<typeAlias alias="SplitTopMouldBean" type="com.compass.splitmould.model.SplitTopMouldBean"/> 
-	<typeAlias alias="SplitOrgMouldBean" type="com.compass.splitmould.model.SplitOrgMouldBean"/>
-	<typeAlias alias="SplitHisMouldBean" type="com.compass.splitmould.model.SplitHisMouldBean"/>
-	<typeAlias alias="SplitRuleBean" type="com.compass.splitrule.model.SplitRuleBean"/> 
 	<typeAlias alias="SystemLogBean" type="com.compass.systemlog.model.SystemLogBean" />
 	<typeAlias alias="OperateTypeBean" type="com.compass.systemlog.model.OperateTypeBean" />
-	<typeAlias alias="TerminalChange" type="com.compass.terminalmanage.model.TerminalChange"/>
-	<typeAlias alias="ActStandardBean" type="com.compass.dealmanager.model.ActStandardBean"/>
-	<typeAlias alias="ParamBean" type="com.compass.authority.model.ParamBean"/>
-	<typeAlias alias="TerminalDealBean" type="com.compass.dealmanager.model.TerminalDealBean"/>
-	<typeAlias alias="TerminalManageBean" type="com.compass.terminalmanage.model.TerminalManageBean" />
-	<typeAlias alias="TerminalSerilBean" type="com.compass.terminalmanage.model.TerminalSerilBean" />
-	<typeAlias alias="TerminalCountBean" type="com.compass.terminalmanage.model.TerminalCountBean" />
-	<typeAlias alias="TerminalViewBean" type="com.compass.terminalmanage.model.TerminalViewBean" />
-	<typeAlias alias="TerminalTypeBean" type="com.compass.terminaltype.model.TerminalTypeBean" />
-	<typeAlias alias="UserRoleBean" type="com.compass.userrole.model.UserRoleBean"></typeAlias>
-	<typeAlias alias="QueryTradeProfit" type="com.compass.pasmFee.model.QueryTradeProfit" />
-	<typeAlias alias="AgencyApprove" type="com.compass.agency.model.AgencyApprove" />
-	<typeAlias alias="RtbParamter" type="com.compass.paramater.model.RtbParamter" />
 	<typeAlias alias="AgencySetup" type="com.compass.agency.model.AgencySetup" />
-	<typeAlias alias="PayCustomer" type="com.compass.paycustomer.model.PayCustomer" />
-	<typeAlias alias="TerminalBack" type="com.compass.terminalmanage.model.TerminalBack" />
-
+	<typeAlias alias="UserRoleBean" type="com.compass.userrole.model.UserRoleBean"></typeAlias>
+	<typeAlias alias="ParamBean" type="com.compass.authority.model.ParamBean"/>
+	<typeAlias alias="RtbParamter" type="com.compass.paramater.model.RtbParamter" />
+	<typeAlias alias="AgencyApprove" type="com.compass.agency.model.AgencyApprove" />
+	<typeAlias alias="Role_AuthBean" type="com.compass.role_auth.model.Role_AuthBean"/> 
 
 	<sqlMap resource="ibatis/sqlMap/USERROLE.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/TERMINALTYPE.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/TERMINALMANAGE.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/TERMINALDEAL.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/TerminalChange.ibatis.xml"/> 
 	<sqlMap resource="ibatis/sqlMap/SYSTEMLOG.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/SPLITRULE.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/SPLITMOULD.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/SPLITFEE.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/SETTING.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/SEQUENCE.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/ROLE.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/ROLE_AUTH.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/PsmFee.ibatis.xml"/> 
-	<sqlMap resource="ibatis/sqlMap/MESSAGE.ibatis.xml"/>
+	<!-- <sqlMap resource="ibatis/sqlMap/MESSAGE.ibatis.xml"/> -->
 	<sqlMap resource="ibatis/sqlMap/MENU.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/LOGIN.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/DEALTYPEMANAGE.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/DEAL.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/DATA.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/AUTHORITY.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/AgencyCost.ibatis.xml"/> 
-	<sqlMap resource="ibatis/sqlMap/AGENCY.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/SYSTEM.ibatis.xml"/>
-	<sqlMap resource="ibatis/sqlMap/QueryTradeProfit.ibatis.xml" />
-	<sqlMap resource="ibatis/sqlMap/AgencyApprove.ibatis.xml" />
 	<sqlMap resource="ibatis/sqlMap/RtbParamter.ibatis.xml" />
-	<sqlMap resource="ibatis/sqlMap/PayCustomer.ibatis.xml" />
-	
+	<sqlMap resource="ibatis/sqlMap/AGENCY.ibatis.xml"/>
 	
 	
 </sqlMapConfig>

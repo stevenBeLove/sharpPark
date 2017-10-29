@@ -2,11 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.imobpay</groupId>
-	<artifactId>RtbPlatform</artifactId>
+	<groupId>com.shandian</groupId>
+	<artifactId>SdtPlatform</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-	<name>RtbPlatform project</name>
+	<name>SdtPlatform project</name>
 
 
 	<properties>
