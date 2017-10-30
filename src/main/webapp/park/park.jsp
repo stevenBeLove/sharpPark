@@ -47,6 +47,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	}
 	var flag;
 	$.openWin = function(obj) {
+		$("#merchantNameU").val('');
 		var rows = $('#viewAgency').datagrid('getSelections');
 		var len = rows.length;
 		$('#markSave').window({
@@ -72,48 +73,61 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	};
 
 	$.AgencySave = function() {
-		var agencyname = $("#agencyname").val(); //机构名称
-		var cityId = $("#cityId").combobox('getValue'); //市
-		
-		
+		var merchantName = $("#merchantName").val();
+		var merchantServicePhone = $("#merchantServicePhone").val();
+		var accountNo = $("#accountNo").val();
+		var cityId = $("#cityId").val();
+		var equipmentName = $("#equipmentName").val();
+		var parkingAddress = $("#parkingAddress").val();
+		var longitude = $("#longitude").val();
+		var latitude = $("#latitude").val();
+		var parkingStartTime = $("#parkingStartTime").val();
+		var parkingEndTime = $("#parkingEndTime").val();
+		var parkingNumber = $("#parkingNumber").val();
+		var parkingLotType = $("#parkingLotType").combobox('getValue');
+		var parkingType = $("#parkingType").combobox('getValue');
+		var paymentMode = $("#paymentMode").combobox('getValue');
+		var payType = $("#payType").combobox('getValue');
+		var shopingmallId = $("#shopingmallId").val();
+		var parkingFeeDescription = $("#parkingFeeDescription").val();
+		var contactName = $("#contactName").val();
+		var contactMobile = $("#contactMobile").val();
+		var contactTel = $("#contactTel").val();
+		var contactEmali = $("#contactEmali").val();
+		var contactWeixin = $("#contactWeixin").val();
+		var contactAlipay = $("#contactAlipay").val();
+		var parkingName = $("#parkingName").val();
+		var timeOut = $("#timeOut").val();
+		var status = $("#status").combobox('getValue');
 		if (flag == "-1") {
-			var systemId = "";
-
 			$('#save').linkbutton('disable');
-			var postActionUrl;
-			if (agid == staticagecyId) {
-				postActionUrl = "${ctx}/agency/agency.do?method=addAgency";
-			}else{
-				postActionUrl = "${ctx}/agency/agency.do?method=addAgencyWithDubbo";
-			}
-			
-			$.post(postActionUrl, {
-				systemId : systemId,
-				agencyid : agencyid,
-				agencyname : agencyname,
-				//agencybriefname:agencybriefname,
-				uppercompanyId : uppercompanyId,
-				vestagencyId : vestagencyId,
-				contactsName : contactsName,
-				companyPhone : companyPhone,
-				companyEmail : companyEmail,
-				companyAddr : companyAddr,
-				certificate : certificate,
-				legalinfo : legalinfo,
-				organizationCode : organizationCode,
-				agreementcode : agreementcode,
-				provinceId : provinceId,
-				cityId : cityId,
-				accountBank : accountBank,
-				bankId : bankId,
-				accountName : accountName,
-				bankcode : bankcode,
-				agencyType : agencyType,
-				isDtbUser :isDtbUser,
-				dtbProfitFlag : dtbProfitFlag,
-			    someoneName : someoneName,
-				someonePhone : someonePhone,
-				userpId : userpId
+			$.post("${ctx}/park/park.do?method=addPark", {
+				merchantName:merchantName,
+				merchantServicePhone:merchantServicePhone,
+				accountNo:accountNo,
+				cityId:cityId,
+				equipmentName:equipmentName,
+				parkingAddress:parkingAddress,
+				longitude:longitude,
+				latitude:latitude,
+				parkingStartTime:parkingStartTime,
+				parkingEndTime:parkingEndTime,
+				parkingNumber:parkingNumber,
+				parkingLotType:parkingLotType,
+				parkingType:parkingType,
+				paymentMode:paymentMode,
+				payType:payType,
+				shopingmallId:shopingmallId,
+				parkingFeeDescription:parkingFeeDescription,
+				contactName:contactName,
+				contactMobile:contactMobile,
+				contactTel:contactTel,
+				contactEmali:contactEmali,
+				contactWeixin:contactWeixin,
+				contactAlipay:contactAlipay,
+				parkingName:parkingName,
+				timeOut:timeOut,
+				status:status
 			}, function(data) {
 				$.parseAjaxReturnInfo(data, $.success, $.failed);
 			}, "json");
@@ -232,6 +246,18 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true
 			}, {
+				field : "merchantServicePhone",
+				title : "服务商电话",
+				width : 100,
+				align : "center",
+				sortable : true
+			}, {
+				field : "accountNo",
+				title : "帐号",
+				width : 100,
+				align : "center",
+				sortable : true
+			}, {
 				field : "equipmentName",
 				title : "设备商名称",
 				width : 200,
@@ -242,9 +268,32 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				title : "停车场地址",
 				width : 100,
 				align : "center",
+			}, {
+				field : "status",
+				title : "是否有效",
+				width : 100,
+				align : "center",
 			} ] ],
 			hideColumn : [ [ {
-				field : "merchantName" //商圈id
+				field : "longitude",
+				field : "latitude",
+				field : "parkingStartTime",
+				field : "parkingEndTime",
+				field : "parkingNumber",
+				field : "parkingLotType",
+				field : "parkingType",
+				field : "paymentMode",
+				field : "payType",
+				field : "shopingmallId",
+				field : "parkingFeeDescription",
+				field : "contactName",
+				field : "contactMobile",
+				field : "contactTel",
+				field : "contactEmali",
+				field : "contactWeixin",
+				field : "contactAlipay",
+				field : "parkingName",
+				field : "timeOut"
 			} ] ],
 			pagination : true,
 			rownumbers : true,
@@ -263,15 +312,6 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				iconCls : 'icon-edit',
 				handler : function() {
 					$.openWin();
-				}
-			}, 
-			'-', {
-				id : 'btnsave',
-				text : '删除',
-				iconCls : 'icon-cut',
-				handler : function() {
-					$.deleteAgency();
-
 				}
 			} ]
 		});

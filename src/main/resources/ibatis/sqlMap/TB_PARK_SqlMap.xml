@@ -1502,7 +1502,7 @@
       PARKING_NUMBER, PARKING_LOT_TYPE, PARKING_TYPE, PAYMENT_MODE, PAY_TYPE, SHOPINGMALL_ID,
       PARKING_FEE_DESCRIPTION, CONTACT_NAME, CONTACT_MOBILE, CONTACT_TEL, CONTACT_EMALI,
       CONTACT_WEIXIN, CONTACT_ALIPAY, PARKING_NAME, TIME_OUT)
-    values (#outParkingId:VARCHAR#, #merchantName:VARCHAR#, #merchantServicePhone:VARCHAR#,
+    values (seq_parkid.nextval, #merchantName:VARCHAR#, #merchantServicePhone:VARCHAR#,
       #accountNo:VARCHAR#, #cityId:VARCHAR#, #equipmentName:VARCHAR#, #parkingAddress:VARCHAR#,
       #longitude:VARCHAR#, #latitude:VARCHAR#, #parkingStartTime:VARCHAR#, #parkingEndTime:VARCHAR#,
       #parkingNumber:VARCHAR#, #parkingLotType:VARCHAR#, #parkingType:VARCHAR#,
