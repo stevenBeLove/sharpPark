@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.compass.park.model.ParkBean;
 import com.compass.park.service.ParkService;
+import com.compass.utils.ConstantUtils;
 import com.compass.utils.mvc.AjaxReturnInfo;
 
 @Controller
@@ -100,8 +101,8 @@ public class ParkController {
 			@RequestParam(value = "timeOut") String timeOut,
 			@RequestParam(value = "status") String status,
 			HttpServletRequest req) {
-		
 		try {
+			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			ParkBean parkBean = new ParkBean();
 			parkBean.setMerchantName(merchantName);
 			parkBean.setMerchantServicePhone(merchantServicePhone);
@@ -128,12 +129,92 @@ public class ParkController {
 			parkBean.setContactAlipay(contactAlipay);
 			parkBean.setParkingName(parkingName);
 			parkBean.setTimeOut(timeOut);
-			parkBean.setStatus(Integer.valueOf(status));
-			LogPay.info("*************"+parkBean.toString());
-			return AjaxReturnInfo.success("保存成功");
+			parkBean.setStatus(status);
+			parkBean.setCreateUserId(userId);
+			boolean flag = this.parkService.addPark(parkBean);
+			if(flag){
+				return AjaxReturnInfo.success("保存成功");
+			}else{
+				return AjaxReturnInfo.failed("保存失败");
+			}
 		} catch (Exception e) {
 			LogPay.error("addPark---error",e);
 		}
-		return AjaxReturnInfo.success("保存成功");
+		return AjaxReturnInfo.failed("系统异常");
+	}
+	
+	
+	@RequestMapping(params = "method=editPark")
+	@ResponseBody
+	public AjaxReturnInfo editPark(
+			@RequestParam(value = "merchantName") String merchantName,
+			@RequestParam(value = "merchantServicePhone") String merchantServicePhone,
+			@RequestParam(value = "accountNo") String accountNo,
+			@RequestParam(value = "cityId") String cityId,
+			@RequestParam(value = "equipmentName") String equipmentName,
+			@RequestParam(value = "parkingAddress") String parkingAddress,
+			@RequestParam(value = "longitude") String longitude,
+			@RequestParam(value = "latitude") String latitude,
+			@RequestParam(value = "parkingStartTime") String parkingStartTime,
+			@RequestParam(value = "parkingEndTime") String parkingEndTime,
+			@RequestParam(value = "parkingNumber") String parkingNumber,
+			@RequestParam(value = "parkingLotType") String parkingLotType,
+			@RequestParam(value = "parkingType") String parkingType,
+			@RequestParam(value = "paymentMode") String paymentMode,
+			@RequestParam(value = "payType") String payType,
+			@RequestParam(value = "shopingmallId") String shopingmallId,
+			@RequestParam(value = "parkingFeeDescription") String parkingFeeDescription,
+			@RequestParam(value = "contactName") String contactName,
+			@RequestParam(value = "contactMobile") String contactMobile,
+			@RequestParam(value = "contactTel") String contactTel,
+			@RequestParam(value = "contactEmali") String contactEmali,
+			@RequestParam(value = "contactWeixin") String contactWeixin,
+			@RequestParam(value = "contactAlipay") String contactAlipay,
+			@RequestParam(value = "parkingName") String parkingName,
+			@RequestParam(value = "timeOut") String timeOut,
+			@RequestParam(value = "status") String status,
+			@RequestParam(value = "outParkingId") String outParkingId,
+			HttpServletRequest req) {
+		try {
+			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
+			ParkBean parkBean = new ParkBean();
+			parkBean.setMerchantName(merchantName);
+			parkBean.setMerchantServicePhone(merchantServicePhone);
+			parkBean.setAccountNo(accountNo);
+			parkBean.setCityId(cityId);
+			parkBean.setEquipmentName(equipmentName);
+			parkBean.setParkingAddress(parkingAddress);
+			parkBean.setLongitude(longitude);
+			parkBean.setLatitude(latitude);
+			parkBean.setParkingStartTime(parkingStartTime);
+			parkBean.setParkingEndTime(parkingEndTime);
+			parkBean.setParkingNumber(parkingNumber);
+			parkBean.setParkingLotType(parkingLotType);
+			parkBean.setParkingType(parkingType);
+			parkBean.setPaymentMode(paymentMode);
+			parkBean.setPayType(payType);
+			parkBean.setShopingmallId(shopingmallId);
+			parkBean.setParkingFeeDescription(parkingFeeDescription);
+			parkBean.setContactName(contactName);
+			parkBean.setContactMobile(contactMobile);
+			parkBean.setContactTel(contactTel);
+			parkBean.setContactEmali(contactEmali);
+			parkBean.setContactWeixin(contactWeixin);
+			parkBean.setContactAlipay(contactAlipay);
+			parkBean.setParkingName(parkingName);
+			parkBean.setTimeOut(timeOut);
+			parkBean.setStatus(status);
+			parkBean.setOutParkingId(outParkingId);
+			parkBean.setModifyUserId(userId);
+			boolean flag = this.parkService.updateParkById(parkBean);
+			if(flag){
+				return AjaxReturnInfo.success("更新成功");
+			}else{
+				return AjaxReturnInfo.failed("更新失败");
+			}
+		} catch (Exception e) {
+			LogPay.error("updatePark---error",e);
+		}
+		return AjaxReturnInfo.failed("系统异常");
 	}
 }

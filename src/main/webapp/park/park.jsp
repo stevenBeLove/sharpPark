@@ -48,6 +48,31 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	var flag;
 	$.openWin = function(obj) {
 		$("#merchantNameU").val('');
+		$("#merchantServicePhone").val('');
+		$("#accountNo").val('');
+		$("#cityId").val('');
+		$("#equipmentName").val('');
+		$("#parkingAddress").val('');
+		$("#longitude").val('');
+		$("#latitude").val('');
+		$("#parkingStartTime").val('');
+		$("#parkingEndTime").val('');
+		$("#parkingNumber").val('');
+		$("#parkingLotType").combobox('select', '');
+		$("#parkingType").combobox('select', '');
+		$("#paymentMode").combobox('select', '');
+		$("#payType").combobox('select', '');
+		$("#shopingmallId").val('');
+		$("#parkingFeeDescription").val('');
+		$("#contactName").val('');
+		$("#contactMobile").val('');
+		$("#contactTel").val('');
+		$("#contactEmali").val('');
+		$("#contactWeixin").val('');
+		$("#contactAlipay").val('');
+		$("#parkingName").val('');
+		$("#timeOut").val('');
+		$("#status").combobox('select', ''	);
 		var rows = $('#viewAgency').datagrid('getSelections');
 		var len = rows.length;
 		$('#markSave').window({
@@ -68,12 +93,38 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			}
 			var row = $('#viewAgency').datagrid('getSelected');
 			$("#merchantNameU").val(row.merchantName);
+			$("#merchantServicePhone").val(row.merchantServicePhone);
+			$("#accountNo").val(row.accountNo);
+			$("#cityId").val(row.cityId);
+			$("#equipmentName").val(row.equipmentName);
+			$("#parkingAddress").val(row.parkingAddress);
+			$("#longitude").val(row.longitude);
+			$("#latitude").val(row.latitude);
+			$("#parkingStartTime").val(row.parkingStartTime);
+			$("#parkingEndTime").val(row.parkingEndTime);
+			$("#parkingNumber").val(row.parkingNumber);
+			$("#parkingLotType").combobox('select', row.parkingLotType);
+			$("#parkingType").combobox('select', row.parkingType);
+			$("#paymentMode").combobox('select', row.paymentMode);
+			$("#payType").combobox('select', row.payType);
+			$("#shopingmallId").val(row.shopingmallId);
+			$("#parkingFeeDescription").val(row.parkingFeeDescription);
+			$("#contactName").val(row.contactName);
+			$("#contactMobile").val(row.contactMobile);
+			$("#contactTel").val(row.contactTel);
+			$("#contactEmali").val(row.contactEmali);
+			$("#contactWeixin").val(row.contactWeixin);
+			$("#contactAlipay").val(row.contactAlipay);
+			$("#parkingName").val(row.parkingName);
+			$("#timeOut").val(row.timeOut);
+			$("#status").combobox('select', row.status);
+			$("#outParkingIdU").val(row.outParkingId);
 		}
 		$("#markSave").window('open').window('refresh');
 	};
 
 	$.AgencySave = function() {
-		var merchantName = $("#merchantName").val();
+		var merchantName = $("#merchantNameU").val();
 		var merchantServicePhone = $("#merchantServicePhone").val();
 		var accountNo = $("#accountNo").val();
 		var cityId = $("#cityId").val();
@@ -98,6 +149,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		var contactAlipay = $("#contactAlipay").val();
 		var parkingName = $("#parkingName").val();
 		var timeOut = $("#timeOut").val();
+		var outParkingId =$("#outParkingIdU").val();
 		var status = $("#status").combobox('getValue');
 		if (flag == "-1") {
 			$('#save').linkbutton('disable');
@@ -132,33 +184,34 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				$.parseAjaxReturnInfo(data, $.success, $.failed);
 			}, "json");
 		} else {
-			$.post("${ctx}/agency/agency.do?method=editAgency", {
-				systemId : systemId,
-				agencyid : agencyid,
-				agencyname : agencyname,
-				//agencybriefname:agencybriefname,
-				vestagencyId : vestagencyId,
-				contactsName : contactsName,
-				companyPhone : companyPhone,
-				companyEmail : companyEmail,
-				companyAddr : companyAddr,
-				certificate : certificate,
-				legalinfo : legalinfo,
-				organizationCode : organizationCode,
-				agreementcode : agreementcode,
-				provinceId : provinceId,
-				cityId : cityId,
-				accountBank : accountBank,
-				bankId : bankId,
-				accountName : accountName,
-				bankcode : bankcode,
-				agencyType : agencyType,
-				agency_status : agency_status,
-				isDtbUser :isDtbUser,
-				dtbProfitFlag : dtbProfitFlag,
-				someoneName : someoneName,
-			    someonePhone : someonePhone,
-			    userpId : userpId
+			$.post("${ctx}/park/park.do?method=editPark", {
+				merchantName:merchantName,
+				merchantServicePhone:merchantServicePhone,
+				accountNo:accountNo,
+				cityId:cityId,
+				equipmentName:equipmentName,
+				parkingAddress:parkingAddress,
+				longitude:longitude,
+				latitude:latitude,
+				parkingStartTime:parkingStartTime,
+				parkingEndTime:parkingEndTime,
+				parkingNumber:parkingNumber,
+				parkingLotType:parkingLotType,
+				parkingType:parkingType,
+				paymentMode:paymentMode,
+				payType:payType,
+				shopingmallId:shopingmallId,
+				parkingFeeDescription:parkingFeeDescription,
+				contactName:contactName,
+				contactMobile:contactMobile,
+				contactTel:contactTel,
+				contactEmali:contactEmali,
+				contactWeixin:contactWeixin,
+				contactAlipay:contactAlipay,
+				parkingName:parkingName,
+				timeOut:timeOut,
+				status:status,
+				outParkingId:outParkingId
 			}, function(data) {
 				$.parseAjaxReturnInfo(data, $.success, $.failed);
 			}, "json");
@@ -357,7 +410,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		style="width: 730px; height: 555px; top: 10px; padding: 0px; background: #fafafa; overflow: hidden;">
 		<div class="easyui-layout" fit="true">
 			<div region="center" border="true" style="padding: 10px; background: #fff; overflow: hidden;">
-				<input type="hidden" id="optFlag" name="optFlag" />
+				<input type="hidden" id="outParkingIdU" name="outParkingIdU"/>
 				<table style="width: 100%;">
 					<tr>
 						<td align="right"><span style="color: red">*</span>商户简称：</td>

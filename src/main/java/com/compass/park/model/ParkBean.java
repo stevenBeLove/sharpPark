@@ -841,7 +841,7 @@ public class ParkBean {
 	private String modifyUserId;
 	private Date createDatetime;
 	private Date modifyDatetime;
-	private Integer status;//0不可用，1 可用
+	private String status;//0不可用，1 可用
 
 	public Integer getStart() {
 		return start;
@@ -891,11 +891,11 @@ public class ParkBean {
 		this.modifyDatetime = modifyDatetime;
 	}
 
-	public Integer getStatus() {
+	public String getStatus() {
 		return status;
 	}
 
-	public void setStatus(Integer status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
 }

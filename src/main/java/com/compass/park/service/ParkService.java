@@ -15,4 +15,12 @@ public class ParkService extends AbstractService{
 	public List<ParkBean> getParkAll(ParkBean parkBean) {
 	        return dao.queryForList("TB_PARK.getParkAll", parkBean);
 	}
+	
+	public boolean addPark(ParkBean parkBean){
+		return dao.insert("TB_PARK.addPark", parkBean)>0?true:false;
+	}
+	
+	public boolean updateParkById(ParkBean parkBean){
+		return dao.update("TB_PARK.updateParkById", parkBean)>0?true:false;
+	}
 }
