@@ -326,6 +326,13 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				title : "是否有效",
 				width : 100,
 				align : "center",
+				formatter:function(value,row,index){
+		          	if(value == 1){
+		          		return '有效';
+		          	}else{
+		          		return '无效';
+		          	}
+		        }
 			} ] ],
 			hideColumn : [ [ {
 				field : "longitude",
