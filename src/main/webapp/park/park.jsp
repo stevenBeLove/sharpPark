@@ -151,6 +151,18 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		var timeOut = $("#timeOut").val();
 		var outParkingId =$("#outParkingIdU").val();
 		var status = $("#status").combobox('getValue');
+		if ($.trim(merchantName) == "") {
+			$.messager.alert("提示 ", "请输入商户简称");
+			return false;
+		}
+		if ($.trim(accountNo) == "") {
+			$.messager.alert("提示 ", "请输入帐号");
+			return false;
+		}
+		if ($.trim(provinceId) == "-1") {
+			$.messager.alert("提示 ", "请选择省");
+			return false;
+		}
 		if (flag == "-1") {
 			$('#save').linkbutton('disable');
 			$.post("${ctx}/park/park.do?method=addPark", {

@@ -33,4 +33,15 @@
   <bean id="parkService" class="com.compass.park.service.ParkService" parent="absIbatisDaoService"></bean>
   
   <bean id="orderService" class="com.compass.order.service.OrderService" parent="absIbatisDaoService"></bean>
+  <bean id="parkRuleSetService" class="com.compass.park.service.ParkRuleSetService" parent="absIbatisDaoService"></bean>
+  <bean id="freeVehicleBrandService" class="com.compass.vehicle.service.FreeVehicleBrandService" parent="absIbatisDaoService"></bean>
+  <bean id="monthVehicleBrandService" class="com.compass.vehicle.service.MonthVehicleBrandService" parent="absIbatisDaoService"></bean>
+  
+  <bean id="queryParkPriceService" class="com.imobpay.base.services.QueryParkPriceServiceImpl">
+	<property name="parkRuleSetService" ref="parkRuleSetService"></property>
+	<property name="freeVehicleBrandService" ref="freeVehicleBrandService"></property>
+	<property name="monthVehicleBrandService" ref="monthVehicleBrandService"></property>
+  </bean>
+  
+  <import resource="provider.xml"/>
 </beans>

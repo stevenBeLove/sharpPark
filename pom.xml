@@ -3,10 +3,10 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.shandian</groupId>
-	<artifactId>SdtPlatform</artifactId>
+	<artifactId>sharpPark</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-	<name>SdtPlatform project</name>
+	<name>sharpPark project</name>
 
 
 	<properties>

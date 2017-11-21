@@ -53,13 +53,9 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$("#markSave").window('close');
 	};
 	$.viewOrder = function() {
-		var outParkingId = $('#outParkingId').val();
-		var merchantName = $('#merchantName').val();
-		if (outParkingId == null || $.trim(outParkingId) == '-1') {
-			outParkingId = "";
-		}
-		if (merchantName == null || $.trim(merchantName) == '-1') {
-			merchantName = "";
+		var carNumber = $('#carNumber').val();
+		if (carNumber == null || $.trim(carNumber) == '-1') {
+			carNumber = "";
 		}
 		$('#viewOrder').datagrid({
 			title : '订单管理',
@@ -69,8 +65,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			pageNumber : 1,
 			url : "${ctx}/order/order.do?method=getOrder",
 			queryParams : {
-				outParkingId : outParkingId,
-				merchantName : merchantName
+				carNumber : carNumber
 			},
 			loadMsg : '数据载入中,请稍等！',
 			remoteSort : false,
@@ -110,7 +105,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			}, {
 				field : "payType",
 				title : "付款方式",
-				width : 50,
+				width : 150,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
@@ -177,8 +172,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	};
 	
 	function resetOrder(){
-		$('#outParkingId').val('');
-		$('#merchantName').val('');
+		$('#carNumber').val('');
 	}
 </script>
 </head>
@@ -187,14 +181,10 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		<tr>
 			<td>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				停车场ID：
+				车牌：
 			</td>
 			<td>
-			<input type="text" id="outParkingId" name="outParkingId" style="width:150px"></input>
-			
-			</td>
-			<td>商户简称：</td>
-			<td><input type="text" name="merchantName" id="merchantName" style="width: 150px;" /></td>
+			<input type="text" id="carNumber" name="carNumber" style="width:150px"></input>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.viewOrder()">查询</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="resetOrder()">重置</a></td>
 		</tr>

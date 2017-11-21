@@ -5,12 +5,14 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.compass.order.model.OrderBean;
@@ -30,8 +32,14 @@ public class OrderController {
 	
 	@RequestMapping(params = "method=getOrder")
 	@ResponseBody
-	public Map<String, Object> getPark(HttpServletRequest req) {
+	public Map<String, Object> getPark(
+			@RequestParam(value = "carNumber") String carNumber,
+			HttpServletRequest req) {
+		LogPay.info("carNumber:"+carNumber);
 		OrderBean orderBean = new OrderBean();
+		if(StringUtils.isNotBlank(carNumber)){
+			orderBean.setCarNumber(carNumber);
+		}
 		String rows = req.getParameter("rows");
 		String page = req.getParameter("page");
 		Integer count = orderService.getOrderCount(orderBean);
