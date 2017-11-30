@@ -4,7 +4,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <style type="text/css">
 		#fm {
 			margin: 0;
@@ -353,7 +353,7 @@ function cs(){
 									{field : "createDt",width : $(window).width()*0.15,title : "操作时间 ",align : "center",hidden : false},
 									{field : "parentagencyId",width : $(window).width()*0.15,title : "上线机构 信息 ",align : "center",hidden : true},
 									{field : "systemsource",width : $(window).width()*0.15,title : "上线机构 信息 ",align : "center",hidden : true},
-									{field : "isDtbUser",width : $(window).width()*0.1,title : "是否瑞推客 ",align : "center",formatter:function(val){
+									{field : "isDtbUser",width : $(window).width()*0.1,title : "是否 ",align : "center",formatter:function(val){
 											if(val == "1"){
 												return "是";
 											}else{

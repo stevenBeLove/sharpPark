@@ -5,7 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,7 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -30,11 +34,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.compass.park.model.ParkBean;
+
 public class ExcelUtils {
 	
 	private static final Logger  log = LoggerFactory.getLogger(ExcelUtils.class);
     
-    public Workbook createWorkbook(InputStream is,String excelFileName) throws IOException{
+    public static Workbook createWorkbook(InputStream is,String excelFileName) throws IOException{
         if (excelFileName.endsWith(".xls")) {
             return new HSSFWorkbook(is);
         }else if (excelFileName.endsWith(".xlsx")) {
@@ -43,23 +49,37 @@ public class ExcelUtils {
         return null;
     }
 
-    public Sheet getSheet(Workbook workbook,int sheetIndex){
+    public static Sheet getSheet(Workbook workbook,int sheetIndex){
         return workbook.getSheetAt(0);        
     }
     
-    public List<Object> importDataFromExcel(Object vo,InputStream is,String excelFileName){
+    public static Map<String,Object> importDataFromExcel(Object vo,InputStream is,String fileName,String title,List<Integer> nCell) throws Exception{
+    	String retCode = "99";
+    	String retMsg = "系统异常";
+    	Map<String,Object> retMap = new HashMap<String, Object>();
         List<Object> list = new ArrayList<Object>();
-        try {
-            //创建工作簿
-            Workbook workbook = this.createWorkbook(is, excelFileName);
-            //创建工作表sheet
-            Sheet sheet = this.getSheet(workbook, 0);
-            //获取sheet中数据的行数
-            int rows = sheet.getPhysicalNumberOfRows();
-            //获取表头单元格个数
-            int cells = sheet.getRow(0).getPhysicalNumberOfCells();
-            //利用反射，给JavaBean的属性进行赋值
-            Field[] fields = vo.getClass().getDeclaredFields();
+        //创建工作簿
+        Workbook workbook = createWorkbook(is, fileName);
+        //创建工作表sheet
+        Sheet sheet = getSheet(workbook, 0);
+        //获取sheet中数据的行数
+        int rows = sheet.getPhysicalNumberOfRows();
+        //获取表头单元格个数
+        int cells = sheet.getRow(0).getPhysicalNumberOfCells();
+        StringBuffer sb = new StringBuffer();
+        Row firstRow = sheet.getRow(0);
+        for (int i = 0; i < cells; i++) {
+        	Cell cell = firstRow.getCell(i);
+        	 if (null == cell) {
+                 cell = firstRow.createCell(i);
+             }
+             cell.setCellType(Cell.CELL_TYPE_STRING);
+        	 sb.append(cell.getStringCellValue());
+		}
+        log.info("firstRow"+sb.toString());
+        //利用反射，给JavaBean的属性进行赋值
+        Field[] fields = vo.getClass().getDeclaredFields();
+        if(title.equals(sb.toString())){
             for (int i = 1; i < rows; i++) {
                 Row row = sheet.getRow(i);
                 int index = 0;
@@ -67,10 +87,14 @@ public class ExcelUtils {
                     Cell cell = row.getCell(index);
                     if (null == cell) {
                         cell = row.createCell(index);
+                        cell.setCellType(Cell.CELL_TYPE_STRING);
                     }
-                    cell.setCellType(Cell.CELL_TYPE_STRING);
-                    String value = null == cell.getStringCellValue()?"":cell.getStringCellValue();
-                    
+                    Object value = getCellData(cell);
+                    if(nCell.contains(index)&&(value==null||"".equals(value))){
+                    	retMap.put("retCode", "99");
+                        retMap.put("retMsg", "excel中必填项有空值");
+                        return retMap;
+                    }
                     Field field = fields[index];
                     String fieldName = field.getName();
                     String methodName = "set"+fieldName.substring(0,1).toUpperCase()+fieldName.substring(1);
@@ -78,26 +102,42 @@ public class ExcelUtils {
                     setMethod.invoke(vo, new Object[]{value});
                     index++;
                 }
-                if (isHasValues(vo)) {//判断对象属性是否有值
-                    list.add(vo);
-                    vo.getClass().getConstructor(new Class[]{}).newInstance(new Object[]{});//重新创建一个vo对象
-                }
-                
+                list.add(vo);
+                vo = vo.getClass().getConstructor(new Class[]{}).newInstance(new Object[]{});//重新创建一个vo对象
             }
-        } catch (Exception e) {
-            log.error("",e);
-        }finally{
-            try {
-                is.close();
-            } catch (Exception e) {
-            	log.error("",e);
-            }
+            retMap.put("list", list);
+            retCode = "00";
+            retMsg = "success";
+        }else{
+        	retMsg = "文件头不正确";
         }
-        return list;
+        retMap.put("retCode", retCode);
+        retMap.put("retMsg", retMsg);
+        return retMap;
         
     }
     
-    public boolean isHasValues(Object object){
+    private static Object getCellData(Cell cell) {
+        if(cell == null) {
+            return null;
+        }
+        switch (cell.getCellType()) {
+        case Cell.CELL_TYPE_STRING:
+            return cell.getRichStringCellValue().getString();
+        case Cell.CELL_TYPE_NUMERIC:
+            if (DateUtil.isCellDateFormatted(cell)) {
+            	SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                return format.format(cell.getDateCellValue());
+            } else {
+            	cell.setCellType(Cell.CELL_TYPE_STRING);
+                return cell.getStringCellValue();
+            }
+        default:
+            return null;
+        }
+    } 
+    
+    public static  boolean isHasValues(Object object){
         Field[] fields = object.getClass().getDeclaredFields();
         boolean flag = false;
         for (int i = 0; i < fields.length; i++) {
@@ -120,7 +160,7 @@ public class ExcelUtils {
         
     }
     
-    public static <T> void exportDataToExcel(HttpServletResponse response,List<T> list,String[] headers,String fileName,String fileSuffix){
+    public static <T> void exportDataToExcel(HttpServletResponse response,List<T> list,String[] headers,String fileName,String fileSuffix,ParkBean parkBean){
     	OutputStream os = null;
         HSSFWorkbook workbook = new HSSFWorkbook();
         //生成一个表格
@@ -162,14 +202,32 @@ public class ExcelUtils {
                     if(null == value)
                         value ="";
                     cell.setCellValue(value.toString());
-                    
                 }
             } catch (Exception e) {
                 log.error("文件导出异常",e);
             }
         }
         try {
-        	fileName = fileName+System.currentTimeMillis();
+        	if(parkBean!=null){
+        		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+        		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        		Date date = new Date();
+        		int add_row = list.size()+10;
+        		row = sheet.createRow(add_row+1);
+        		row.createCell(0).setCellValue("导出日期：");
+        		row.createCell(1).setCellValue(dateFormat.format(date));
+        		row.createCell(2).setCellValue("导出时间：");
+        		row.createCell(3).setCellValue(timeFormat.format(date));
+        		row = sheet.createRow(add_row+2);
+        		row.createCell(0).setCellValue("停车场基本信息：");
+        		row = sheet.createRow(add_row+3);
+        		row.createCell(0).setCellValue("停车场Id:");
+        		row.createCell(1).setCellValue("停车场名称");
+        		row = sheet.createRow(add_row+4);
+        		row.createCell(0).setCellValue(parkBean.getOutParkingId());
+        		row.createCell(1).setCellValue(parkBean.getParkingName());
+        	}
+        	 fileName = fileName+System.currentTimeMillis();
         	 response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes("gb2312"),"ISO8859-1")+fileSuffix);
              response.setCharacterEncoding("UTF-8");
              response.setContentType("application/vnd.ms-excel");
@@ -245,7 +303,7 @@ public class ExcelUtils {
     
     public static HSSFCellStyle getCellStyle(HSSFWorkbook workbook){
         HSSFCellStyle style = workbook.createCellStyle();
-        style.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+        style.setFillForegroundColor(HSSFColor.AQUA.index);
         style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
         style.setBorderBottom(HSSFCellStyle.BORDER_THIN);
         style.setBorderTop(HSSFCellStyle.BORDER_THIN);
@@ -257,7 +315,7 @@ public class ExcelUtils {
 
     public static HSSFFont getFont(HSSFWorkbook workbook){
         HSSFFont font = workbook.createFont();
-        font.setColor(HSSFColor.WHITE.index);
+        font.setColor(HSSFColor.BLACK.index);
         font.setFontHeightInPoints((short)12);
         font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
         return font;

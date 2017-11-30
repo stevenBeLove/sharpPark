@@ -597,6 +597,7 @@ public class FreeVehicleBrandBean {
     
     private Integer start;
 	private Integer end;
+	private String inStatus;
 
 	public Integer getStart() {
 		return start;
@@ -612,5 +613,13 @@ public class FreeVehicleBrandBean {
 
 	public void setEnd(Integer end) {
 		this.end = end;
+	}
+
+	public String getInStatus() {
+		return inStatus;
+	}
+
+	public void setInStatus(String inStatus) {
+		this.inStatus = inStatus;
 	}
 }

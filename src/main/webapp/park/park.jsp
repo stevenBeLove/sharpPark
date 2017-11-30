@@ -9,7 +9,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <script type="text/javascript">	
 var agid='<%=session.getAttribute(ConstantUtils.AGENCYID).toString().trim()%>';
 var sysId='<%=session.getAttribute(ConstantUtils.SYSTEMID).toString().trim()%>';
@@ -47,6 +47,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	}
 	var flag;
 	$.openWin = function(obj) {
+		$("input[name='payType']").prop("checked", "");
 		$("#merchantNameU").val('');
 		$("#merchantServicePhone").val('');
 		$("#accountNo").val('');
@@ -61,7 +62,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$("#parkingLotType").combobox('select', '');
 		$("#parkingType").combobox('select', '');
 		$("#paymentMode").combobox('select', '');
-		$("#payType").combobox('select', '');
+		//$("#payType").combobox('select', '');
 		$("#shopingmallId").val('');
 		$("#parkingFeeDescription").val('');
 		$("#contactName").val('');
@@ -106,7 +107,18 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			$("#parkingLotType").combobox('select', row.parkingLotType);
 			$("#parkingType").combobox('select', row.parkingType);
 			$("#paymentMode").combobox('select', row.paymentMode);
-			$("#payType").combobox('select', row.payType);
+			var payType = row.payType;
+			if(payType!=''&&payType!=undefined){
+				var payTypes = payType.split(',');
+				for(var i = 0;i < payTypes.length; i++) {
+					$("input[name='payType']").each(function(){
+						if($(this).val()==payTypes[i]){
+							$(this).prop("checked",true);
+						}
+					});	
+				}
+			}
+			//$("#payType").combobox('select', row.payType);
 			$("#shopingmallId").val(row.shopingmallId);
 			$("#parkingFeeDescription").val(row.parkingFeeDescription);
 			$("#contactName").val(row.contactName);
@@ -124,6 +136,9 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	};
 
 	$.AgencySave = function() {
+		var payType = $("input[name='payType']:checked").map(function () {
+               return $(this).val();
+        }).get().join(',');
 		var merchantName = $("#merchantNameU").val();
 		var merchantServicePhone = $("#merchantServicePhone").val();
 		var accountNo = $("#accountNo").val();
@@ -138,7 +153,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		var parkingLotType = $("#parkingLotType").combobox('getValue');
 		var parkingType = $("#parkingType").combobox('getValue');
 		var paymentMode = $("#paymentMode").combobox('getValue');
-		var payType = $("#payType").combobox('getValue');
+		//var payType = $("#payType").combobox('getValue');
 		var shopingmallId = $("#shopingmallId").val();
 		var parkingFeeDescription = $("#parkingFeeDescription").val();
 		var contactName = $("#contactName").val();
@@ -157,10 +172,6 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		}
 		if ($.trim(accountNo) == "") {
 			$.messager.alert("提示 ", "请输入帐号");
-			return false;
-		}
-		if ($.trim(provinceId) == "-1") {
-			$.messager.alert("提示 ", "请选择省");
 			return false;
 		}
 		if (flag == "-1") {
@@ -396,9 +407,6 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			displayMsg : '当前显示 {from} - {to} 条记录   共 {total} 条记录'
 		});
 	};
-		function showRegisterUrl(value){
-		$.messager.alert('注册URL',"该下级机构已开设成功！系统已自动生成该下级机构信息，请将下方链接复制给下级进行激活，激活成功后即可登录分润系统（三击链接即可全选）<br/>"+'<textarea class="easyui-combobox" readonly="readonly" style="width: 280px; height:200px;">'+value+'</textarea>'); 
-	}
 	
 	function resetPark(){
 		$('#outParkingId').val('');
@@ -519,12 +527,16 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 					<tr>
 						<td align="right">支付方式：</td>
 						<td align="left">
+							<input type="checkbox" name="payType" value="1"/>支付宝在线缴费
+							<input type="checkbox" name="payType" value="2"/>支付宝代扣缴费
+							<input type="checkbox" name="payType" value="3"/>当面付
+							<!-- 
 							<select class="easyui-combobox" id="payType" name="payType" style="width: 155px;" editable="false">
 									<option value="" selected="selected">--请选择--</option>
 									<option value="1">支付宝在线缴费</option>
 									<option value="2">支付宝代扣缴费</option>
 									<option value="3">当面付</option>
-							</select>
+							</select> -->
 						</td>
 						<td align="right">商圈id:</td>
 						<td align="left">

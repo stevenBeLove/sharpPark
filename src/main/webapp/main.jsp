@@ -20,7 +20,7 @@
 </style>
 <script type="text/javascript" src="${ctx}/commons/js/tab.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <script type="text/javascript">
 	var flag = "${initpwd}";
 	var userPhone = "${userPhone}";
@@ -334,7 +334,7 @@
 		}, function(data) {
 			if (data.success == "true") {
 				$.messager.alert("提示", data.message
-						+ "! 您的分润平台移动的-瑞源宝密码也同步修改，登录瑞源宝时请使用新密码。");
+						+ "!请使用新密码。");
 				$('#w').window('close');
 			} else {
 				$.messager.alert("提示", data.message);
@@ -754,12 +754,6 @@
 					</tr>
 					<tr>
 						<td>如上次登录时间与您实际操作时间不符，请警惕平台安全。</td>
-					</tr>
-					<tr>
-						<td>如发现：平台异常、分润发错、漏发、未放，数据丢失、终端下发混乱等问题。</td>
-					</tr>
-					<tr>
-						<td>欢迎通过瑞钱包市场监督信箱：marketing@imobpay.com进行反馈。</td>
 					</tr>
 				</table>
 			</div>

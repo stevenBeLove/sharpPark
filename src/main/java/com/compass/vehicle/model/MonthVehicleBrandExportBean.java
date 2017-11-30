@@ -2,16 +2,15 @@ package com.compass.vehicle.model;
 
 public class MonthVehicleBrandExportBean {
 	private String carNumber;
+	private String vehicleBrandType;
 	private String startDate;
 	private String endDate;
 	private String monthPayAmount;
-	private String vehicleBrandType;
+	private String isExpire;
+	private String inStatus;
 	private String carOwnerName;
-	private String carOwnerAddres;
 	private String carOwnerPhone;
-	private String carOwnerEmail;
 	private String remark;
-	private String vehicleBrand;
 	public String getCarNumber() {
 		return carNumber;
 	}
@@ -30,35 +29,17 @@ public class MonthVehicleBrandExportBean {
 	public void setCarOwnerName(String carOwnerName) {
 		this.carOwnerName = carOwnerName;
 	}
-	public String getCarOwnerAddres() {
-		return carOwnerAddres;
-	}
-	public void setCarOwnerAddres(String carOwnerAddres) {
-		this.carOwnerAddres = carOwnerAddres;
-	}
 	public String getCarOwnerPhone() {
 		return carOwnerPhone;
 	}
 	public void setCarOwnerPhone(String carOwnerPhone) {
 		this.carOwnerPhone = carOwnerPhone;
 	}
-	public String getCarOwnerEmail() {
-		return carOwnerEmail;
-	}
-	public void setCarOwnerEmail(String carOwnerEmail) {
-		this.carOwnerEmail = carOwnerEmail;
-	}
 	public String getRemark() {
 		return remark;
 	}
 	public void setRemark(String remark) {
 		this.remark = remark;
-	}
-	public String getVehicleBrand() {
-		return vehicleBrand;
-	}
-	public void setVehicleBrand(String vehicleBrand) {
-		this.vehicleBrand = vehicleBrand;
 	}
 	public String getStartDate() {
 		return startDate;
@@ -77,5 +58,17 @@ public class MonthVehicleBrandExportBean {
 	}
 	public void setMonthPayAmount(String monthPayAmount) {
 		this.monthPayAmount = monthPayAmount;
+	}
+	public String getIsExpire() {
+		return isExpire;
+	}
+	public void setIsExpire(String isExpire) {
+		this.isExpire = isExpire;
+	}
+	public String getInStatus() {
+		return inStatus;
+	}
+	public void setInStatus(String inStatus) {
+		this.inStatus = inStatus;
 	}
 }

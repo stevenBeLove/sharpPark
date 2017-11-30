@@ -9,7 +9,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <script type="text/javascript">	
 var agid='<%=session.getAttribute(ConstantUtils.AGENCYID).toString().trim()%>';
 var sysId='<%=session.getAttribute(ConstantUtils.SYSTEMID).toString().trim()%>';
@@ -182,26 +182,44 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	function monthVehicleBrandExport() {
 		var carNumber = $('#s_carNumber').val();
 		var carOwnerName = $('#s_carOwnerName').val();
+		var inStatus =  $("#s_inStatus").combobox('getValue');
+		var isExpire =  $("#s_isExpire").combobox('getValue');
 		if (carNumber == null || $.trim(carNumber) == '-1') {
 			carNumber = "";
 		}
 		if (carOwnerName == null || $.trim(carOwnerName) == '-1') {
 			carOwnerName = "";
 		}
+		if (inStatus == null || $.trim(inStatus) == '-1') {
+			inStatus = "";
+		}
+		if (isExpire == null || $.trim(isExpire) == '-1') {
+			isExpire = "";
+		}
 		$.getToPost('${ctx}/monthVehicleBrand/monthVehicleBrand.do?method=monthVehicleBrandExport', {
 			carNumber : carNumber,
-			carOwnerName : carOwnerName
+			carOwnerName : carOwnerName,
+			inStatus : inStatus,
+			isExpire : isExpire
 		});
 	}
 	
 	$.search = function() {
 		var carNumber = $('#s_carNumber').val();
 		var carOwnerName = $('#s_carOwnerName').val();
+		var inStatus =  $("#s_inStatus").combobox('getValue');
+		var isExpire =  $("#s_isExpire").combobox('getValue');
 		if (carNumber == null || $.trim(carNumber) == '-1') {
 			carNumber = "";
 		}
 		if (carOwnerName == null || $.trim(carOwnerName) == '-1') {
 			carOwnerName = "";
+		}
+		if (inStatus == null || $.trim(inStatus) == '-1') {
+			inStatus = "";
+		}
+		if (isExpire == null || $.trim(isExpire) == '-1') {
+			isExpire = "";
 		}
 		$('#search').datagrid({
 			title : '月卡车牌管理',
@@ -212,7 +230,9 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			url : "${ctx}/monthVehicleBrand/monthVehicleBrand.do?method=getFreeVehicleBrand",
 			queryParams : {
 				carNumber : carNumber,
-				carOwnerName : carOwnerName
+				carOwnerName : carOwnerName,
+				inStatus : inStatus,
+				isExpire : isExpire
 			},
 			loadMsg : '数据载入中,请稍等！',
 			remoteSort : false,
@@ -244,11 +264,13 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true,
 				formatter : function(value){
-                    var date = new Date(value);
-                    var y = date.getFullYear();
-                    var m = date.getMonth() + 1;
-                    var d = date.getDate();
-                    return y + '-' +m + '-' + d;
+					if(value!=null){
+						var date = new Date(value);
+	                    var y = date.getFullYear();
+	                    var m = date.getMonth() + 1;
+	                    var d = date.getDate();
+	                    return y + '-' +m + '-' + d;
+					}
                 }
 			}, {
 				field : "endDate",
@@ -257,11 +279,13 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true,
 				formatter : function(value){
-                    var date = new Date(value);
-                    var y = date.getFullYear();
-                    var m = date.getMonth() + 1;
-                    var d = date.getDate();
-                    return y + '-' +m + '-' + d;
+                    if(value!=null){
+                    	var date = new Date(value);
+	                    var y = date.getFullYear();
+	                    var m = date.getMonth() + 1;
+	                    var d = date.getDate();
+	                    return y + '-' +m + '-' + d;
+                    }
                 }
 			}, {
 				field : "monthPayAmount",
@@ -273,6 +297,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				field : "isExpire",
 				title : "是否逾期",
 				width : 100,
+				align : "center",
+				sortable : true
+			}, {
+				field : "inStatus",
+				title : "车辆在场状态",
+				width : 150,
 				align : "center",
 				sortable : true
 			}, {
@@ -331,7 +361,39 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	function reset(){
 		$('#s_carNumber').val('');
 		$('#s_carOwnerName').val('');
+		$("#s_inStatus").combobox('select', '');
+		$("#s_isExpire").combobox('select', '');
 	}
+	
+	$.upload = function(){
+		var name = $("#upload_file").val();
+		if(name==""){
+			 $.messager.alert("提示","请选择文件！");
+	    	   return;
+		}
+		if(!(name.endWith(".xls"))&&!(name.endWith(".xlsx"))){
+	    	$.messager.alert("提示","文件类型不正确，请重新选择！");
+	    	return;
+	    }
+		$.ajaxFileUpload({
+		       url:"${ctx}/monthVehicleBrand/monthVehicleBrand.do?method=monthVehicleBrandImport",
+		       secureuri:false,
+		       fileElementId:'upload_file',
+		       dataType: 'json',
+		       success:function(data,textStatus) {
+		       	   var jsonData = jQuery.parseJSON(jQuery(data).text());
+		    	   $.messager.alert("提示",jsonData.message);
+		    	   $.search();
+		       }
+		    }
+		);
+	};
+	
+	//判断文件类型
+	String.prototype.endWith=function(oString){
+		var reg=new RegExp(oString+"$");  
+		return reg.test(this);     
+	};
 </script>
 </head>
 <body id="indexd">
@@ -347,9 +409,30 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			</td>
 			<td>车主姓名：</td>
 			<td><input type="text" name="s_carOwnerName" id="s_carOwnerName" style="width: 150px;" /></td>
+			<td>是否在场：</td>
+			<td>
+				<select class="easyui-combobox" id="s_inStatus" name="s_inStatus"  style="width: 55px;" editable="false">
+					<option value="" selected="selected"></option>
+					<option value="1">在场</option>
+					<option value="0">离场</option>
+				</select>
+			</td>
+			<td>是否逾期：</td>
+			<td>
+				<select class="easyui-combobox" id="s_isExpire" name="s_isExpire"  style="width: 55px;" editable="false">
+					<option value="" selected="selected"></option>
+					<option value="1">是</option>
+					<option value="0">否</option>
+				</select>
+			</td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.search()">查询</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="reset()">重置</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" onclick="monthVehicleBrandExport()">导出</a></td>
+			<td>
+				<input type="hidden" name='textfield' id='textfield' class='txt' />
+				<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-redo'" onclick="$.upload()">导入</a>
+				<input type="file" name="upload_file" class="file" id="upload_file" size="13"/>
+			</td>
 		</tr>
 	</table>
 	<table id="search"></table>

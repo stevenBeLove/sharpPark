@@ -339,25 +339,52 @@
   </update>
   
   <select id="getMonthVehicleBrandCount" resultClass="java.lang.Integer">
-  	select count(1) from TB_MONTH_VEHICLE_BRAND
-  	where 1=1 
-  	<isNotEmpty property="carOwnerName" prepend="and">
-		CAR_OWNER_NAME like '%$carOwnerName$%'
-	</isNotEmpty>
-	<isNotEmpty property="carNumber" prepend="and">
-	    CAR_NUMBER like '%$carNumber$%'
-	</isNotEmpty>
-	<isNotEmpty prepend="and" property="outParkingId" >
-        OUT_PARKING_ID = #outParkingId:VARCHAR#
-    </isNotEmpty>
+    select count(1)
+    from (
+	  	select distinct t.CAR_NUMBER
+		  from TB_MONTH_VEHICLE_BRAND t
+		  left join tb_order o
+		    on t.car_number = o.car_number
+		   and t.out_parking_id = o.out_parking_id
+	  	where 1=1 
+	  	<isNotEmpty property="inStatus" prepend="and">
+			<isEqual property="inStatus" compareValue="1">
+				o.IN_TIME is not null
+			</isEqual>
+			<isEqual property="inStatus" compareValue="0">
+				o.IN_TIME is null
+			</isEqual>
+		</isNotEmpty>
+		<isNotEmpty property="isExpire" prepend="and">
+			<isEqual property="isExpire" compareValue="1">
+				<![CDATA[
+					sysdate not between t.start_date and t.end_date
+				 ]]>
+			</isEqual>
+			<isEqual property="isExpire" compareValue="0">
+				<![CDATA[
+					sysdate between t.start_date and t.end_date
+				 ]]>
+			</isEqual>
+		</isNotEmpty>
+	  	<isNotEmpty property="carOwnerName" prepend="and">
+			t.CAR_OWNER_NAME like '%$carOwnerName$%'
+		</isNotEmpty>
+		<isNotEmpty property="carNumber" prepend="and">
+		    t.CAR_NUMBER like '%$carNumber$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="outParkingId" >
+	        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
+	    </isNotEmpty>
+    )
   </select>
   
   <select id="getMonthVehicleBrandAll" resultClass="com.compass.vehicle.model.MonthVehicleBrandBean">
   	select *
 	  from (select b.*, rownum rn
 	          from (select
+	         		distinct t.CAR_NUMBER carNumber,
 					t.MONTH_VEHICLE_BRAND_ID monthVehicleBrandId,
-					t.CAR_NUMBER carNumber,
 					t.VEHICLE_BRAND_TYPE vehicleBrandType,
 					t.START_DATE startDate,
 					t.END_DATE endDate,
@@ -370,6 +397,8 @@
 					t.CAR_OWNER_PHONE carOwnerPhone,
 					t.CAR_OWNER_EMAIL carOwnerEmail,
 					t.REMARK remark,
+					decode(o.IN_TIME, null, '离场', '在场') inStatus,
+					case when (sysdate between t.start_date and t.end_date) then '否' else '是' end isExpire,
 					t.OUT_PARKING_ID outParkingId,
 					t.VEHICLE_BRAND vehicleBrand,
 					t.CREATE_USERID createUserid,
@@ -377,16 +406,40 @@
 					t.CREATE_DATETIME createDatetime,
 					t.MODIFY_DATETIME modifyDatetime
 					from TB_MONTH_VEHICLE_BRAND t
+					left join tb_order o
+					    on t.car_number = o.car_number
+					   and t.out_parking_id = o.out_parking_id
 					where 1=1 
+				<isNotEmpty property="inStatus" prepend="and">
+					<isEqual property="inStatus" compareValue="1">
+						o.IN_TIME is not null
+					</isEqual>
+					<isEqual property="inStatus" compareValue="0">
+						o.IN_TIME is null
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty property="isExpire" prepend="and">
+					<isEqual property="isExpire" compareValue="1">
+						<![CDATA[
+							sysdate not between t.start_date and t.end_date
+						 ]]>
+					</isEqual>
+					<isEqual property="isExpire" compareValue="0">
+						<![CDATA[
+							sysdate between t.start_date and t.end_date
+						 ]]>
+					</isEqual>
+				</isNotEmpty>
 				<isNotEmpty property="carOwnerName" prepend="and">
-					CAR_OWNER_NAME like '%$carOwnerName$%'
+					t.CAR_OWNER_NAME like '%$carOwnerName$%'
 				</isNotEmpty>
 				<isNotEmpty property="carNumber" prepend="and">
-					CAR_NUMBER like '%$carNumber$%'
+					t.CAR_NUMBER like '%$carNumber$%'
 				</isNotEmpty>
 				<isNotEmpty prepend="and" property="outParkingId" >
-			        OUT_PARKING_ID = #outParkingId:VARCHAR#
+			        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
 			    </isNotEmpty>
+			    order by t.CREATE_DATETIME desc
 				) b
 	         where rownum <![CDATA[<=]]> #end#)
 	 where rn > #start#
@@ -403,27 +456,70 @@
   </select>
   
   <select id="getMonthVehicleBrandExport" parameterClass="com.compass.vehicle.model.MonthVehicleBrandBean" resultClass="com.compass.vehicle.model.MonthVehicleBrandExportBean">
-			select t.CAR_NUMBER carNumber,
+			select distinct t.CAR_NUMBER carNumber,
 			       to_char(t.START_DATE, 'yyyy-MM-dd') startDate,
 			       to_char(t.END_DATE, 'yyyy-MM-dd') endDate,
 			       t.MONTH_PAY_AMOUNT monthPayAmount,
 			       t.VEHICLE_BRAND_TYPE vehicleBrandType,
+			       decode(o.IN_TIME, null, '离场', '在场') inStatus,
+			       case when (sysdate between t.start_date and t.end_date) then '否' else '是' end isExpire,
 			       t.CAR_OWNER_NAME carOwnerName,
-			       t.CAR_OWNER_ADDRES carOwnerAddres,
 			       t.CAR_OWNER_PHONE carOwnerPhone,
-			       t.CAR_OWNER_EMAIL carOwnerEmail,
-			       t.REMARK remark,
-			       t.VEHICLE_BRAND vehicleBrand
+			       t.CREATE_DATETIME createDatetime,
+			       t.REMARK remark
 			  from TB_MONTH_VEHICLE_BRAND t
+			  left join tb_order o
+					    on t.car_number = o.car_number
+					   and t.out_parking_id = o.out_parking_id
 			 where 1 = 1
+			 <isNotEmpty property="inStatus" prepend="and">
+					<isEqual property="inStatus" compareValue="1">
+						o.IN_TIME is not null
+					</isEqual>
+					<isEqual property="inStatus" compareValue="0">
+						o.IN_TIME is null
+					</isEqual>
+				</isNotEmpty>
+				<isNotEmpty property="isExpire" prepend="and">
+					<isEqual property="isExpire" compareValue="1">
+						<![CDATA[
+							sysdate not between t.start_date and t.end_date
+						 ]]>
+					</isEqual>
+					<isEqual property="isExpire" compareValue="0">
+						<![CDATA[
+							sysdate between t.start_date and t.end_date
+						 ]]>
+					</isEqual>
+				</isNotEmpty>
 		<isNotEmpty property="carOwnerName" prepend="and">
-			CAR_OWNER_NAME like '%$carOwnerName$%'
+			t.CAR_OWNER_NAME like '%$carOwnerName$%'
 		</isNotEmpty>
 		<isNotEmpty property="carNumber" prepend="and">
-			CAR_NUMBER like '%$carNumber$%'
+			t.CAR_NUMBER like '%$carNumber$%'
 		</isNotEmpty>
 		<isNotEmpty prepend="and" property="outParkingId" >
-	        OUT_PARKING_ID = #outParkingId:VARCHAR#
+	        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
 	    </isNotEmpty>
+	    order by t.CREATE_DATETIME desc
   </select>
+  
+   <insert id="addBatchMonthVehicleBrand" parameterClass="java.util.List" >
+   	insert all
+   	<iterate conjunction=" ">
+          into TB_MONTH_VEHICLE_BRAND(MONTH_VEHICLE_BRAND_ID, CAR_NUMBER, VEHICLE_BRAND_TYPE,
+          START_DATE, END_DATE, MONTH_PAY_AMOUNT,
+      CAR_OWNER_NAME, 
+      CAR_OWNER_PHONE,  REMARK, CREATE_USERID, 
+      CREATE_DATETIME, OUT_PARKING_ID)
+    values (to_char(sysdate,'yyyyMMddHH24miss') || replace(lpad(SEQ_MONTH_VEHICLE_BRAND.Nextval,9,'0'),'','0'), #[].carNumber:VARCHAR#, #[].vehicleBrandType:VARCHAR#,
+      #[].startDate:TIMESTAMP#, #[].endDate:TIMESTAMP#, #[].monthPayAmount:DECIMAL#,
+      #[].carOwnerName:VARCHAR#, #[].carOwnerPhone:VARCHAR#,
+       #[].remark:VARCHAR#,'excel', sysdate,
+      #[].outParkingId:VARCHAR#)
+   </iterate>
+   <![CDATA[
+          select * from dual
+   ]]>
+  </insert>
 </sqlMap>

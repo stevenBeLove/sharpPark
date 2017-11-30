@@ -4,7 +4,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <style type="text/css">
 * {
 	margin: 0;
@@ -178,21 +178,16 @@
 			<div style="width: 1200px; margin: 0 auto; overflow: hidden; position: relative;">
 				<div style="float: left; width: 1200px; height: 684px; position: relative;">
 					<img src="${ctx}/commons/images/majorization/Z-7.png" style="position: absolute; top: 95px; left: -77px;">
-					<p style="position: absolute; top: 135px; left: 410px; font-size: 18px; color: #F0F0F0;">微信扫码下载，支持</p>
-					<p style="position: absolute; top: 165px; left: 410px; font-size: 18px; color: #F0F0F0;">各机构管理员下载使</p>
-					<p style="position: absolute; top: 195px; left: 410px; font-size: 18px; color: #F0F0F0;">用哦！</p>
-					<p style="position: absolute; top: 435px; left: 80px; font-size: 20px; color: #f5ff52;">分润、交易、终端数据一目了然；开机构、设分润、发终端一步到位！</p>
+					<p style="position: absolute; top: 135px; left: 410px; font-size: 18px; color: #F0F0F0;"></p>
+					<p style="position: absolute; top: 165px; left: 410px; font-size: 18px; color: #F0F0F0;"></p>
+					<p style="position: absolute; top: 195px; left: 410px; font-size: 18px; color: #F0F0F0;"></p>
+					<p style="position: absolute; top: 435px; left: 80px; font-size: 20px; color: #f5ff52;"></p>
 				</div>
 
 				
 			<div style="float:right;position:absolute;top:103px;right:80px;height:417px;width: 344px;background: #FFF">
 				<div class="loginWrap">
-			
-				<div style="position:absolute;top:12px;left:140px;background:url(${ctx}/commons/images/majorization/XZ-82.png)center top no-repeat;"">
-					<p style="font-size:10px;width: 150px;height: 30px;" ><b style="position:absolute;top:13px;left:15px;font-size:13px;color: rgb(255, 140, 60);">扫码下载分润移动端</b></p>
-				</div>
 				<div class="changeLogin" style="position:absolute;top:0px;right:0px;" width="310px" height="230px">
-					<a href="javascript:;"><img src="${ctx}/commons/images/majorization/1.png" style="position:absolute;top:6px;right: 6px;"></a>
 				</div>
 				<table width="344px" height="360" border="0 cellspacing="0" style="position:absolute;top:60px;left:0px;">
 					<tr height="40px"">
@@ -210,7 +205,7 @@
 				    	    </div>
 				    	    <img style="position: absolute; left: 30px; top: 100px;" src="${ctx}/commons/images/majorization/!.png">
 									<p style="position: absolute; left: 55px; top: 100px;">
-										<font size='1' style="color:#ff6d00; font-size: 13px;">瑞通宝平台用户请在账户前面输入"RTB"! </font>
+										<font size='1' style="color:#ff6d00; font-size: 13px;"></font>
 									</p>
 				       </TD>
 					</tr>
@@ -251,27 +246,6 @@
 				
 		</div>
 			
-			<div class="download" style="display:none">
-				<div style="position:absolute;top:12px;left:140px;background:url(${ctx}/commons/images/majorization/XZ-82.png)center top no-repeat;"">
-					<p style="font-size:10px;width: 150px;height: 30px;" ><b style="position:absolute;top:13px;left:25px;font-size:13px;color:rgb(255, 140, 60);">账户登录在这里！</b></p>
-				</div>
-				<div class="changeLogin2" style="position:absolute;top:0px;right:0px;" width="310px" height="230px">
-					<a href="javascript:;"><img src="${ctx}/commons/images/majorization/DN2.png"  style="position:absolute;top:6px;right: 6px;"></a>
-				</div>
-					<p style="position:absolute;top:75px;left:75px;font-size:18px;color:#3CAOFF">手机扫码下载分润移动端</p>
-					<img src="${ctx}/commons/images/majorization/1493025294.png" style="position:absolute;top:115px;left:102px;">
-					<img src="${ctx}/commons/images/majorization/SM2.png" style="position:absolute;top:300px;left:68px;">
-					<p style="position:absolute;top:315px;left:113px;font-size:16px;color:#3CAOFF">使用<b style="color:rgb(255, 140, 60);font-weight:normal;">微信扫码</b>功能下载</p>
-					<input id="submit" style="position:absolute;top:350px;left:30px;
-						color:white;
-						font-size:16px;
-						width:285px;
-						height:40px;
-						border:1px solid #FF6600;
-						border-radius:5px;
-						background:#ff6d42;
-						cursor:pointer;" type="button" value="去登录" class="changeLogin3">
-			</div>
 		</div>
 
 			</div>
@@ -280,16 +254,16 @@
 			<TD align="center">
 				<div style="line-height: 20px; font-size: 50px;margin-top:-20px;">
 					<p align="center" style="color: #666666;">
-						<b style="color: #333333;">温馨提示：</b>亲爱的合作伙伴，请合理使用产品推广权限、保证代理体系的健全并遵守产品推广协议相关约定。感谢您的支持。在市场推广中，请保证：下级分润的准时下发，合规的管理、推广方式，并
+						<b style="color: #333333;"></b>
 					</p>
-					<p align="center" style="color: #666666;">杜绝任何形式的恶意的切、换机等不当行为。如我方发现存在任何形式的不合规行为并获取准确信息及证据，将有权冻结贵方平台甚至取消使用权限及采取必要的法律程序。</p>
+					<p align="center" style="color: #666666;"></p>
 				</div>
 			</TD>
 		</TR>
 		<p style="border-top: 1px solid #E6E6E6;margin:25 auto 0;width: 1000px;"></p>
 		<TD align="center" valign="middle">
 			<div align="center" style="margin-top: 26px;margin-bottom: 26px;">
-				<p style="font-size: 14px;color: #777777;">Copyright  银联认证2014-2015.All Rights  Reserved 版权所有</p>
+				<p style="font-size: 14px;color: #777777;">Copyright 版权所有</p>
 			</div>
 		</TD>
 	</div>

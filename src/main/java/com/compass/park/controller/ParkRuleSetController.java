@@ -171,7 +171,7 @@ public class ParkRuleSetController {
 			HttpServletRequest req) {
 		try {
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
-			String outParkingId = "100020";
+			String outParkingId = "10180";
 			ParkRuleSetBean parkRuleSetBean = new ParkRuleSetBean();
 			parkRuleSetBean.setOutParkingId(outParkingId);
 			parkRuleSetBean.setRuleName(ruleName);

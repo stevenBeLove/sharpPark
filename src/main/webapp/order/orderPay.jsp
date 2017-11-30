@@ -63,7 +63,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			height : $(window).height() * 0.9,
 			pageSize : 20,
 			pageNumber : 1,
-			url : "${ctx}/order/order.do?method=getOrder",
+			url : "${ctx}/orderPay/orderPay.do?method=getOrderPay",
 			queryParams : {
 				carNumber : carNumber
 			},
@@ -128,6 +128,11 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				title : "缴费金额",
 				width : 100,
 				align : "center",
+				formatter:function(value,row,index){
+		          	if (row != null) {
+                      return parseFloat(value).toFixed(2);
+                    }
+		        }
 			}, {
 				field : "inTime",
 				title : "入场时间",

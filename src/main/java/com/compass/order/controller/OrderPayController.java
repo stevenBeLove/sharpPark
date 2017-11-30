@@ -15,43 +15,43 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.compass.order.model.OrderBean;
-import com.compass.order.service.OrderService;
+import com.compass.order.model.OrderPayBean;
+import com.compass.order.service.OrderPayService;
 import com.compass.utils.mvc.AjaxReturnInfo;
 
 @Controller
-@RequestMapping("/order/order.do")
-public class OrderController {
+@RequestMapping("/orderPay/orderPay.do")
+public class OrderPayController {
 	
 	private static final Logger LogPay = LoggerFactory
-			.getLogger(OrderController.class);
+			.getLogger(OrderPayController.class);
 
 	@Autowired
-	@Qualifier("orderService")
-	private OrderService orderService;
+	@Qualifier("orderPayService")
+	private OrderPayService orderPayService;
 	
-	@RequestMapping(params = "method=getOrder")
+	@RequestMapping(params = "method=getOrderPay")
 	@ResponseBody
-	public Map<String, Object> getOrder(
+	public Map<String, Object> getOrderPay(
 			@RequestParam(value = "carNumber") String carNumber,
 			HttpServletRequest req) {
 		LogPay.info("carNumber:"+carNumber);
-		OrderBean orderBean = new OrderBean();
+		OrderPayBean orderPayBean = new OrderPayBean();
 		if(StringUtils.isNotBlank(carNumber)){
-			orderBean.setCarNumber(carNumber);
+			orderPayBean.setCarNumber(carNumber);
 		}
 		String rows = req.getParameter("rows");
 		String page = req.getParameter("page");
-		Integer count = orderService.getOrderCount(orderBean);
+		Integer count = orderPayService.getOrderPayCount(orderPayBean);
 		int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
 				: page);
 		int rownumber = Integer.parseInt((rows == "0" || rows == null) ? "20"
 				: rows);
 		int start = (pagenumber - 1) * rownumber;
 		int end = (start + rownumber) > count ? count : start + rownumber;
-		orderBean.setStart(start);
-		orderBean.setEnd(end);
-		List<OrderBean> list = orderService.getOrderAll(orderBean);
+		orderPayBean.setStart(start);
+		orderPayBean.setEnd(end);
+		List<OrderPayBean> list = orderPayService.getOrderPayAll(orderPayBean);
 		return AjaxReturnInfo.setTable(count, list);
 	}
 }

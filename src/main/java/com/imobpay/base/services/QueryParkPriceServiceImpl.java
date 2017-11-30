@@ -30,6 +30,7 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 	public List<Integer> noWeekDayList = Arrays.asList(6, 7);
 
 	public Map<String, Object> execute(Map<String, Object> paramMap) {
+		long begin = System.currentTimeMillis();
 		Map<String, Object> retMap = new HashMap<String, Object>();
 		String retCode = "99";
 		String retMessage = "系统异常";
@@ -54,6 +55,8 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 			freeVehicleBrandBean.setCarNumber(carNumber);
 			if(freeVehicleBrandService.isFreeVehicleFlag(freeVehicleBrandBean)){
 				log.info(carNumber+"该车为免费车");
+				long end = System.currentTimeMillis();
+				log.info("QueryParkPriceService---耗时："+(end-begin)+"ms");
 				retMap.put("totalPrice", totalPrice.toString());
 				retMap.put("payType", "F");
 				retMap.put("retCode", "00");
@@ -306,6 +309,8 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 			retCode = "99";
 			retMessage = "系统异常";
 		}
+		long end = System.currentTimeMillis();
+		log.info("QueryParkPriceService---耗时："+(end-begin)+"ms");
 		retMap.put("retCode", retCode);
 		retMap.put("retMessage", retMessage);
 		return retMap;

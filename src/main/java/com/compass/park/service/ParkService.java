@@ -23,4 +23,8 @@ public class ParkService extends AbstractService{
 	public boolean updateParkById(ParkBean parkBean){
 		return dao.update("TB_PARK.updateParkById", parkBean)>0?true:false;
 	}
+	
+	public ParkBean getParkByOutParkingId(String outParkingId){
+		return (ParkBean) dao.queryForObject("TB_PARK.getParkByOutParkingId", outParkingId);
+	}
 }

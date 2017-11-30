@@ -23,6 +23,7 @@
 				<property name="locations">
 					<list>
 					    <value>file:/home/weblogic/etc/system.properties</value>
+					    <!-- <value>file:E:/soft/config/system.properties</value> -->
 					</list>
 				</property>
 		</bean>		
@@ -116,5 +117,4 @@
 <!--    <import resource="applicationContext-dubbo.xml" /> -->
    <import resource="system.spring.xml" />
    <import resource="applicationContext-job.xml" />
-   
 </beans>

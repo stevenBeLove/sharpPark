@@ -1689,4 +1689,42 @@
 	         where rownum <![CDATA[<=]]> #end#)
 	 where rn > #start#
   </select>
+  
+  <select id="getParkByOutParkingId" resultClass="com.compass.park.model.ParkBean">
+  	select t.OUT_PARKING_ID outParkingId,
+				t.MERCHANT_NAME merchantName,
+				t.MERCHANT_SERVICE_PHONE  merchantServicePhone,
+				t.ACCOUNT_NO accountNo,
+				t.CITY_ID cityId,
+				t.EQUIPMENT_NAME equipmentName,
+				t.PARKING_ADDRESS parkingAddress,
+				t.LONGITUDE longitude,
+				t.LATITUDE latitude,
+				t.PARKING_START_TIME parkingStartTime,
+				t.PARKING_END_TIME parkingEndTime,
+				t.PARKING_NUMBER parkingNumber,
+				t.PARKING_LOT_TYPE parkingLotType,
+				t.PARKING_TYPE parkingType,
+				t.PAYMENT_MODE paymentMode,
+				t.PAY_TYPE payType,
+				t.SHOPINGMALL_ID shopingmallId,
+				t.PARKING_FEE_DESCRIPTION parkingFeeDescription,
+				t.CONTACT_NAME contactName,
+				t.CONTACT_MOBILE contactMobile,
+				t.CONTACT_TEL  contactTel,
+				t.CONTACT_EMALI  contactEmali,
+				t.CONTACT_WEIXIN  contactWeixin,
+				t.CONTACT_ALIPAY  contactAlipay,
+				t.PARKING_NAME  parkingName,
+				t.TIME_OUT  timeOut,
+				t.CREATE_USERID createUserId,
+				t.MODIFY_USERID modifyUserId,
+				t.CREATE_DATETIME createDatetime,
+				t.MODIFY_DATETIME modifyDatetime,
+				t.STATUS status from TB_PARK t
+				where 1=1 
+			    and  OUT_PARKING_ID = #outParkingId:VARCHAR#
+			    and STATUS=1
+			    and rownum=1
+  </select>
 </sqlMap>

@@ -38,6 +38,7 @@
 	<sqlMap resource="ibatis/sqlMap/AGENCY.ibatis.xml"/>
 	<sqlMap resource="ibatis/sqlMap/TB_PARK_SqlMap.xml"/>
 	<sqlMap resource="ibatis/sqlMap/TB_ORDER_SqlMap.xml"/>
+	<sqlMap resource="ibatis/sqlMap/TB_ORDER_PAY_SqlMap.xml"/>
 	<sqlMap resource="ibatis/sqlMap/TB_PARK_RULE_SET_SqlMap.xml"/>
 	<sqlMap resource="ibatis/sqlMap/TB_FREE_VEHICLE_BRAND_SqlMap.xml"/>
 	<sqlMap resource="ibatis/sqlMap/TB_MONTH_VEHICLE_BRAND_SqlMap.xml"/>

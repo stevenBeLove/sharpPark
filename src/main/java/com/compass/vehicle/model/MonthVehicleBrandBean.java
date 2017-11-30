@@ -468,6 +468,7 @@ public class MonthVehicleBrandBean {
 	private Integer start;
 	private Integer end;
 	private String isExpire;
+	private String inStatus;
 	private Date stopDate;
 	public Integer getStart() {
 		return start;
@@ -499,5 +500,13 @@ public class MonthVehicleBrandBean {
 
 	public void setStopDate(Date stopDate) {
 		this.stopDate = stopDate;
+	}
+
+	public String getInStatus() {
+		return inStatus;
+	}
+
+	public void setInStatus(String inStatus) {
+		this.inStatus = inStatus;
 	}
 }

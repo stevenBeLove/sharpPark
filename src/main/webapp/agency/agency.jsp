@@ -9,7 +9,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <script type="text/javascript">	
 var agid='<%=session.getAttribute(ConstantUtils.AGENCYID).toString().trim()%>';
 var sysId='<%=session.getAttribute(ConstantUtils.SYSTEMID).toString().trim()%>';
@@ -316,7 +316,6 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			$("#someonePhone").val(row.someonePhone);//联系人电话
 			$("#userpId").val(row.userpId);
 			
-			//是否开通瑞推客
 			$.post("${ctx}/agency/agency.do?method=getIsDtbUser", {
 				'agencyId':row.agency_id
 			}, function(data) {
@@ -325,7 +324,6 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				}
 			}, "json");
 			
-			//是否开通瑞推客提现
 			$.post("${ctx}/agency/agency.do?method=getDtbProfitFlag", {
 				'agencyId':row.agency_id
 			}, function(data) {
@@ -1109,7 +1107,6 @@ if(ConstantUtils.CENTERCODE.equals(agencyId.trim())){
 
 						<td align="right"><span style="color: red">*</span>手机号码：</td>
 						<td align="left"><input type="text" name="companyPhone" id="companyPhone" maxlength="11" onkeyup="value=this.value.replace(/\D+/g,'')" />
-						<span style="color: red">（可登录“瑞源宝APP”）</span>
 						</td>
 						
 						<td align="right"></td>
@@ -1203,7 +1200,7 @@ if(ConstantUtils.CENTERCODE.equals(agencyId.trim())){
 						   boolean tinyBussiness = (Boolean)session.getAttribute(ConstantUtils.TINYBUSSINESS);
 							if(tinyBussiness){
 						%>
-								<td align="right" >开通瑞推客：</td>
+								<td align="right" >开通：</td>
 								<td align="left" >
 									<input type="checkbox" name="isDtbUser" id ="isDtbUser" value="1"/>
 								</td>
@@ -1212,7 +1209,7 @@ if(ConstantUtils.CENTERCODE.equals(agencyId.trim())){
 							}
 						%>
 						
-						<td id="dtbProfitFlag1" align="right" >开通瑞推客提现：</td>
+						<td id="dtbProfitFlag1" align="right" >开通提现：</td>
 						<td id="dtbProfitFlag2" align="left" >
 							<input type="checkbox" name="dtbProfitFlag" id ="dtbProfitFlag" value="1" />
 						</td>	

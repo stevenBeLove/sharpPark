@@ -329,28 +329,47 @@
   </update>
   
   <select id="getFreeVehicleBrandCount" resultClass="java.lang.Integer">
-  	select count(1) from TB_FREE_VEHICLE_BRAND
-  	where 1=1 
-  	<isNotEmpty property="carOwnerName" prepend="and">
-		CAR_OWNER_NAME like '%$carOwnerName$%'
-	</isNotEmpty>
-	<isNotEmpty property="carNumber" prepend="and">
-	    CAR_NUMBER like '%$carNumber$%'
-	</isNotEmpty>
-	<isNotEmpty prepend="and" property="outParkingId" >
-        OUT_PARKING_ID = #outParkingId:VARCHAR#
-    </isNotEmpty>
+  select count(1)
+    from (
+	  	select distinct f.CAR_NUMBER
+	           from TB_FREE_VEHICLE_BRAND f
+	           left join tb_order o
+	             on f.car_number = o.car_number
+	            and f.out_parking_id = o.out_parking_id
+	  	where 1=1 
+	  	<isNotEmpty property="status" prepend="and">
+			f.status = #status:VARCHAR#
+		</isNotEmpty>
+		<isNotEmpty property="inStatus" prepend="and">
+			<isEqual property="inStatus" compareValue="1">
+				o.IN_TIME is not null
+			</isEqual>
+			<isEqual property="inStatus" compareValue="0">
+				o.IN_TIME is null
+			</isEqual>
+		</isNotEmpty>
+	  	<isNotEmpty property="carOwnerName" prepend="and">
+			f.CAR_OWNER_NAME like '%$carOwnerName$%'
+		</isNotEmpty>
+		<isNotEmpty property="carNumber" prepend="and">
+		    f.CAR_NUMBER like '%$carNumber$%'
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="outParkingId" >
+	        f.OUT_PARKING_ID = #outParkingId:VARCHAR#
+	    </isNotEmpty>
+    )
   </select>
   
   <select id="getFreeVehicleBrandAll" resultClass="com.compass.vehicle.model.FreeVehicleBrandBean">
   	select *
 	  from (select b.*, rownum rn
 	          from (select
+					distinct t.CAR_NUMBER            carNumber,
 					t.FREE_VEHICLE_BRAND_ID freeVehicleBrandId,
-					t.CAR_NUMBER            carNumber,
 					t.VEHICLE_BRAND_TYPE    vehicleBrandType,
 					t.IN_GATE               inGate,
 					t.OUT_GATE              outGate,
+					decode(o.IN_TIME, null, '离场', '在场') inStatus,
 					t.VEHICLE_PLACE         vehiclePlace,
 					t.SCENE_STATE           sceneState,
 					t.CAR_OWNER_NAME        carOwnerName,
@@ -366,43 +385,69 @@
 					t.OUT_PARKING_ID        outParkingId,
 					t.VEHICLE_BRAND         vehicleBrand
 					from TB_FREE_VEHICLE_BRAND t
-					where 1=1 
+		           left join tb_order o
+		             on t.car_number = o.car_number
+		            and t.out_parking_id = o.out_parking_id
+		            where 1=1 
+				<isNotEmpty property="status" prepend="and">
+					t.status = #status:VARCHAR#
+				</isNotEmpty>
+				<isNotEmpty property="inStatus" prepend="and">
+					<isEqual property="inStatus" compareValue="1">
+						o.IN_TIME is not null
+					</isEqual>
+					<isEqual property="inStatus" compareValue="0">
+						o.IN_TIME is null
+					</isEqual>
+				</isNotEmpty>
 				<isNotEmpty property="carOwnerName" prepend="and">
-					CAR_OWNER_NAME like '%$carOwnerName$%'
+					t.CAR_OWNER_NAME like '%$carOwnerName$%'
 				</isNotEmpty>
 				<isNotEmpty property="carNumber" prepend="and">
-					CAR_NUMBER like '%$carNumber$%'
+					t.CAR_NUMBER like '%$carNumber$%'
 				</isNotEmpty>
 				<isNotEmpty prepend="and" property="outParkingId" >
-			        OUT_PARKING_ID = #outParkingId:VARCHAR#
+			        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
 			    </isNotEmpty>
+			    order by t.CREATE_DATETIME desc
 				) b
 	         where rownum <![CDATA[<=]]> #end#)
 	 where rn > #start#
   </select>
   
   <select id="getFreeVehicleBrandExport" parameterClass="com.compass.vehicle.model.FreeVehicleBrandBean" resultClass="com.compass.vehicle.model.FreeVehicleBrandExportBean">
-			select
-			t.CAR_NUMBER            carNumber,
-			t.VEHICLE_BRAND_TYPE    vehicleBrandType,
-			t.CAR_OWNER_NAME        carOwnerName,
-			t.CAR_OWNER_ADDRES      carOwnerAddres,
-			t.CAR_OWNER_PHONE       carOwnerPhone,
-			t.CAR_OWNER_EMAIL       carOwnerEmail,
-			t.REMARK                remark,
-			t.STATUS                 status,
-			t.VEHICLE_BRAND         vehicleBrand
-			from TB_FREE_VEHICLE_BRAND t
+			select distinct t.CAR_NUMBER carNumber,
+			       decode(t.VEHICLE_BRAND_TYPE,'1','公安','2','武警','3','军队','4','其他') vehicleBrandType,
+			       decode(o.IN_TIME, null, '离场', '在场') inStatus,
+			       t.CAR_OWNER_NAME carOwnerName,
+			       t.CAR_OWNER_PHONE carOwnerPhone,
+			       t.CREATE_DATETIME       createDatetime,
+			       t.REMARK remark
+			  from TB_FREE_VEHICLE_BRAND t
+			  left join tb_order o
+			    on t.car_number = o.car_number and t.out_parking_id = o.out_parking_id
 			where 1=1 
+			<isNotEmpty property="status" prepend="and">
+				t.status = #status:VARCHAR#
+			</isNotEmpty>
+			<isNotEmpty property="inStatus" prepend="and">
+				<isEqual property="inStatus" compareValue="1">
+					o.IN_TIME is not null
+				</isEqual>
+				<isEqual property="inStatus" compareValue="0">
+					o.IN_TIME is null
+				</isEqual>
+			</isNotEmpty>
 		<isNotEmpty property="carOwnerName" prepend="and">
-			CAR_OWNER_NAME like '%$carOwnerName$%'
+			t.CAR_OWNER_NAME like '%$carOwnerName$%'
 		</isNotEmpty>
 		<isNotEmpty property="carNumber" prepend="and">
-			CAR_NUMBER like '%$carNumber$%'
+			t.CAR_NUMBER like '%$carNumber$%'
 		</isNotEmpty>
 		<isNotEmpty prepend="and" property="outParkingId" >
-	        OUT_PARKING_ID = #outParkingId:VARCHAR#
+	        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
 	    </isNotEmpty>
+	    order by t.CREATE_DATETIME desc
   </select>
   
   <select id="isFreeVehicleFlag" resultClass="java.lang.Integer" parameterClass="com.compass.vehicle.model.FreeVehicleBrandBean">
@@ -411,5 +456,45 @@
      and OUT_PARKING_ID = #outParkingId:VARCHAR#
      and STATUS=1
   </select>
+  
+   <select id="getFreeVehicleByOutPardingIdAndCarNumber" resultClass="java.lang.Integer" parameterClass="com.compass.vehicle.model.FreeVehicleBrandBean">
+  	select count(1) from TB_FREE_VEHICLE_BRAND
+  	where CAR_NUMBER = #carNumber:VARCHAR#
+     and OUT_PARKING_ID = #outParkingId:VARCHAR#
+  </select>
+  
+  <update id="updateBatchFreeVehicle" parameterClass="java.util.List">
+   begin
+      <iterate conjunction="">
+      	update TB_FREE_VEHICLE_BRAND
+      set 
+      VEHICLE_BRAND_TYPE = #[].vehicleBrandType:VARCHAR#,
+      CAR_OWNER_NAME = #[].carOwnerName:VARCHAR#,
+      CAR_OWNER_PHONE = #[].carOwnerPhone:VARCHAR#,
+      REMARK = #[].remark:VARCHAR#,
+      STATUS = 1,
+      MODIFY_DATETIME = sysdate
+    where CAR_NUMBER = #[].carNumber:VARCHAR#
+    and OUT_PARKING_ID = #[].outParkingId:VARCHAR#;
+      </iterate>
+     end; 
+  </update>
+  
+   <insert id="addBatchFreeVehicle" parameterClass="java.util.List" >
+   	insert all
+   	<iterate conjunction=" ">
+          into TB_FREE_VEHICLE_BRAND(FREE_VEHICLE_BRAND_ID, CAR_NUMBER, VEHICLE_BRAND_TYPE,
+      CAR_OWNER_NAME, 
+      CAR_OWNER_PHONE,  REMARK, STATUS, CREATE_USERID, 
+      CREATE_DATETIME, OUT_PARKING_ID)
+    values (to_char(sysdate,'yyyyMMddHH24miss') || replace(lpad(SEQ_FREE_VEHICLE_BRAND.Nextval,9,'0'),'','0'), #[].carNumber:VARCHAR#, #[].vehicleBrandType:VARCHAR#,
+      #[].carOwnerName:VARCHAR#, #[].carOwnerPhone:VARCHAR#,
+       #[].remark:VARCHAR#, 1, 'excel', sysdate,
+      #[].outParkingId:VARCHAR#)
+   </iterate>
+   <![CDATA[
+          select * from dual
+   ]]>
+  </insert>
   
 </sqlMap>

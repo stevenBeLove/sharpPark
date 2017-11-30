@@ -9,7 +9,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>瑞通宝综合管理系统</title>
+<title>云停风驰管理系统</title>
 <script type="text/javascript">	
 var agid='<%=session.getAttribute(ConstantUtils.AGENCYID).toString().trim()%>';
 var sysId='<%=session.getAttribute(ConstantUtils.SYSTEMID).toString().trim()%>';
@@ -164,26 +164,44 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	function freeVehicleBrandExport() {
 		var carNumber = $('#s_carNumber').val();
 		var carOwnerName = $('#s_carOwnerName').val();
+		var inStatus =  $("#s_inStatus").combobox('getValue');
+		var status =  $("#s_status").combobox('getValue');
 		if (carNumber == null || $.trim(carNumber) == '-1') {
 			carNumber = "";
 		}
 		if (carOwnerName == null || $.trim(carOwnerName) == '-1') {
 			carOwnerName = "";
 		}
+		if (inStatus == null || $.trim(inStatus) == '-1') {
+			inStatus = "";
+		}
+		if (status == null || $.trim(status) == '-1') {
+			status = "";
+		}
 		$.getToPost('${ctx}/freeVehicleBrand/freeVehicleBrand.do?method=freeVehicleBrandExport', {
 			carNumber : carNumber,
-			carOwnerName : carOwnerName
+			carOwnerName : carOwnerName,
+			inStatus : inStatus,
+			status : status
 		});
 	}
 	
 	$.search = function() {
 		var carNumber = $('#s_carNumber').val();
 		var carOwnerName = $('#s_carOwnerName').val();
+		var inStatus =  $("#s_inStatus").combobox('getValue');
+		var status =  $("#s_status").combobox('getValue');
 		if (carNumber == null || $.trim(carNumber) == '-1') {
 			carNumber = "";
 		}
 		if (carOwnerName == null || $.trim(carOwnerName) == '-1') {
 			carOwnerName = "";
+		}
+		if (inStatus == null || $.trim(inStatus) == '-1') {
+			inStatus = "";
+		}
+		if (status == null || $.trim(status) == '-1') {
+			status = "";
 		}
 		$('#search').datagrid({
 			title : '免费车牌管理',
@@ -194,7 +212,9 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			url : "${ctx}/freeVehicleBrand/freeVehicleBrand.do?method=getFreeVehicleBrand",
 			queryParams : {
 				carNumber : carNumber,
-				carOwnerName : carOwnerName
+				carOwnerName : carOwnerName,
+				inStatus : inStatus,
+				status : status
 			},
 			loadMsg : '数据载入中,请稍等！',
 			remoteSort : false,
@@ -230,6 +250,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				field : "vehicleBrand",
 				title : "车辆品牌",
 				width : 100,
+				align : "center",
+				sortable : true
+			},{
+				field : "inStatus",
+				title : "在场状态",
+				width : 50,
 				align : "center",
 				sortable : true
 			}, {
@@ -300,7 +326,39 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	function reset(){
 		$('#s_carNumber').val('');
 		$('#s_carOwnerName').val('');
+		$("#s_inStatus").combobox('select', '');
+		$("#s_status").combobox('select', '');
 	}
+	
+	$.upload = function(){
+		var name = $("#upload_file").val();
+		if(name==""){
+			 $.messager.alert("提示","请选择文件！");
+	    	   return;
+		}
+		if(!(name.endWith(".xls"))&&!(name.endWith(".xlsx"))){
+	    	$.messager.alert("提示","文件类型不正确，请重新选择！");
+	    	return;
+	    }
+		$.ajaxFileUpload({
+		       url:"${ctx}/freeVehicleBrand/freeVehicleBrand.do?method=freeVehicleBrandImport",
+		       secureuri:false,
+		       fileElementId:'upload_file',
+		       dataType: 'json',
+		       success:function(data,textStatus) {
+		       	   var jsonData = jQuery.parseJSON(jQuery(data).text());
+		    	   $.messager.alert("提示",jsonData.message);
+		    	   $.search();
+		       }
+		    }
+		);
+	};
+	
+	//判断文件类型
+	String.prototype.endWith=function(oString){
+		var reg=new RegExp(oString+"$");  
+		return reg.test(this);     
+	};
 </script>
 </head>
 <body id="indexd">
@@ -316,10 +374,31 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			</td>
 			<td>车主姓名：</td>
 			<td><input type="text" name="s_carOwnerName" id="s_carOwnerName" style="width: 150px;" /></td>
+			<td>是否在场：</td>
+			<td>
+				<select class="easyui-combobox" id="s_inStatus" name="s_inStatus"  style="width: 55px;" editable="false">
+					<option value="" selected="selected"></option>
+					<option value="1">在场</option>
+					<option value="0">离场</option>
+				</select>
+			</td>
+			<td>是否有效：</td>
+			<td>
+				<select class="easyui-combobox" id="s_status" name="s_status"  style="width: 55px;" editable="false">
+					<option value="" selected="selected"></option>
+					<option value="1">有效</option>
+					<option value="0">无效</option>
+				</select>
+			</td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.search()">查询</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="reset()">重置</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" onclick="freeVehicleBrandExport()">导出</a></td>
-		</tr>
+			<td>
+				<input type="hidden" name='textfield' id='textfield' class='txt' />
+				<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-redo'" onclick="$.upload()">导入</a>
+				<input type="file" name="upload_file" class="file" id="upload_file" size="13"/>
+			</td>
+			
 	</table>
 	<table id="search"></table>
 	<div id="markSave" class="easyui-window" title="免费车录入" closed=true cache="false" collapsible="false" zIndex="20px" minimizable="false"
