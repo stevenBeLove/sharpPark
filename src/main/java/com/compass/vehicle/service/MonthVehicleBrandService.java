@@ -35,8 +35,16 @@ public class MonthVehicleBrandService extends AbstractService{
 		return dao.update("TB_MONTH_VEHICLE_BRAND.updateMonthVehicleBrandById", monthVehicleBrandBean)>0?true:false;
 	}
 	
+	public boolean returnMonthVehicleBrandById(MonthVehicleBrandBean monthVehicleBrandBean){
+		return dao.update("TB_MONTH_VEHICLE_BRAND.returnMonthVehicleBrandById", monthVehicleBrandBean)>0?true:false;
+	}
+	
 	public boolean isMonthVehicleFlag(MonthVehicleBrandBean monthVehicleBrandBean){
 		return (Integer)dao.queryForObject("TB_MONTH_VEHICLE_BRAND.isMonthVehicleFlag",monthVehicleBrandBean)>0?true:false;
+	}
+	
+	public boolean isMonthCardRefund(MonthVehicleBrandBean monthVehicleBrandBean){
+		return dao.update("TB_MONTH_VEHICLE_BRAND.isMonthCardRefund", monthVehicleBrandBean)>0?true:false;
 	}
 	
 	@SuppressWarnings("unchecked")

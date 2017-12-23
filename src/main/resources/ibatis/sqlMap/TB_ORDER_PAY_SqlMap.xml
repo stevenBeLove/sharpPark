@@ -484,6 +484,7 @@
 	               <isNotEmpty prepend="and" property="payType" >
 		        		t.PAY_TYPE = #payType:VARCHAR#
 		    	   </isNotEmpty>
+		    	   order by to_date(t.IN_TIME,'yyyy-MM-dd hh24:mi:ss') desc
 	                ) b
 	         where rownum <![CDATA[<=]]> #end#)
 	where rn > #start#
@@ -534,4 +535,280 @@
 	        		t.PAY_TYPE = #payType:VARCHAR#
 	    	   </isNotEmpty>
   </select>
+  
+  <select id="getManagementAnalysisList" parameterClass="java.util.HashMap" resultClass="com.compass.order.model.ManagementAnalysisBean">
+  <![CDATA[
+  	  select *
+	  from (select b.*, rownum rn
+	          from (
+	          select substr(p.pay_time, 0, 10) dateStr,
+           (select nvl(sum(nvl(p1.PAID_MONEY, 0)), 0)
+              from tb_order_pay p1
+             where p1.billing_typer = 'L'
+               and substr(p1.pay_time, 0, 10) = substr(p.pay_time, 0, 10) and p1.out_parking_id=#outParkingId:VARCHAR#) tempTotalAmount,
+           (select nvl(sum(nvl(p2.PAID_MONEY, 0)), 0)
+              from tb_order_pay p2
+             where p2.billing_typer = 'L'
+               and substr(p2.pay_time, 0, 10) = substr(p.pay_time, 0, 10)
+               and p2.pay_type = '3' and p2.out_parking_id=#outParkingId:VARCHAR#) tempAmount,
+           (select nvl(sum(nvl(p3.PAID_MONEY, 0)), 0)
+              from tb_order_pay p3
+             where p3.billing_typer = 'L'
+               and substr(p3.pay_time, 0, 10) = substr(p.pay_time, 0, 10)
+               and p3.pay_type in ('1', '2') and p3.out_parking_id=#outParkingId:VARCHAR#) tempAlipayAmount,
+           0 tempWeiXinAmount,
+           (select count(1) c
+              from tb_order_pay p4
+             where substr(p4.in_time, 0, 10) = substr(p.pay_time, 0, 10) and p4.out_parking_id=#outParkingId:VARCHAR#) inTimeCount,
+           (select count(1) c
+              from tb_order p5
+             where substr(p5.in_time, 0, 10) = substr(p.pay_time, 0, 10) and p5.out_parking_id=#outParkingId:VARCHAR#) inTimeStayCount,
+           (select count(1) c
+              from tb_order p6
+             where substr(p6.out_time, 0, 10) = substr(p.pay_time, 0, 10) and p6.out_parking_id=#outParkingId:VARCHAR#) outTimeCount
+      from tb_order_pay p
+     where to_date(p.PAY_TIME, 'yyyy-MM-dd hh24:mi:ss') between
+           to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
+           to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and p.out_parking_id=#outParkingId:VARCHAR#
+     group by substr(p.pay_time, 0, 10)
+       ) b
+	         where rownum<= #end#)
+	where rn > #start#
+     ]]>
+  </select>
+  
+  <select id="getManagementAnalysisCount" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+  <![CDATA[
+  select count(1) from(
+  	select count(1)
+  	from tb_order_pay p
+  where to_date(p.PAY_TIME, 'yyyy-MM-dd hh24:mi:ss') between
+           to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
+           to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and p.out_parking_id=#outParkingId:VARCHAR#
+     group by substr(p.pay_time, 0, 10))
+     ]]>
+  </select>
+  
+  <select id="getAccountList" parameterClass="java.util.HashMap" resultClass="com.compass.order.model.AccountBean">
+  <![CDATA[
+  	select * from(
+	  	select 1 payType,
+	  		'预计临停现金收费'  payTypeName,
+	       count(1) totalCount,
+	       nvl(sum(nvl(p.paid_money,0)),0) transactionAmount,
+	       nvl(sum(decode(p.refund_money, null, 0, 1)),0) refundCount,
+	       nvl(sum(nvl(p.refund_money, 0)), 0) refundAmount,
+	       0 merchantDiscount,
+	       0 cloudDiscount,
+	       nvl(sum(nvl(p.paid_money,0)),0) actualAmount,
+	       0 freeAmount,
+	       nvl(sum(nvl(p.paid_money,0)),0) settAmount
+	  from tb_order_pay p
+	 where to_date(p.PAY_TIME, 'yyyy-MM-dd hh24:mi:ss') between
+	       to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
+	       to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss')
+	   and p.out_parking_id = #outParkingId:VARCHAR#
+	   and p.pay_type ='3'
+	union all 
+	select 2 payType,
+			'支付宝'  payTypeName,
+	       count(1) totalCount,
+	       nvl(sum(nvl(p.paid_money,0)),0) transactionAmount,
+	       nvl(sum(decode(p.refund_money, null, 0, 1)),0) refundCount,
+	       nvl(sum(nvl(p.refund_money, 0)), 0) refundAmount,
+	       0 merchantDiscount,
+	       0 cloudDiscount,
+	       nvl(sum(nvl(p.paid_money,0)),0) actualAmount,
+	       0 freeAmount,
+	       nvl(sum(nvl(p.paid_money,0)),0) settAmount
+	  from tb_order_pay p
+	 where to_date(p.PAY_TIME, 'yyyy-MM-dd hh24:mi:ss') between
+	       to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
+	       to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss')
+	   and p.out_parking_id = #outParkingId:VARCHAR#
+	   and p.pay_type in ('1', '2')
+	   union all 
+		select 3 payType,
+		'微信'  payTypeName,
+		       0 totalCount,
+		       0 transactionAmount,
+		       0 refundCount,
+		       0 refundAmount,
+		       0 merchantDiscount,
+		       0 cloudDiscount,
+		       0 actualAmount,
+		       0 freeAmount,
+		       0 settAmount
+		  from dual)
+      ]]>
+		  where 1=1
+	  <isNotEmpty prepend="and" property="payType" >
+          payType = #payType:VARCHAR#
+      </isNotEmpty>
+  </select>
+  
+  
+  <select id="getOrderPayEntryCount" resultClass="java.lang.Integer" parameterClass="com.compass.order.model.OrderPayBean">
+  	select sum(c) from(
+  	<isEmpty property="inStatus" >
+	  	select count(1) c from TB_ORDER_PAY p
+	  	where 1=1 
+	     <isNotEmpty prepend="and" property="outParkingId" >
+	        p.OUT_PARKING_ID = #outParkingId:VARCHAR#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property="carNumber" >
+	        p.CAR_NUMBER like '%$carNumber$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property="startDate" >
+		  <![CDATA[
+		       		to_date(p.IN_TIME,'yyyy-MM-dd hh24:mi:ss')>=#startDate:TIMESTAMP#
+		  		]]>
+	    </isNotEmpty>
+		<isNotEmpty prepend="and" property="endDate" >
+		  <![CDATA[
+	 			to_date(p.IN_TIME,'yyyy-MM-dd hh24:mi:ss')<=#endDate:TIMESTAMP#
+	 	  ]]>
+		 </isNotEmpty>
+		 <isNotEmpty prepend="and" property="billingTyper" >
+		 		p.BILLING_TYPER = #billingTyper:VARCHAR#
+		 </isNotEmpty>
+		 union all
+	 </isEmpty>
+	 select count(1) c from TB_ORDER o 
+  	where 1=1 
+     <isNotEmpty prepend="and" property="outParkingId" >
+        o.OUT_PARKING_ID = #outParkingId:VARCHAR#
+    </isNotEmpty>
+    <isNotEmpty prepend="and" property="carNumber" >
+        o.CAR_NUMBER like '%$carNumber$%'
+    </isNotEmpty>
+    <isNotEmpty prepend="and" property="startDate" >
+	  <![CDATA[
+	       		to_date(o.IN_TIME,'yyyy-MM-dd hh24:mi:ss')>=#startDate:TIMESTAMP#
+	  		]]>
+    </isNotEmpty>
+	<isNotEmpty prepend="and" property="endDate" >
+	  <![CDATA[
+ 			to_date(o.IN_TIME,'yyyy-MM-dd hh24:mi:ss')<=#endDate:TIMESTAMP#
+ 	  ]]>
+	 </isNotEmpty>
+	 <isNotEmpty prepend="and" property="billingTyper" >
+	 		o.BILLING_TYPER = #billingTyper:VARCHAR#
+	 </isNotEmpty>
+	  )
+  </select>
+  
+  
+  <select id="getOrderPayEntryAll" resultClass="com.compass.order.model.OrderPayBean">
+	  select *
+	  from (select b.*, rownum rn
+	          from (
+	          select x.* from(
+	          <isEmpty property="inStatus" >
+	          select p.ORDER_ID         orderId,
+					       p.USER_ID          userId,
+					       p.OUT_PARKING_ID   outParkingId,
+					       p.PARKING_NAME     parkingName,
+					       p.CAR_NUMBER       carNumber,
+					       p.OUT_ORDER_NO     outOrderNo,
+					       p.ORDER_STATUS     orderStatus,
+					       p.ORDER_TIME       orderTime,
+					       p.ORDER_NO         orderNo,
+					       p.PAY_TIME         payTime,
+					       p.PAY_TYPE         payType,
+					       p.PAY_MONEY        payMoney,
+					       p.IN_TIME          inTime,
+					       p.PARKING_ID       parkingId,
+					       p.IN_DURATION      inDuration,
+					       p.CARD_NUMBER      cardNumber,
+					       p.DISCOUNT_MONEY   discountMoney,
+					       p.PAID_MONEY       paidMoney,
+					       p.SELLER_ID        sellerId,
+					       p.OUT_TIME         outTime,
+					       p.ORDER_SYN_STATUS orderSynStatus,
+					       p.ORDER_PAY_STATUS orderPayStatus,
+					       p.CAR_ID           carId,
+					       p.CAR_COLOR        carColor,
+					       p.CAR_TYPE         carType,
+					       p.ORDER_TRADE      orderTrade,
+					       p.BILLING_TYPER  billingTyper,
+					       p.LANE lane
+					  from TB_ORDER_PAY p
+	                 where 1 = 1
+	                 <isNotEmpty prepend="and" property="outParkingId" >
+				        p.OUT_PARKING_ID = #outParkingId:VARCHAR#
+				    </isNotEmpty>
+	                 <isNotEmpty prepend="and" property="carNumber" >
+				        p.CAR_NUMBER like '%$carNumber$%'
+				    </isNotEmpty>
+			     	<isNotEmpty prepend="and" property="startDate" >
+			     	<![CDATA[
+	               		 to_date(p.IN_TIME,'yyyy-MM-dd hh24:mi:ss')>=#startDate:TIMESTAMP#
+	               		]]>
+	               </isNotEmpty>
+	               <isNotEmpty prepend="and" property="endDate" >
+	               <![CDATA[
+	               		 to_date(p.IN_TIME,'yyyy-MM-dd hh24:mi:ss')<=#endDate:TIMESTAMP#
+	               		]]>
+	               </isNotEmpty>
+	              <isNotEmpty prepend="and" property="billingTyper" >
+				 		p.BILLING_TYPER = #billingTyper:VARCHAR#
+				 </isNotEmpty>
+				 union all
+			 </isEmpty>
+				 select ''        orderId,
+					       o.USER_ID          userId,
+					       o.OUT_PARKING_ID   outParkingId,
+					       o.PARKING_NAME     parkingName,
+					       o.CAR_NUMBER       carNumber,
+					       o.OUT_ORDER_NO     outOrderNo,
+					       o.ORDER_STATUS     orderStatus,
+					       o.ORDER_TIME       orderTime,
+					       o.ORDER_NO         orderNo,
+					       o.PAY_TIME         payTime,
+					       o.PAY_TYPE         payType,
+					       o.PAY_MONEY        payMoney,
+					       o.IN_TIME          inTime,
+					       o.PARKING_ID       parkingId,
+					       o.IN_DURATION      inDuration,
+					       o.CARD_NUMBER      cardNumber,
+					       o.DISCOUNT_MONEY   discountMoney,
+					       o.PAID_MONEY       paidMoney,
+					       o.SELLER_ID        sellerId,
+					       o.OUT_TIME         outTime,
+					       o.ORDER_SYN_STATUS orderSynStatus,
+					       o.ORDER_PAY_STATUS orderPayStatus,
+					       o.CAR_ID           carId,
+					       o.CAR_COLOR        carColor,
+					       o.CAR_TYPE         carType,
+					       o.ORDER_TRADE      orderTrade,
+					       o.BILLING_TYPER  billingTyper,
+					       o.LANE lane
+					  from TB_ORDER o
+	                 where 1 = 1
+	                 <isNotEmpty prepend="and" property="outParkingId" >
+				        o.OUT_PARKING_ID = #outParkingId:VARCHAR#
+				    </isNotEmpty>
+	                 <isNotEmpty prepend="and" property="carNumber" >
+				        o.CAR_NUMBER like '%$carNumber$%'
+				    </isNotEmpty>
+			     	<isNotEmpty prepend="and" property="startDate" >
+			     	<![CDATA[
+	               		 to_date(o.IN_TIME,'yyyy-MM-dd hh24:mi:ss')>=#startDate:TIMESTAMP#
+	               		]]>
+	               </isNotEmpty>
+	               <isNotEmpty prepend="and" property="endDate" >
+	               <![CDATA[
+	               		 to_date(o.IN_TIME,'yyyy-MM-dd hh24:mi:ss')<=#endDate:TIMESTAMP#
+	               		]]>
+	               </isNotEmpty>
+	              <isNotEmpty prepend="and" property="billingTyper" >
+				 		o.BILLING_TYPER = #billingTyper:VARCHAR#
+				 </isNotEmpty>
+				 ) x  order by to_date(x.inTime,'yyyy-MM-dd hh24:mi:ss') desc
+				 ) b
+	         where rownum <![CDATA[<=]]> #end#)
+	where rn > #start#
+  </select>
+  
 </sqlMap>

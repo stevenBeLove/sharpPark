@@ -1,6 +1,8 @@
 package com.compass.users.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +22,8 @@ import com.compass.agency.service.AgencyApproveService;
 import com.compass.agency.service.AgencyService;
 import com.compass.authority.service.AuthorityService;
 import com.compass.common.FrConstants;
+import com.compass.park.model.ParkBean;
+import com.compass.park.service.ParkService;
 import com.compass.utils.CommonDate;
 import com.compass.utils.CommonEnums.AgencyStatus;
 import com.compass.utils.ConstantUtils;
@@ -48,6 +52,11 @@ public class MainController {
     @Autowired
     @Qualifier("authorityService")
     private AuthorityService authorityService;
+    
+    @Autowired
+    @Qualifier("parkService")
+    private ParkService parkService;
+    
     /**
      * 【方法名】    : (跳转到主页). <br/> 
      * 【作者】: yinghui zhang .<br/>
@@ -67,7 +76,7 @@ public class MainController {
         String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
         String userLoginName = req.getSession().getAttribute(ConstantUtils.USERLOGINNAME).toString();
         try {
-
+        	List<ParkBean> list = new ArrayList<ParkBean>();
             boolean isWhiteListUser = getIsWhiteListUser(req.getSession());
             paraMap.put("isWhiteListUser", isWhiteListUser);
             // 验证是否实名
@@ -91,6 +100,16 @@ public class MainController {
             } else {
                 paraMap.put("levelOne", false);
             }
+            String isAdmin = "";
+            if(ConstantUtils.CENTERCODE.equals(agencyId)){
+            	isAdmin = "1";
+            	ParkBean parkBean = new ParkBean();
+        		parkBean.setStart(0);
+        		parkBean.setEnd(1000);
+        		list = parkService.getParkAll(parkBean);
+            }
+            paraMap.put("isAdmin", isAdmin);
+            paraMap.put("list", list);
             paraMap.put("agencyBean", agencyBean);
             paraMap.put("approve", approve);
             paraMap.put(ConstantUtils.AGENCY_CERTIFICATION, flag);

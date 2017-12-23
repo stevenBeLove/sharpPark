@@ -56,7 +56,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$("#carOwnerPhone").val('');
 		$("#carOwnerEmail").val('');
 		$("#remark").val('');
-		$("#status").combobox('select', '');
+		$("#status").combobox('select', '1');
 		$("#vehicleBrand").val('');
 		var rows = $('#search').datagrid('getSelections');
 		var len = rows.length;
@@ -461,8 +461,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 						<td align="right">状态：</td>
 						<td align="left">
 							<select class="easyui-combobox" id="status" name="status" style="width: 155px;" editable="false">
-									<option value="" selected="selected">--请选择--</option>
-									<option value="1">可用</option>
+									<option value="1" selected="selected">可用</option>
 									<option value="0">不可用</option>
 							</select>
 						</td>

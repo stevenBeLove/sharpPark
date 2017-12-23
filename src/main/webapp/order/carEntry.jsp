@@ -28,7 +28,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		return $(window).width() - 8;
 	}
 	$(function() {
-		$.viewOrder();
+		$.search();
 	});
 
 	function check() {
@@ -41,7 +41,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$.messager.alert("提示 ", message);
 		$('#save').linkbutton('enable');
 		$.close();
-		$.viewOrder();
+		$.search();
 	};
 	$.failed = function(message, data) {
 		$.messager.alert("提示 ", message);
@@ -52,20 +52,38 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$.hideDivShade();
 		$("#markSave").window('close');
 	};
-	$.viewOrder = function() {
+	$.search = function() {
+		var billingTyper =  $("#billingTyper").combobox('getValue');
+		var inStatus = $("input[name='inStatus']:checked").map(function () {
+            return $(this).val();
+        }).get().join(',');
+		var startDate = $("#startDate").datetimebox('getValue');
+		var endDate = $("#endDate").datetimebox('getValue');
+		if($.trim(startDate) != ""&&$.trim(endDate) == ""){
+			$.messager.alert("提示 ", "结束时间不能为空");
+			return false;
+		}
+		if($.trim(startDate) == ""&&$.trim(endDate) != ""){
+			$.messager.alert("提示 ", "起始时间不能为空");
+			return false;
+		}
 		var carNumber = $('#carNumber').val();
 		if (carNumber == null || $.trim(carNumber) == '-1') {
 			carNumber = "";
 		}
-		$('#viewOrder').datagrid({
-			title : '订单管理',
+		$('#search').datagrid({
+			title : '车辆出入',
 			width : $(window).width() - 8,
 			height : $(window).height() * 0.9,
 			pageSize : 20,
 			pageNumber : 1,
-			url : "${ctx}/orderPay/orderPay.do?method=getOrderPay",
+			url : "${ctx}/orderPay/orderPay.do?method=getOrderPayEntry",
 			queryParams : {
-				carNumber : carNumber
+				carNumber : carNumber,
+				billingTyper : billingTyper,
+				inStatus : inStatus,
+				startDate : startDate,
+				endDate : endDate
 			},
 			loadMsg : '数据载入中,请稍等！',
 			remoteSort : false,
@@ -84,48 +102,53 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true
 			}, {
-				field : "outOrderNo",
-				title : "设备商订单号",
-				width : 100,
-				align : "center",
-				sortable : true
-			}, {
-				field : "orderStatus",
-				title : "设备商订单状态",
-				width : 100,
+				field : "billingTyper",
+				title : "车牌性质",
+				width : 60,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
-		          	if(value == 0){
-		          		return '成功';
+		          	if(value == 'M'){
+		          		return '月卡';
+		          	}else if(value == 'L'){
+		          		return '临时';
+		          	}else if(value == 'F'){
+		          		return '免费';
 		          	}else{
-		          		return '失败';
+		          		return '其他';
 		          	}
 		        }
 			}, {
-				field : "payType",
-				title : "付款方式",
+				field : "inTime",
+				title : "入场时间",
+				width : 120,
+				align : "center",
+				sortable : true
+			}, {
+				field : "lane",
+				title : "入场车道",
+				width : 60,
+				align : "center",
+				sortable : true
+			}, {
+				field : "outTime",
+				title : "出场时间",
+				width : 120,
+				align : "center",
+				sortable : true
+			}, {
+				field : "lane",
+				title : "出场车道",
+				width : 60,
+				align : "center"
+			}, {
+				field : "inDuration",
+				title : "停车时长（以分为单位）",
 				width : 150,
 				align : "center",
-				sortable : true,
-				formatter:function(value,row,index){
-		          	if(value == 1){
-		          		return '支付宝在线缴费';
-		          	}else if(value == 2){
-		          		return '支付宝代扣缴费';
-		          	}else{
-		          		return '未知';
-		          	}
-		        }
-			}, {
-				field : "orderNo",
-				title : "支付宝支付流水",
-				width : 200,
-				align : "center",
-				sortable : true
 			}, {
 				field : "paidMoney",
-				title : "缴费金额",
+				title : "应收停车费",
 				width : 100,
 				align : "center",
 				formatter:function(value,row,index){
@@ -134,29 +157,35 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
                     }
 		        }
 			}, {
-				field : "inTime",
-				title : "入场时间",
+				field : "paidMoney",
+				title : "云缴费金额",
 				width : 100,
 				align : "center",
+				formatter:function(value,row,index){
+		          	if (row != null) {
+                      return parseFloat(value).toFixed(2);
+                    }
+		        }
 			}, {
-				field : "inDuration",
-				title : "停车时长（以分为单位）",
-				width : 110,
-				align : "center",
-			}, {
-				field : "cardNumber",
-				title : "停车卡卡号",
+				field : "payType",
+				title : "缴费类型",
 				width : 100,
 				align : "center",
+				formatter:function(value,row,index){
+		          	if(value == '1'){
+		          		return '支付宝';
+		          	}else if(value == '2'){
+		          		return '支付宝';
+		          	}else if(value == '3'){
+		          		return '现金';
+		          	}else{
+		          		return '其他';
+		          	}
+		        }
 			}, {
 				field : "payTime",
-				title : "缴费时间",
-				width : 100,
-				align : "center",
-			}, {
-				field : "orderTime",
-				title : "订单创建时间",
-				width : 100,
+				title : "支付时间",
+				width : 120,
 				align : "center",
 			} ] ],
 			hideColumn : [ [ {
@@ -167,7 +196,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			showFooter : true
 		});
 		$('#btnsave').hide();
-		var p = $('#viewOrder').datagrid('getPager');
+		var p = $('#search').datagrid('getPager');
 		$(p).pagination({
 			pageList : [ 20 ],
 			beforePageText : '第',
@@ -178,6 +207,10 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	
 	function resetOrder(){
 		$('#carNumber').val('');
+		$("#billingTyper").combobox('select', '');
+		$("#startDate").datebox('setValue','');	
+		$("#endDate").datebox('setValue','');
+		$("input[name='inStatus']").prop("checked", "");
 	}
 </script>
 </head>
@@ -186,13 +219,30 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		<tr>
 			<td>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				车牌：
+				车牌号：
 			</td>
 			<td>
 			<input type="text" id="carNumber" name="carNumber" style="width:150px"></input>
-			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.viewOrder()">查询</a></td>
+			</td>
+			<td>车牌性质：</td>
+			<td>
+				<select class="easyui-combobox" id="billingTyper" name="billingTyper"  style="width: 55px;" editable="false">
+					<option value="" selected="selected"></option>
+					<option value="M">月卡</option>
+					<option value="F">免费</option>
+					<option value="L">临时</option>
+				</select>
+			</td>
+			<td><input type="checkbox" id="inStatus" name="inStatus" value="1"/>在场内</td>
+			<td>时间段：</td>
+			<td>
+				<input class="easyui-datebox" name="startDate" id="startDate" style="width: 150px;" />
+					——
+			 	<input class="easyui-datebox" name="endDate" id="endDate" style="width: 150px;" />
+			</td>
+			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.search()">查询</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="resetOrder()">重置</a></td>
 		</tr>
 	</table>
-	<table id="viewOrder"></table>
+	<table id="search"></table>
 </body>

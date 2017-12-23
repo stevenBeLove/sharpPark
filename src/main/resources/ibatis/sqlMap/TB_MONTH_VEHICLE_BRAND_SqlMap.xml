@@ -338,6 +338,21 @@
     and OUT_PARKING_ID = #outParkingId:VARCHAR# 
   </update>
   
+  <update id="returnMonthVehicleBrandById" parameterClass="com.compass.vehicle.model.MonthVehicleBrandBean">
+    update TB_MONTH_VEHICLE_BRAND
+    set 
+      VEHICLE_BRAND_TYPE = #vehicleBrandType:VARCHAR#,
+      END_DATE = #endDate:TIMESTAMP#,
+      MONTH_PAY_AMOUNT = MONTH_PAY_AMOUNT-#monthPayAmount:DECIMAL#,
+      CAR_OWNER_NAME = #carOwnerName:VARCHAR#,
+      VEHICLE_PLACE = #vehiclePlace:VARCHAR#,
+      MODIFY_USERID = #modifyUserid:VARCHAR#,
+      MODIFY_DATETIME =sysdate
+   where MONTH_VEHICLE_BRAND_ID = #monthVehicleBrandId:VARCHAR#
+    and OUT_PARKING_ID = #outParkingId:VARCHAR# 
+    and MONTH_PAY_AMOUNT>=#monthPayAmount:DECIMAL#
+  </update>
+  
   <select id="getMonthVehicleBrandCount" resultClass="java.lang.Integer">
     select count(1)
     from (
@@ -522,4 +537,16 @@
           select * from dual
    ]]>
   </insert>
+  
+  <update id="isMonthCardRefund" parameterClass="com.compass.vehicle.model.MonthVehicleBrandBean">
+  	update tb_month_vehicle_brand
+	   set MONTH_PAY_AMOUNT = MONTH_PAY_AMOUNT - #monthPayAmount:DECIMAL#,
+	       modify_userId    = #modifyUserid:VARCHAR#,
+	       modify_datetime  = sysdate,
+	       END_DATE = #endDate:TIMESTAMP#
+	 where START_DATE = #startDate:TIMESTAMP#
+	   and CAR_NUMBER = #carNumber:VARCHAR#
+	   and OUT_PARKING_ID = #outParkingId:VARCHAR#
+  </update>
+  
 </sqlMap>

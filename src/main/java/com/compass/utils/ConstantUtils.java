@@ -157,7 +157,18 @@ public class ConstantUtils {
 	public static final String OPERNAMESYSLOG = "系统日志";
 	public static final String OPERNAMETERMINALDEAL = "终端交易查询";
 	public static final String OPERNAMEPSMFEE = "终端费率";
-	public static final String CERTIFICATION = "实名认证";
+	//新增
+	public static final String OPERNAMEPARK = "停车场管理";
+	public static final String OPERNAMEPARKRULESET = "收费规则配置";
+	public static final String OPERNAMECARINPARK = "在场车辆";
+	public static final String OPERNAMEORDER = "订单管理";
+	public static final String OPERNAMEFREEVEHICLEBRAND = "免费车牌管理";
+	public static final String OPERNAMEMONTHVEHICLEBRAND = "月卡车牌管理";
+	public static final String OPERNAMEACCOUNT = "对账管理";
+	public static final String OPERNAMETRANSACTIONFLOW = "流水管理";
+	public static final String OPERNAMEMANAGEMENTANALYSIS = "经营分析";
+	public static final String OPERNAMECARENTRY = "车辆出入";
+	public static final String OPERNAMECAREXCEP = "异常车牌";
 
 	// 操作类型
 	public static final String OPERTYPEADD = "1";// 增
@@ -181,6 +192,7 @@ public class ConstantUtils {
 	public static final String OPERTYPEDEALSER = "19";// 交易查询;
 	public static final String OPERTYPEDEDUCTSER = "20";// 扣款查询;
 	public static final String OPERTYPETASK = "21";// 定时任务;
+	public static final String OPERTYPERET = "22";// 退款;
   public static final String MSG_CODE = "MSG_CODE";//返回码
   public static final String MSG_TEXT = "MSG_TEXT";//返回内容
   /**

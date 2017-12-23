@@ -805,6 +805,7 @@ public class OrderBean {
     
     private Integer start;
 	private Integer end;
+	private String status;
 
 	public Integer getStart() {
 		return start;
@@ -820,5 +821,13 @@ public class OrderBean {
 
 	public void setEnd(Integer end) {
 		this.end = end;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 }

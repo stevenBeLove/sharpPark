@@ -28,6 +28,7 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 	public List<Integer> weekList = Arrays.asList(1, 2, 3, 4, 5, 6, 7);
 	public List<Integer> weekDayList = Arrays.asList(1, 2, 3, 4, 5);
 	public List<Integer> noWeekDayList = Arrays.asList(6, 7);
+	public String RULE_TYPE = "01"; //01：模糊计费 (30/60分钟) 02：精确计费(分钟) 
 
 	public Map<String, Object> execute(Map<String, Object> paramMap) {
 		long begin = System.currentTimeMillis();
@@ -172,7 +173,7 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 									+ date.format(out));
 							boolean inFlag = this.isDayFlag(startHour, endHour, in);
 							boolean outFlag = this
-									.isDayFlag(startHour, endHour, in);
+									.isDayFlag(startHour, endHour, out);
 							int stopMin = queryMin(in, out);
 							if (inFlag && outFlag) {
 								price = totalPrice(stopMin, freeTime, subFreeTime,
@@ -361,13 +362,13 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 	}
 
 	private boolean isDayFlag(Date time, Date from, Date to) {
-		Calendar date = Calendar.getInstance();
-		date.setTime(time);
-		Calendar after = Calendar.getInstance();
-		after.setTime(from);
-		Calendar before = Calendar.getInstance();
-		before.setTime(to);
-		if (date.after(after) && date.before(before)) {
+		Calendar c_time = Calendar.getInstance();
+		c_time.setTime(time);
+		Calendar c_from = Calendar.getInstance();
+		c_from.setTime(from);
+		Calendar c_to = Calendar.getInstance();
+		c_to.setTime(to);
+		if(c_to.after(c_time)&&c_from.after(c_to)){
 			return true;
 		} else {
 			return false;
@@ -416,15 +417,23 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 					if (stopMin > startChargeTime) {
 						stopMin = (int) (stopMin - startChargeTime);
 						price = price.add(startChargePrice);
-						price = price.add(chargePrice.multiply(
-								new BigDecimal(stopMin)).divide(
-								new BigDecimal(chargeTime), 2,
-								BigDecimal.ROUND_HALF_UP));
+						if("01".equals(RULE_TYPE)){
+							price = price.add(chargePrice.multiply(new BigDecimal(queryChargeCount(stopMin, (int)chargeTime))));
+						}else if("02".equals(RULE_TYPE)){
+							price = price.add(chargePrice.multiply(
+									new BigDecimal(stopMin)).divide(
+									new BigDecimal(chargeTime), 2,
+									BigDecimal.ROUND_HALF_UP));
+						}
 					} else {
-						price = startChargePrice.multiply(
-								new BigDecimal(stopMin)).divide(
-								new BigDecimal(startChargeTime), 2,
-								BigDecimal.ROUND_HALF_UP);
+						if("01".equals(RULE_TYPE)){
+							price = startChargePrice;
+						}else if("02".equals(RULE_TYPE)){
+							price = startChargePrice.multiply(
+									new BigDecimal(stopMin)).divide(
+									new BigDecimal(startChargeTime), 2,
+									BigDecimal.ROUND_HALF_UP);
+						}
 					}
 				}
 				if (timeSlotLimit.compareTo(BigDecimal.ZERO) > 0) {
@@ -444,9 +453,13 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 			}
 		} else {
 			if ("1".equals(chargeType)) {
-				price = startChargePrice.multiply(new BigDecimal(stopMin))
-						.divide(new BigDecimal(startChargeTime), 2,
-								BigDecimal.ROUND_HALF_UP);
+				if("01".equals(RULE_TYPE)){
+					price = startChargePrice.multiply(new BigDecimal(queryChargeCount(stopMin, (int)startChargeTime)));
+				}else if("02".equals(RULE_TYPE)){
+					price = startChargePrice.multiply(new BigDecimal(stopMin))
+							.divide(new BigDecimal(startChargeTime), 2,
+									BigDecimal.ROUND_HALF_UP);
+				}
 			} else if ("2".equals(chargeType)) {
 				if (flag) {
 					price = subCharge;
@@ -459,6 +472,16 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 			}
 		}
 		return price;
+	}
+	
+	private int queryChargeCount(int stopMin,int chargeTime){
+		int c = 0;
+		if(stopMin%chargeTime==0){
+			c = stopMin/chargeTime;
+		}else{
+			c = stopMin/chargeTime+1;
+		}
+		return c;
 	}
 
 	private int queryMin(Date start, Date end) throws Exception {

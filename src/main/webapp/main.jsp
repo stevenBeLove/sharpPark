@@ -33,7 +33,6 @@
 	var curCount;//当前剩余秒数  
 
 	$(function() {
-
 		$("#detailTree").tree({
 			onlyLeafCheck : true,
 			checkbox : false,
@@ -48,134 +47,6 @@
 
 			}
 		});
-
-		$
-				.post(
-						'${ctx}/terminalmanage/terminalmanage.do?method=getNoCheckTerminalBackCount',
-						{}, function(data) {
-							if (data.success == "true") {
-								unCheckCount = data.datas.unCheckCount;
-								if (unCheckCount != 0) {
-									$("#unCheckCount").text(unCheckCount);
-									$('#checkDesc').window('open');
-								}
-							} else {
-								$.messager.alert("提示", data.message);
-							}
-						}, "json");
-
-		$('#agencyApprove').click(function() {
-			$('#sendMessageWin').window({
-				title : '激活我的机构',
-				width : 365,
-				modal : true,
-				shadow : true,
-				closable : false,
-				height : 270,
-				resizable : false
-			});
-			$('#sendMessageWin').window('open');
-		});
-		$('#btnIgnore').click(function() {
-			$('#sendMessageWin').window('close');
-		});
-
-		//实名认证窗口
-<%Boolean flag = (Boolean) request.getAttribute("flag");
-			if (!flag) {%>
-	$('#certification').window({
-			title : '代理商实名认证',
-			width : 365,
-			modal : true,
-			shadow : true,
-			closable : false,
-			height : 350,
-			resizable : false
-		});
-		$('#certification').window('open');
-<%}%>
-	
-<%Boolean approve = (Boolean) request.getAttribute("approve");
-			//true为已认证通过
-			if (!approve) {%>
-	$('#sendMessageWin').window({
-			title : '激活我的机构',
-			width : 365,
-			modal : true,
-			shadow : true,
-			closable : false,
-			height : 270,
-			resizable : false
-		});
-		$('#sendMessageWin').window('open');
-<%}%>
-	//实名认证
-		$("#btnCertification")
-				.click(
-						function() {
-							var contactsName = $("#contactsName").val();
-							var userpId = $("#userpId").val();
-							var companyEmail = $("#someoneEmail").val();
-							var companyName = $("#agencyName").val();
-							var companyPhone = $("#companyPhone").val();
-							if (contactsName == "") {
-								$.messager.alert("提示 ", "请输入本人姓名!");
-								return false;
-							}
-
-							if (userpId == "") {
-								$.messager.alert("提示 ", "请输入身份证号!");
-								return false;
-							}
-
-							if (companyEmail != "") {
-								if (!(/^([a-zA-Z0-9]+[_|\-|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\-|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/)
-										.test(companyEmail)) {
-									$.messager.alert("提示 ", "邮箱格式不正确");
-									return false;
-								}
-							}
-							$
-									.post(
-											'${ctx}/agency/agency.do?method=updateCertification',
-											{
-												companyName : companyName,
-												contactsName : contactsName,
-												userpId : userpId,
-												companyEmail : companyEmail,
-												companyPhone : companyPhone
-											}, function(data) {
-												if (data.success == "true") {
-													$.messager.alert("提示",
-															data.message);
-													$('#certification').window(
-															'close');
-												} else {
-													$.messager.alert("提示",
-															data.message);
-												}
-											}, "json");
-
-						});
-<%String username = (String) request.getSession().getAttribute(
-					"username");
-			String agencyId = (String) request.getSession().getAttribute(
-					"agencyId");
-			if (username.equals(agencyId)) {%>
-	$.post("${ctx}/agency/agency.do?method=getAgencyObj", {},
-				function(data) {
-					getAgencyDate(data);
-				}, "json");
-
-		$.post('${ctx}/agency/agency.do?method=getAgencyObject',
-				function(data) {
-					if (data.success == "true") {
-						$('#resert').window('close');
-					} else {
-						$('#resert').window('open');
-					}
-				}, "json");
-<%}%>
 	});
 
 	function getAgencyDate(data) {
@@ -455,7 +326,11 @@
 		$('#loginRemind').click(function() {
 			$('#hint').window('open');
 		});
-
+		
+		$('#changePark').click(function() {
+			$('#changeParkDiv').window('open');
+		});
+		
 		//完善机构信息
 		$('#agencyUpdate')
 				.click(
@@ -600,6 +475,7 @@
 			height : 120,
 			resizable : false
 		});
+		
 	}
 
 	//更新手机号码
@@ -677,21 +553,34 @@
 		}, "json");
 
 	}
+	
+	function selectChange(){
+		var changeParkId = $("#outParkingId").combobox('getValue');
+		if ($.trim(changeParkId) == "") {
+			$.messager.alert("提示 ", "请选择需要切换的停车场");
+			return false;
+		}
+		$.post('${ctx}/park/park.do?method=changePark', {
+			changeParkId : changeParkId
+		}, function(data) {
+			$.messager.alert("提示", data.message);
+			window.location.reload();
+		}, "json");
+	}
 </script>
 </head>
 <body class="easyui-layout" style="overflow-y: hidden" fit="true" scroll="no">
 	<div data-options="region:'north',title:'',split:false" style="overflow: true; height: 65%; background: url('') repeat-x center 50%; line-height: 20px; font-family: Verdana, 微软雅黑, 黑体" class='colors'>
 		<table width="100%">
 			<tr>
-				<td><img height="50px" width="463px" src="${ctx}/commons/images/logo.png" alt="" /></td>
-				<td align="right" style="font-size: 12px; font-weight: bold;"><span style="float: right; padding-right: 20px; padding-top: 15px"> 欢迎${username} &nbsp;&nbsp;&nbsp;&nbsp; <a href="#"
-						id="loginRemind">登录提示</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" id="editpass">修改密码</a>&nbsp;&nbsp; <%
-     Boolean isLevelOne = (Boolean) request.getAttribute("levelOne");
-     //是一级机构
-     if (isLevelOne) {
- %> <a href="#" id="agencyUpdate">完善机构信息</a>&nbsp;&nbsp; <%
-     }
- %> <%-- <%
+				<td><img height="50px" width="463px" src="" alt="" /></td>
+				
+				<td align="right" style="font-size: 12px; font-weight: bold;"><span style="float: right; padding-right: 20px; padding-top: 15px"> 欢迎${username} &nbsp;&nbsp;&nbsp;&nbsp; 
+				<c:if test="${'1'==isAdmin }">
+					<a href="#" id="changePark">切换停车场</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				</c:if>
+				<a href="#" id="loginRemind">登录提示</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" id="editpass">修改密码</a>&nbsp;&nbsp; 
+						 <%-- <%
 				Boolean isWhiteListUser = (Boolean)request.getAttribute("isWhiteListUser");
 				//是白名单
 				if(isWhiteListUser && !approve){
@@ -759,6 +648,25 @@
 			</div>
 		</div>
 	</div>
+	
+	<div id="changeParkDiv" class="easyui-window" title="切换停车场" closed="true" style="width: 500px; height: 180px; padding: 5px; background: #fafafa;" collapsible="false" minimizable="false" maximizable="false"
+		icon="icon-save">
+		<div class="easyui-layout" fit="true">
+			<div region="center" border="false" style="padding: 10px; background: #fff; border: 1px solid #ccc;">
+					<select class="easyui-combobox" id="outParkingId" name="outParkingId" style="width: 255px;" editable="false">
+						<option value="" selected="selected">--请选择--</option>
+						<c:forEach items="${list}" var="parkBean">
+							<option value="${parkBean.outParkingId }">${parkBean.outParkingId }：${parkBean.merchantName }</option>
+						</c:forEach>
+					</select>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<a name="change" id="change" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'"
+							onclick="selectChange();">切换</a>
+			</div>
+		</div>
+	</div>
+	
+	
 	<!--终端回拨审核提示窗口-->
 	<div id="checkDesc" class="easyui-window" title="审核提示" closed="true" style="width: 400px; height: 150px; padding: 5px; background: #fafafa;" collapsible="false" minimizable="false"
 		maximizable="false" icon="icon-save">
@@ -838,25 +746,6 @@ if(username.equals(agencyId)){
 			</div>
 		</div>
 	</div>
-	<!-- 实名认证   -->
-	<div id="certification" class="easyui-window" title="代理商实名认证" collapsible="false" minimizable="false" maximizable="false" icon="icon-save"
-		style="width: 380px; height: 250px; padding: 5px; background: #fafafa;" closed="true">
-		<div class="easyui-layout" fit="true">
-			<div region="center" border="false" style="padding: 10px; background: #fff; border: 1px solid #ccc;">
-				<span id="warnID1">**为了确保您经营数据的私密性，重置密码的安全性，分润反馈的真实性，请您填写本人真实信息，一经提交，不可修改！</span><br /> <br /> 机构名称：<input id="agencyName" type="text" value="${agencyBean.companyName}" readonly="readonly"
-					style="width: 223px;" /><br /> <br /> 手机号码：<input id="companyPhone" type="text" value="${agencyBean.companyPhone}" readonly="readonly" style="width: 223px;" maxlength="11" /><br /> <br />
-				法人姓名：<input id="contactsName" placeholder="请输入本人姓名" type="text" style="width: 223px;" /><br /> <br /> 身份证号：<input id="userpId" placeholder="请输入本人身份证号" type="text" style="width: 223px;"
-					maxlength="18" /><br /> <br /> 联系邮箱：<input id="someoneEmail" value="${agencyBean.companyEmail}" placeholder="请输入本人联系邮箱(选填)" type="text" style="width: 223px;" /><br /> <br />
-			</div>
-			<div region="south" border="false" style="text-align: center; height: 30px; line-height: 30px;">
-				<a id="btnCertification" class="easyui-linkbutton" icon="icon-ok" href="javascript:void(0)">确认提交</a>
-
-			</div>
-		</div>
-	</div>
-
-
-
 	<!-- 完善机构信息 -->
 	<div id="markSave" class="easyui-window" title="完善机构信息" closed=true cache="false" collapsible="false" zIndex="20px" minimizable="false" maximizable="false" resizable="false" draggable="true"
 		closable="false" style="width: 730px; height: 455px; top: 10px; padding: 0px; background: #fafafa; overflow: hidden;">
@@ -946,7 +835,7 @@ if(username.equals(agencyId)){
 
 
 	<div align="center" data-options="region:'south',title:'',split:true" style="overflow: true; height: 30%; line-height: 20px; font-family: Verdana, 微软雅黑, 黑体" class='colors'>
-		<img align="middle" src="${ctx}/commons/images/bottom.png" alt="" />
+		<%-- <img align="middle" src="${ctx}/commons/images/bottom.png" alt="" /> --%>
 	</div>
 
 	<div id="mm" class="easyui-menu" style="width: 150px;">

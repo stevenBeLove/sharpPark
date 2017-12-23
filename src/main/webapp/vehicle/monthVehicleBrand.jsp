@@ -55,6 +55,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	}
 	var flag;
 	$.openWin = function(obj) {
+		$("#refundMoney").val('');
+		$("#n_endDate").datebox('setValue','');	
 		$("#monthVehicleBrandId").val('');
 		$("#carNumber").val('');
 		$("#vehicleBrandType").combobox('select', '');
@@ -88,20 +90,33 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			}
 			var row = $('#search').datagrid('getSelected');
 			$("#monthVehicleBrandId").val(row.monthVehicleBrandId);
-			$("#carNumber").val(row.carNumber);
-			$("#vehicleBrandType").combobox('select', row.vehicleBrandType);
-			$("#vehiclePlace").val(row.vehiclePlace);
-			$("#carOwnerName").val(row.carOwnerName);
-			$("#carOwnerAddres").val(row.carOwnerAddres);
-			$("#carOwnerPhone").val(row.carOwnerPhone);
-			$("#carOwnerEmail").val(row.carOwnerEmail);
-			$("#remark").val(row.remark);
-			$("#vehicleBrand").val(row.vehicleBrand);
-			$("#startDate").datebox('setValue',dateFormat(row.startDate));
-			$("#endDate").datebox('setValue',dateFormat(row.endDate));
-			$("#monthPayAmount").val(row.monthPayAmount);
+			if(flag=="2"){
+				$("#r_carNumber").val(row.carNumber);
+				$("#r_vehicleBrandType").combobox('select', row.vehicleBrandType);
+				$("#r_vehiclePlace").val(row.vehiclePlace);
+				$("#r_endDate").datebox('setValue',dateFormat(row.endDate));
+				$("#r_carOwnerName").val(row.carOwnerName);
+				$("#r_monthPayAmount").val(row.monthPayAmount);
+			}else{
+				$("#carNumber").val(row.carNumber);
+				$("#vehicleBrandType").combobox('select', row.vehicleBrandType);
+				$("#vehiclePlace").val(row.vehiclePlace);
+				$("#carOwnerName").val(row.carOwnerName);
+				$("#carOwnerAddres").val(row.carOwnerAddres);
+				$("#carOwnerPhone").val(row.carOwnerPhone);
+				$("#carOwnerEmail").val(row.carOwnerEmail);
+				$("#remark").val(row.remark);
+				$("#vehicleBrand").val(row.vehicleBrand);
+				$("#startDate").datebox('setValue',dateFormat(row.startDate));
+				$("#endDate").datebox('setValue',dateFormat(row.endDate));
+				$("#monthPayAmount").val(row.monthPayAmount);
+			}
 		}
-		$("#markSave").window('open').window('refresh');
+		if(flag=="2"){
+			$("#editSave").window('open').window('refresh');
+		}else{
+			$("#markSave").window('open').window('refresh');
+		}
 	};
 
 	$.save = function() {
@@ -118,7 +133,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		var startDate = $("#startDate").datetimebox('getValue');
 		var endDate = $("#endDate").datetimebox('getValue');	
 		var monthPayAmount = $("#monthPayAmount").val();
-		if ($.trim(carNumber) == "") {
+		if (flag != "2"&&$.trim(carNumber) == "") {
 			$.messager.alert("提示 ", "请输入车牌号");
 			return false;
 		}
@@ -138,6 +153,31 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				startDate : startDate,
 				endDate : endDate,
 				monthPayAmount : monthPayAmount
+			}, function(data) {
+				$.parseAjaxReturnInfo(data, $.success, $.failed);
+			}, "json");
+		}else if(flag == "2"){
+			var refundMoney = $("#refundMoney").val();
+			var endDate = $("#n_endDate").datetimebox('getValue');
+			var vehicleBrandType = $("#r_vehicleBrandType").combobox('getValue');
+			var vehiclePlace = $("#r_vehiclePlace").val();
+			var carOwnerName = $("#r_carOwnerName").val();
+			if ($.trim(refundMoney) == "") {
+				$.messager.alert("提示 ", "请输入退款金额");
+				return false;
+			}
+			if ($.trim(endDate) == "") {
+				$.messager.alert("提示 ", "请设置新的到期日期");
+				return false;
+			}
+			$('#r_save').linkbutton('disable');
+			$.post("${ctx}/monthVehicleBrand/monthVehicleBrand.do?method=returnMonthVehicleBrand", {
+				vehicleBrandType : vehicleBrandType,
+				vehiclePlace : vehiclePlace,
+				carOwnerName : carOwnerName,
+				endDate : endDate,
+				refundMoney : refundMoney,
+				monthVehicleBrandId:monthVehicleBrandId
 			}, function(data) {
 				$.parseAjaxReturnInfo(data, $.success, $.failed);
 			}, "json");
@@ -166,17 +206,20 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	$.success = function(message, data) {
 		$.messager.alert("提示 ", message);
 		$('#save').linkbutton('enable');
+		$('#r_save').linkbutton('enable');
 		$.close();
 		$.search();
 	};
 	$.failed = function(message, data) {
 		$.messager.alert("提示 ", message);
 		$('#save').linkbutton('enable');
+		$('#r_save').linkbutton('enable');
 
 	};
 	$.close = function() {
 		$.hideDivShade();
 		$("#markSave").window('close');
+		$("#editSave").window('close');
 	};
 	
 	function monthVehicleBrandExport() {
@@ -250,7 +293,20 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				title : "车牌类型",
 				width : 100,
 				align : "center",
-				sortable : true
+				sortable : true,
+				formatter:function(value,row,index){
+		          	if(value == 1){
+		          		return '小型车';
+		          	}else if(value == 2){
+		          		return '中型车';
+		          	}else if(value == 3){
+		          		return '大型车';
+		          	}else if(value == 4){
+		          		return '摩托车';
+		          	}else if(value == 5){
+		          		return '其他';
+		          	}
+		        }
 			}, {
 				field : "vehicleBrand",
 				title : "车辆品牌",
@@ -337,6 +393,14 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				iconCls : 'icon-add',
 				handler : function() {
 					$.openWin(-1);
+				}
+			},
+			'-', {
+				id : 'btncut',
+				text : '月卡退费',
+				iconCls : 'icon-redo',
+				handler : function() {
+					$.openWin(2);
 				}
 			},
 			'-', {
@@ -451,10 +515,11 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 						<td align="left">
 							<select class="easyui-combobox" id="vehicleBrandType" name="vehicleBrandType" style="width: 155px;" editable="false">
 									<option value="" selected="selected">--请选择--</option>
-									<option value="1">公安</option>
-									<option value="2">武警</option>
-									<option value="3">军队</option>
-									<option value="4">其他</option>
+									<option value="1">小型车</option>
+									<option value="2">中型车</option>
+									<option value="3">大型车</option>
+									<option value="4">摩托车</option>
+									<option value="5">其他</option>
 							</select>
 						</td>
 					</tr>
@@ -528,4 +593,67 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			</div>
 		</div>
 	</div>
+	
+	<div id="editSave" class="easyui-window" title="月卡退费" closed=true cache="false" collapsible="false" zIndex="20px" minimizable="false"
+		maximizable="false" resizable="false" draggable="true" closable="false"
+		style="width: 730px; height: 555px; top: 10px; padding: 0px; background: #fafafa; overflow: hidden;">
+		<div class="easyui-layout" fit="true">
+			<div region="center" border="true" style="padding: 10px; background: #fff; overflow: hidden;">
+				<input type="hidden" id="r_monthPayAmount" name="r_monthPayAmount"/>
+				<table style="width: 100%;">
+					<tr>
+						<td align="right"><span style="color: red">*</span>车牌号码：</td>
+						<td align="left"><input type="text" name="r_carNumber" id="r_carNumber" disabled="disabled"/></td>
+						<td align="right"><span style="color: red">*</span>车牌类型：</td>
+						<td align="left">
+							<select class="easyui-combobox" id="r_vehicleBrandType" name="r_vehicleBrandType" style="width: 155px;" editable="false">
+									<option value="" selected="selected">--请选择--</option>
+									<option value="1">小型车</option>
+									<option value="2">中型车</option>
+									<option value="3">大型车</option>
+									<option value="4">摩托车</option>
+									<option value="5">其他</option>
+							</select>
+						</td>
+					</tr>
+					
+					<tr>
+						<td align="right"><span style="color: red">*</span>退费金额：</td>
+						<td align="left">
+							<input type="text" name="refundMoney" id="refundMoney" />
+						</td>
+						<td align="right"><span style="color: red">*</span>停车位置：</td>
+						<td align="left"><input type="text" name="r_vehiclePlace" id="r_vehiclePlace" maxlength="300"/></td>
+					</tr>
+					
+					<tr>
+						<td align="right"><span style="color: red">*</span>原到期日：</td>
+						<td align="left">
+							<input class="easyui-datebox" name="r_endDate" id="r_endDate" style="width: 150px;" disabled="disabled"/>
+						</td>
+						<td align="right"><span style="color: red">*</span>车主姓名：</td>
+						<td align="left"><input type="text" name="r_carOwnerName" id="r_carOwnerName" />
+						</td>
+					</tr>
+					
+					<tr>
+						<td align="right"><span style="color: red">*</span>新设到期日期：</td>
+						<td align="left">
+							<input class="easyui-datebox" name="n_endDate" id="n_endDate" style="width: 150px;"/>
+						</td>
+						<td align="right"></td>
+						<td align="left"></td>
+					</tr>
+					
+					<tr height="54px">
+						<td align="center" colspan="6"><a name="r_save" id="r_save" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'"
+							onclick="$.save()">保存</a>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a name="close"
+							id="close" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="$.close()">关闭</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>	
 </body>

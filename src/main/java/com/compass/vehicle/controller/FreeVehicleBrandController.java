@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import com.alibaba.fastjson.JSONObject;
 import com.compass.park.model.ParkBean;
 import com.compass.park.service.ParkService;
+import com.compass.systemlog.service.SystemLogService;
 import com.compass.utils.ConstantUtils;
 import com.compass.utils.ExcelUtils;
+import com.compass.utils.IpUtils;
 import com.compass.utils.PropertyPlaceholderConfigurerExt;
 import com.compass.utils.mvc.AjaxReturnInfo;
 import com.compass.vehicle.model.FreeVehicleBrandBean;
@@ -62,6 +66,10 @@ public class FreeVehicleBrandController {
 			HttpServletRequest req) {
 		String rows = req.getParameter("rows");
 		String page = req.getParameter("page");
+		String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+		String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+		//测试用
+		outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 		FreeVehicleBrandBean freeVehicleBrandBean= new FreeVehicleBrandBean();
 		if (StringUtils.isNotBlank(carNumber)) {
 			freeVehicleBrandBean.setCarNumber(carNumber);
@@ -75,6 +83,7 @@ public class FreeVehicleBrandController {
 		if (StringUtils.isNotBlank(status)) {
 			freeVehicleBrandBean.setStatus(status);
 		}
+		freeVehicleBrandBean.setOutParkingId(outParkingId);
 		// 待添加查询条件
 		Integer count = freeVehicleBrandService.getFreeVehicleBrandCount(freeVehicleBrandBean);
 		int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
@@ -105,7 +114,10 @@ public class FreeVehicleBrandController {
 			@RequestParam(value = "status") String status,
 			HttpServletRequest req) {
 		try {
-			String outParkingId = "10180";//后续从session中获取
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			FreeVehicleBrandBean freeVehicleBrandBean = new FreeVehicleBrandBean();
 			freeVehicleBrandBean.setFreeVehicleBrandId(freeVehicleBrandId);
@@ -121,6 +133,7 @@ public class FreeVehicleBrandController {
 			freeVehicleBrandBean.setStatus(status);
 			freeVehicleBrandBean.setModifyUserid(userId);
 			freeVehicleBrandBean.setOutParkingId(outParkingId);
+			this.addLog(req, ConstantUtils.OPERNAMEFREEVEHICLEBRAND, ConstantUtils.OPERTYPEUPD, JSONObject.toJSONString(freeVehicleBrandBean));
 			boolean flag = freeVehicleBrandService.updateFreeVehicleBrandById(freeVehicleBrandBean);
 			if(flag){
 				return AjaxReturnInfo.success("更新成功");
@@ -148,7 +161,10 @@ public class FreeVehicleBrandController {
 			@RequestParam(value = "status") String status,
 			HttpServletRequest req) {
 		try {
-			String outParkingId = "10180";
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			FreeVehicleBrandBean freeVehicleBrandBean = new FreeVehicleBrandBean();
 			freeVehicleBrandBean.setCarNumber(carNumber);
@@ -162,7 +178,9 @@ public class FreeVehicleBrandController {
 			freeVehicleBrandBean.setVehicleBrand(vehicleBrand);
 			freeVehicleBrandBean.setStatus(status);
 			freeVehicleBrandBean.setCreateUserid(userId);
+			freeVehicleBrandBean.setModifyDatetime(Calendar.getInstance().getTime());
 			freeVehicleBrandBean.setOutParkingId(outParkingId);
+			this.addLog(req, ConstantUtils.OPERNAMEFREEVEHICLEBRAND, ConstantUtils.OPERTYPEADD, JSONObject.toJSONString(freeVehicleBrandBean));
 			boolean flag = freeVehicleBrandService.addFreeVehicleBrand(freeVehicleBrandBean);
 			if(flag){
 				return AjaxReturnInfo.success("新增成功");
@@ -184,7 +202,10 @@ public class FreeVehicleBrandController {
 			@RequestParam(value = "status") String status,
 			HttpServletRequest req,HttpServletResponse response) {
 		try {
-			String outParkingId = "10180";
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			FreeVehicleBrandBean freeVehicleBrandBean= new FreeVehicleBrandBean();
 			if (StringUtils.isNotBlank(carNumber)) {
 				freeVehicleBrandBean.setCarNumber(carNumber);
@@ -199,8 +220,12 @@ public class FreeVehicleBrandController {
 				freeVehicleBrandBean.setStatus(status);
 			}
 			freeVehicleBrandBean.setOutParkingId(outParkingId);
+			this.addLog(req, ConstantUtils.OPERNAMEFREEVEHICLEBRAND, ConstantUtils.OPERTYPEEXPO, JSONObject.toJSONString(freeVehicleBrandBean));
 			List<FreeVehicleBrandExportBean> list = freeVehicleBrandService.getFreeVehicleBrandExport(freeVehicleBrandBean);
-			ParkBean parkBean = parkService.getParkByOutParkingId(outParkingId);
+			ParkBean parkBean = new ParkBean();
+			if(StringUtils.isNotBlank(outParkingId)){
+				parkBean = parkService.getParkByOutParkingId(outParkingId);
+			}
 			ExcelUtils.exportDataToExcel(response, list, new String[]{"车牌号","车牌性质","车辆在场状态","车主姓名","联系方式","备注"}, "免费车信息", ".xls",parkBean);
 		} catch (Exception e) {
 			log.error("freeVehicleBrandExport导出异常",e);
@@ -213,7 +238,10 @@ public class FreeVehicleBrandController {
 		String msg = "系统异常";
 		FileInputStream fileInputStream = null;
 		try {
-			String outParkingId = "10180";
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) req;
 			MultipartFile file = multipartRequest.getFile("upload_file");  
 	        if(file.isEmpty()){  
@@ -249,5 +277,20 @@ public class FreeVehicleBrandController {
 			}
 		}
 		return AjaxReturnInfo.failed(msg);
+	}
+	
+	@Autowired
+    @Qualifier("systemLogService")
+    private SystemLogService     systemLogService;
+	
+	public void addLog(HttpServletRequest req,String operName,String operType,String operateDetail){
+		try {
+			String ipAddress = IpUtils.getRemoteHost(req);
+			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
+			String agencyIdS = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString();
+			systemLogService.addLog(ipAddress, agencyIdS, userId, operName, operType, operateDetail);
+		} catch (Exception e) {
+			log.error("insert--log---error",e);
+		}
 	}
 }

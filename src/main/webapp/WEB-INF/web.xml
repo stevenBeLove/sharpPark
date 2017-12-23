@@ -43,7 +43,7 @@
   </init-param>
   <init-param>
    <param-name>notCheckURLList</param-name>
-   <param-value>/users/users.do,/system/system.do,/login/login.jsp,/login/cxlogin.jsp,/qeryParkPrice.do</param-value>
+   <param-value>/users/users.do,/system/system.do,/login/login.jsp,/login/cxlogin.jsp,/qeryParkPrice.do,/queryCarNumberType.do,/monthCardRecharge.do,/monthCardRefund.do,/addFreeCard.do,/delFreeCard.do,/updateFreeCard.do</param-value>
   </init-param>
   </filter>
   <filter>

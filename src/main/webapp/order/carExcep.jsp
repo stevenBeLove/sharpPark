@@ -58,12 +58,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			carNumber = "";
 		}
 		$('#viewOrder').datagrid({
-			title : '订单管理',
+			title : '异常车牌',
 			width : $(window).width() - 8,
 			height : $(window).height() * 0.9,
 			pageSize : 20,
 			pageNumber : 1,
-			url : "${ctx}/orderPay/orderPay.do?method=getOrderPay",
+			url : "${ctx}/order/order.do?method=getExcepOrder",
 			queryParams : {
 				carNumber : carNumber
 			},
@@ -103,55 +103,30 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		          	}
 		        }
 			}, {
-				field : "payType",
-				title : "付款方式",
-				width : 150,
-				align : "center",
-				sortable : true,
-				formatter:function(value,row,index){
-		          	if(value == 1){
-		          		return '支付宝在线缴费';
-		          	}else if(value == 2){
-		          		return '支付宝代扣缴费';
-		          	}else{
-		          		return '未知';
-		          	}
-		        }
-			}, {
 				field : "orderNo",
 				title : "支付宝支付流水",
 				width : 200,
 				align : "center",
 				sortable : true
 			}, {
-				field : "paidMoney",
+				field : "payMoney",
 				title : "缴费金额",
 				width : 100,
 				align : "center",
-				formatter:function(value,row,index){
-		          	if (row != null) {
-                      return parseFloat(value).toFixed(2);
-                    }
-		        }
 			}, {
 				field : "inTime",
 				title : "入场时间",
-				width : 100,
+				width : 120,
 				align : "center",
 			}, {
-				field : "inDuration",
-				title : "停车时长（以分为单位）",
-				width : 110,
-				align : "center",
-			}, {
-				field : "cardNumber",
-				title : "停车卡卡号",
-				width : 100,
+				field : "outTime",
+				title : "出场时间",
+				width : 120,
 				align : "center",
 			}, {
 				field : "payTime",
 				title : "缴费时间",
-				width : 100,
+				width : 120,
 				align : "center",
 			}, {
 				field : "orderTime",

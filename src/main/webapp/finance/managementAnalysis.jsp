@@ -42,7 +42,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$.messager.alert("提示 ", message);
 		$('#save').linkbutton('enable');
 		$.close();
-		$.search();
+		$.search(1);
 	};
 	$.failed = function(message, data) {
 		$.messager.alert("提示 ", message);
@@ -54,109 +54,78 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$("#markSave").window('close');
 	};
 	$.search = function(obj) {
-		type = obj;
-		var carNumber = $('#carNumber').val();
+		var dateSet = $("input[name='dateSet']:checked").val();
 		var startDate = $("#startDate").datetimebox('getValue');
 		var endDate = $("#endDate").datetimebox('getValue');
-		var payType = $("#payType").combobox('getValue');
-		if (carNumber == null || $.trim(carNumber) == '-1') {
-			carNumber = "";
+		if ('1'!=obj&&$.trim(dateSet) == "") {
+			$.messager.alert("提示 ", "请选择对账时间");
+			return false;
 		}
-		if(type==2){
-			if ($.trim(startDate) == "") {
-				$.messager.alert("提示 ", "起始日期不能为空");
+		if('1'==obj){
+			dateSet = 1;
+		}
+		if(dateSet==4){
+			if($.trim(startDate) == ""||$.trim(endDate) == ""){
+				$.messager.alert("提示 ", "自定义时间不能为空");
 				return false;
 			}
-			if ($.trim(endDate) == "") {
-				$.messager.alert("提示 ", "结束日期不能为空");
-				return false;
-			}
-		}
-		if (payType == null || $.trim(payType) == '-1') {
-			payType = "";
 		}
 		$('#search').datagrid({
-			title : '流水管理',
+			title : '经营分析',
 			width : $(window).width() - 8,
 			height : $(window).height() * 0.9,
 			pageSize : 20,
 			pageNumber : 1,
-			url : "${ctx}/finance/transactionFlow.do?method=getOrderPay",
+			url : "${ctx}/managementAnalysis/managementAnalysis.do?method=getManagementAnalysis",
 			queryParams : {
-				carNumber : carNumber,
+				dateSet : dateSet,
 				startDate : startDate,
-				endDate : endDate,
-				payType : payType
+				endDate : endDate
 			},
 			loadMsg : '数据载入中,请稍等！',
 			remoteSort : false,
 			pagination : true,
 			columns : [ [ 
 			{
-				field : "carNumber",
-				title : "车牌",
+				field : "dateStr",
+				title : "日期",
 				width : 100,
 				align : "center",
 				sortable : true
 			}, {
-				field : "carType",
-				title : "车辆类型",
+				field : "tempTotalAmount",
+				title : "临停总金额",
 				width : 100,
 				align : "center",
-				formatter:function(value,row,index){
-		          	if(value == 1){
-		          		return '小型车';
-		          	}else if(value == 2){
-		          		return '中型车';
-		          	}else if(value == 3){
-		          		return '大型车';
-		          	}else if(value == 4){
-		          		return '摩托车';
-		          	}else{
-		          		return '其他';
-		          	}
-		        }
-			},{
-				field : "orderNo",
-				title : "支付宝支付流水",
-				width : 200,
-				align : "center",
-				sortable : true
 			}, {
-				field : "paidMoney",
-				title : "收费金额",
+				field : "tempAmount",
+				title : "临停现金",
 				width : 100,
-				align : "center",
-				formatter:function(value,row,index){
-		          	if (row != null) {
-                      return parseFloat(value).toFixed(2);
-                    }
-		        }
+				align : "center"
 			}, {
-				field : "payType",
-				title : "收费类型",
+				field : "tempAlipayAmount",
+				title : "临停支付宝",
 				width : 150,
 				align : "center",
-				sortable : true,
-				formatter:function(value,row,index){
-		          	if(value == 1){
-		          		return '支付宝在线缴费';
-		          	}else if(value == 2){
-		          		return '支付宝代扣缴费';
-		          	}else if(value == 3){
-		          		return '当面付';
-		          	}else{
-		          		return '未知';
-		          	}
-		        }
+				sortable : true
 			}, {
-				field : "inTime",
-				title : "进场时间",
+				field : "tempWeiXinAmount",
+				title : "临停微信",
 				width : 200,
 				align : "center",
 			}, {
-				field : "outTime",
-				title : "出场时间",
+				field : "inTimeCount",
+				title : "入库车次",
+				width : 200,
+				align : "center",
+			}, {
+				field : "outTimeCount",
+				title : "出库车次",
+				width : 200,
+				align : "center",
+			}, {
+				field : "expectedVehicleCount",
+				title : "预计库内车辆",
 				width : 200,
 				align : "center",
 			}] ],
@@ -178,10 +147,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	};
 	
 	function reset(){
-		$('#carNumber').val('');
 		$("#startDate").datebox('setValue','');	
 		$("#endDate").datebox('setValue','');	
-		$("#payType").combobox('select', '');
 	}
 	
 	function dateFormat(value){
@@ -193,63 +160,45 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
     }
     
     function exportExcel() {
-		var carNumber = $('#carNumber').val();
+		var dateSet = $("input[name='dateSet']:checked").val();
 		var startDate = $("#startDate").datetimebox('getValue');
 		var endDate = $("#endDate").datetimebox('getValue');
-		var payType = $("#payType").combobox('getValue');
-		if (carNumber == null || $.trim(carNumber) == '-1') {
-			carNumber = "";
-		}
-		if ($.trim(startDate) == "") {
-			$.messager.alert("提示 ", "起始日期不能为空");
+		if ($.trim(dateSet) == "") {
+			$.messager.alert("提示 ", "请选择对账时间");
 			return false;
 		}
-		if ($.trim(endDate) == "") {
-			$.messager.alert("提示 ", "结束日期不能为空");
-			return false;
+		if(dateSet==4){
+			if($.trim(startDate) == ""||$.trim(endDate) == ""){
+				$.messager.alert("提示 ", "自定义时间不能为空");
+				return false;
+			}
 		}
-		if (payType == null || $.trim(payType) == '-1') {
-			payType = "";
-		}
-		$.getToPost('${ctx}/finance/transactionFlow.do?method=makeTransactionFlow', {
-			carNumber : carNumber,
+		$.getToPost('${ctx}/managementAnalysis/managementAnalysis.do?method=makeManagementAnalysis', {
+			dateSet : dateSet,
 			startDate : startDate,
-			endDate : endDate,
-			payType : payType
-		});
-	}
+			endDate : endDate
+		}); 
+    }
 </script>
 </head>
 <body id="indexd">
 	<table>
 		<tr>
-			<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;时间设置：</td>
+			<td align="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<label>对账时间设置：</label>
+			</td>
 			<td>
+				<input class="easyui-validatebox" type="radio" name="dateSet" value="1" />昨天
+				<input class="easyui-validatebox" type="radio" name="dateSet" value="2"/>上周
+				<input class="easyui-validatebox" type="radio" name="dateSet" value="3"/>上月
+				<input class="easyui-validatebox" type="radio" name="dateSet" value="4"/>自定义时段
 				<input class="easyui-datebox" name="startDate" id="startDate" style="width: 150px;" />
 				——
 				<input class="easyui-datebox" name="endDate" id="endDate" style="width: 150px;" />
 			</td>
-			<td>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				车牌：
-			</td>
-			<td>
-			<input type="text" id="carNumber" name="carNumber" style="width:150px"></input>
-			</td>
-			<td>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;收费类型：
-			</td>
-			<td>
-				<select class="easyui-combobox" id="payType" name="payType" style="width: 155px;" editable="false">
-						<option value="" selected="selected">--请选择--</option>
-						<option value="1">支付宝在线缴费</option>
-						<option value="2">支付宝代扣缴费</option>
-						<option value="3">当面付</option>
-				</select>
-			</td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.search(2)">查询</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="reset()">重置</a></td>
-			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" onclick="exportExcel()">导出报表文件</a></td>
+			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-undo'" onclick="exportExcel()">经营分析表导出</a></td>
 		</tr>
 	</table>
 	<table id="search"></table>

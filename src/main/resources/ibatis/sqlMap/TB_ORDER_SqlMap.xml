@@ -542,6 +542,9 @@
     <isNotEmpty prepend="and" property="carNumber" >
         CAR_NUMBER like '%$carNumber$%'
     </isNotEmpty>
+    <isNotEmpty prepend="and" property="status" >
+        status = #status:VARCHAR#
+    </isNotEmpty>
   </select>
   
   <select id="getOrderAll" resultClass="com.compass.order.model.OrderBean">
@@ -576,11 +579,15 @@
 					  from TB_ORDER t
 	                 where 1 = 1
 	                 <isNotEmpty prepend="and" property="outParkingId" >
-				        OUT_PARKING_ID = #outParkingId:VARCHAR#
+				        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
 				    </isNotEmpty>
 	                 <isNotEmpty prepend="and" property="carNumber" >
-				        CAR_NUMBER like '%$carNumber$%'
+				        t.CAR_NUMBER like '%$carNumber$%'
 				    </isNotEmpty>
+				    <isNotEmpty prepend="and" property="status" >
+				        t.status = #status:VARCHAR#
+				    </isNotEmpty>
+				     order by to_date(t.IN_TIME,'yyyy-MM-dd hh24:mi:ss') desc
 	                ) b
 	         where rownum <![CDATA[<=]]> #end#)
 	where rn > #start#

@@ -42,7 +42,7 @@ public class QueryParkPriceController {
 		String retMessage = "系统异常";
 		Map<String, String> retMap = new HashMap<String, String>();
 		Map<String, Object>  paramMap = new HashMap<String, Object>();
-		log.info("outParkingId:"+outParkingId+",inTime:"+inTime+",outTime:"+outTime+",vehicleType:"+vehicleType+",carNumber:"+carNumber);
+		log.info("qeryParkPrice--start--:outParkingId:"+outParkingId+",inTime:"+inTime+",outTime:"+outTime+",vehicleType:"+vehicleType+",carNumber:"+carNumber);
 		if(StringUtils.isBlank(outParkingId)||StringUtils.isBlank(inTime)||StringUtils.isBlank(outTime)||StringUtils.isBlank(vehicleType)||StringUtils.isBlank(carNumber)){
 			retCode = "01";
 			retMessage = "请求参数为空";

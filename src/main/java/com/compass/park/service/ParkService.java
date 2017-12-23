@@ -27,4 +27,8 @@ public class ParkService extends AbstractService{
 	public ParkBean getParkByOutParkingId(String outParkingId){
 		return (ParkBean) dao.queryForObject("TB_PARK.getParkByOutParkingId", outParkingId);
 	}
+	
+	public String getParkSeq(){
+		return (String) dao.queryForObject("TB_PARK.getParkSeq");
+	}
 }

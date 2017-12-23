@@ -1,11 +1,9 @@
 package com.compass.vehicle.service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.springframework.beans.BeanUtils;
 
 import com.compass.utils.AbstractService;
 import com.compass.vehicle.model.FreeVehicleBrandBean;
@@ -23,7 +21,15 @@ public class FreeVehicleBrandService extends AbstractService{
 	}
 	
 	public boolean addFreeVehicleBrand(FreeVehicleBrandBean freeVehicleBrandBean){
-		return dao.insert("TB_FREE_VEHICLE_BRAND.addFreeVehicleBrand", freeVehicleBrandBean)>0?true:false;
+		if(getFreeVehicleByOutPardingIdAndCarNumber(freeVehicleBrandBean)>0){
+			return updateFreeByBean(freeVehicleBrandBean);
+		}else{
+			return dao.insert("TB_FREE_VEHICLE_BRAND.addFreeVehicleBrand", freeVehicleBrandBean)>0?true:false;
+		}
+	}
+	
+	public boolean updateFreeByBean(FreeVehicleBrandBean freeVehicleBrandBean){
+		return dao.update("TB_FREE_VEHICLE_BRAND.updateFreeByBean", freeVehicleBrandBean)>0?true:false;
 	}
 	
 	public boolean updateFreeVehicleBrandById(FreeVehicleBrandBean freeVehicleBrandBean){

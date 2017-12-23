@@ -213,7 +213,7 @@ public class UserRoleController {
 			UserRoleBean userRoleBean = new UserRoleBean();
 			userRoleBean.setUserId(userId);
 			userRoleBean.setUserName(userName);
-			userRoleBean.setLoginName(ConstantUtils.RTBPREFIX+loginName);
+			userRoleBean.setLoginName(loginName);
 			userRoleBean.setPassword(password);
 			userRoleBean.setEmail(email);
 			userRoleBean.setPhone(phone);

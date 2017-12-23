@@ -38,11 +38,16 @@ public class ParkRuleSetController {
 	public Map<String, Object> getParkRuleSet(
 			HttpServletRequest req) {
 		Integer count = 0;
+		String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+		String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+		//测试用
+		outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 		List<ParkRuleSetBean> list = new ArrayList<ParkRuleSetBean>();
 		try {
 			ParkRuleSetBean parkRuleSetBean = new ParkRuleSetBean();
 			String rows = req.getParameter("rows");
 			String page = req.getParameter("page");
+			parkRuleSetBean.setOutParkingId(outParkingId);
 			count = parkRuleSetService.getParkRuleSetCount(parkRuleSetBean);
 			int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
 					: page);
@@ -93,9 +98,14 @@ public class ParkRuleSetController {
 			@RequestParam(value = "freeTime") String freeTime,
 			HttpServletRequest req) {
 		try {
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			ParkRuleSetBean parkRuleSetBean = new ParkRuleSetBean();
 			parkRuleSetBean.setRuleName(ruleName);
+			parkRuleSetBean.setOutParkingId(outParkingId);
 			parkRuleSetBean.setVehicleType(vehicleType);
 			parkRuleSetBean.setDayLimit(new BigDecimal(StringUtils.isEmpty(dayLimit)?"0":dayLimit));
 			parkRuleSetBean.setStartHour(startHour);
@@ -170,8 +180,11 @@ public class ParkRuleSetController {
 			@RequestParam(value = "freeTime") String freeTime,
 			HttpServletRequest req) {
 		try {
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
-			String outParkingId = "10180";
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			ParkRuleSetBean parkRuleSetBean = new ParkRuleSetBean();
 			parkRuleSetBean.setOutParkingId(outParkingId);
 			parkRuleSetBean.setRuleName(ruleName);

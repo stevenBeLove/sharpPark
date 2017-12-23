@@ -2,16 +2,14 @@ package com.compass.finance;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -24,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.compass.order.model.AccountBean;
+import com.compass.order.model.ManagementAnalysisBean;
 import com.compass.order.service.OrderPayService;
 import com.compass.park.model.ParkBean;
 import com.compass.park.service.ParkService;
@@ -32,13 +30,19 @@ import com.compass.systemlog.service.SystemLogService;
 import com.compass.utils.ConstantUtils;
 import com.compass.utils.DateUtil;
 import com.compass.utils.IpUtils;
+import com.compass.utils.mvc.AjaxReturnInfo;
 
+/**
+ * 经营分析
+ * @author lenovo
+ *
+ */
 @Controller
-@RequestMapping("/finance/account.do")
-public class AccountController {
+@RequestMapping("/managementAnalysis/managementAnalysis.do")
+public class ManagementAnalysisController {
 	
 	private static final Logger log = LoggerFactory
-			.getLogger(AccountController.class);
+			.getLogger(ManagementAnalysisController.class);
 	
 	@Autowired
 	@Qualifier("parkService")
@@ -48,15 +52,65 @@ public class AccountController {
 	@Qualifier("orderPayService")
 	private OrderPayService orderPayService;
 	
-	@RequestMapping(params = "method=makeAccount")
+	@RequestMapping(params = "method=getManagementAnalysis")
 	@ResponseBody
-	public void makeAccount(
+	public Map<String, Object> getManagementAnalysis(
 			@RequestParam(value = "dateSet") String dateSet,
 			@RequestParam(value = "startDate") String startDate,
 			@RequestParam(value = "endDate") String endDate,
-			@RequestParam(value = "payType") String payType,
 			HttpServletRequest req,HttpServletResponse response) {
-		log.info("dateSet:"+dateSet+",startDate:"+startDate+",endDate:"+endDate+",payType:"+payType);
+		Integer count = 0;
+		List<ManagementAnalysisBean> list = new ArrayList<ManagementAnalysisBean>();
+		log.info("dateSet:"+dateSet+",startDate:"+startDate+",endDate:"+endDate);
+		try {
+			String rows = req.getParameter("rows");
+			String page = req.getParameter("page");
+			String bDate = " 00:00:00";
+			String eDate = " 23:59:59";
+			if("1".equals(dateSet)){
+				//昨天
+				String yesterDay = DateUtil.yesterday();
+				bDate = yesterDay+bDate;
+				eDate = yesterDay+eDate;
+			}else if("2".equals(dateSet)){
+				//上周
+				bDate = DateUtil.lastWeekFirst()+bDate;
+				eDate = DateUtil.lastWeekEnd()+eDate;
+			}else if("3".equals(dateSet)){
+				//上月
+				bDate = DateUtil.lastMonthFirst()+bDate;
+				eDate = DateUtil.lastMonthEnd()+eDate;
+			}else if("4".equals(dateSet)){
+				//自定义
+				bDate = startDate+bDate;
+				eDate = endDate+eDate;
+			}
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
+			count = orderPayService.getManagementAnalysisCount(outParkingId,bDate, eDate);
+			int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
+					: page);
+			int rownumber = Integer.parseInt((rows == "0" || rows == null) ? "20"
+					: rows);
+			int start = (pagenumber - 1) * rownumber;
+			int end = (start + rownumber) > count ? count : start + rownumber;
+			list = orderPayService.getManagementAnalysisList(outParkingId,bDate, eDate,start,end);
+		} catch (Exception e) {
+			log.error("查询经营分析异常",e);
+		}
+		return AjaxReturnInfo.setTable(count, list);
+	}
+	
+	@RequestMapping(params = "method=makeManagementAnalysis")
+	@ResponseBody
+	public void makeManagementAnalysis(
+			@RequestParam(value = "dateSet") String dateSet,
+			@RequestParam(value = "startDate") String startDate,
+			@RequestParam(value = "endDate") String endDate,
+			HttpServletRequest req,HttpServletResponse response) {
+		log.info("dateSet:"+dateSet+",startDate:"+startDate+",endDate:"+endDate);
 		try {
 			String bDate = " 00:00:00";
 			String eDate = " 23:59:59";
@@ -80,21 +134,21 @@ public class AccountController {
 			}
 			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
 			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
 			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
-			this.addLog(req, ConstantUtils.OPERNAMEACCOUNT, ConstantUtils.OPERTYPEEXPO, "参数：outParkingId："+outParkingId+",payType:"+payType+",bDate:"+bDate+",eDate:"+eDate);
+			this.addLog(req, ConstantUtils.OPERNAMEMANAGEMENTANALYSIS, ConstantUtils.OPERTYPEEXPO, "参数：outParkingId："+outParkingId+",bDate:"+bDate+",eDate:"+eDate);
 			ParkBean parkBean = new ParkBean();
 			if(StringUtils.isNotBlank(outParkingId)){
 				parkBean = parkService.getParkByOutParkingId(outParkingId);
 			}
-			List<AccountBean> list = orderPayService.getAccountList(outParkingId,payType,bDate, eDate);
-			exportDataToExcel(response,bDate,eDate,parkBean,list,"对账报表", ".xls");
+			List<ManagementAnalysisBean> list = orderPayService.getManagementAnalysisList(outParkingId,bDate, eDate,0,1000);
+			exportDataToExcel(response,bDate,eDate,parkBean,list,"经营分析表", ".xls");
 		} catch (Exception e) {
 			log.error("数据导出异常",e);
 		}
 	}
 	
-	
-	public static void exportDataToExcel(HttpServletResponse response,String startDate,String endDate,ParkBean parkBean,List<AccountBean> list,String fileName,String fileSuffix){
+	public static void exportDataToExcel(HttpServletResponse response,String startDate,String endDate,ParkBean parkBean,List<ManagementAnalysisBean> list,String fileName,String fileSuffix){
     	OutputStream os = null;
         try {
         	HSSFWorkbook workbook = new HSSFWorkbook();
@@ -109,7 +163,7 @@ public class AccountController {
             row.createCell(2).setCellValue("终止日期:");
             row.createCell(3).setCellValue("["+endDate+"]");
             row = sheet.createRow(1);
-            row.createCell(0).setCellValue("对账单编号");
+            row.createCell(0).setCellValue("报表编号");
             row.createCell(1).setCellValue(System.currentTimeMillis()+"");
             row = sheet.createRow(2);
             row.createCell(0).setCellValue("停车场基本信息");
@@ -120,44 +174,33 @@ public class AccountController {
             row.createCell(0).setCellValue(parkBean.getOutParkingId());
             row.createCell(1).setCellValue(parkBean.getParkingName());
             row = sheet.createRow(6);
-            row.createCell(0).setCellValue("收费汇总清单");
-            row = sheet.createRow(7);
-            row.createCell(0).setCellValue("收费类型");
-            row.createCell(1).setCellValue("交易笔数");
-            row.createCell(2).setCellValue("交易金额");
-            row.createCell(3).setCellValue("退款笔数");
-            row.createCell(4).setCellValue("退款金额");
-            row.createCell(5).setCellValue("商户优惠");
-            row.createCell(6).setCellValue("云停风行优惠");
-            row.createCell(7).setCellValue("实收金额");
-            row.createCell(8).setCellValue("手续费");
-            row.createCell(9).setCellValue("结算金额");
-            HSSFCellStyle cellStyle = workbook.createCellStyle();
-            cellStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("0.00"));
+            row.createCell(0).setCellValue("日期");
+            row.createCell(1).setCellValue("预计临停总营收");
+            row.createCell(2).setCellValue("预计临停现金收入");
+            row.createCell(3).setCellValue("临停支付宝收入");
+            row.createCell(4).setCellValue("临停微信收入");
+            row.createCell(5).setCellValue("入库车次");
+            row.createCell(6).setCellValue("出库车次");
+            row.createCell(7).setCellValue("预计场内车辆");
+            
             if(list!=null&&!list.isEmpty()&&list.size()>0){
-            	int i = 7;
-            	for (AccountBean accountBean : list) {
+            	int i = 6;
+            	for (ManagementAnalysisBean managementAnalysisBean : list) {
             		i++;
             		row = sheet.createRow(i);
-                    row.createCell(0).setCellValue(accountBean.getPayTypeName());
-                    row.createCell(1).setCellValue(accountBean.getTotalCount());
-                    HSSFCell cell = row.createCell(2);
-                    cell.setCellValue(new BigDecimal(accountBean.getTransactionAmount()).doubleValue());
-                    row.createCell(3).setCellValue(accountBean.getRefundCount());
-                    cell = row.createCell(4);
-                    cell.setCellValue(new BigDecimal(accountBean.getRefundAmount()).doubleValue());
-                    cell = row.createCell(5);
-                    cell.setCellValue(new BigDecimal(accountBean.getMerchantDiscount()).doubleValue());
-                    cell = row.createCell(6);
-                    cell.setCellValue(new BigDecimal(accountBean.getCloudDiscount()).doubleValue());
-                    cell = row.createCell(7);
-                    cell.setCellValue(new BigDecimal(accountBean.getActualAmount()).doubleValue());
-                    cell = row.createCell(8);
-                    cell.setCellValue(new BigDecimal(accountBean.getFreeAmount()).doubleValue());
-                    cell = row.createCell(9);
-                    cell.setCellValue(new BigDecimal(accountBean.getSettAmount()).doubleValue());
+                    row.createCell(0).setCellValue(managementAnalysisBean.getDateStr());
+                    row.createCell(1).setCellValue(managementAnalysisBean.getTempTotalAmount());
+                    row.createCell(2).setCellValue(managementAnalysisBean.getTempAmount());
+                    row.createCell(3).setCellValue(managementAnalysisBean.getTempAlipayAmount());
+                    row.createCell(4).setCellValue(managementAnalysisBean.getTempWeiXinAmount());
+                    row.createCell(5).setCellValue(managementAnalysisBean.getInTimeCount());
+                    row.createCell(6).setCellValue(managementAnalysisBean.getOutTimeCount());
+                    if(managementAnalysisBean.getExpectedVehicleCount()!=null){
+                        row.createCell(7).setCellValue(managementAnalysisBean.getExpectedVehicleCount());
+                    }
 				}
             }
+            
         	 fileName = fileName+System.currentTimeMillis();
         	 response.setHeader("Content-Disposition", "attachment; filename=" + new String(fileName.getBytes("gb2312"),"ISO8859-1")+fileSuffix);
              response.setCharacterEncoding("UTF-8");

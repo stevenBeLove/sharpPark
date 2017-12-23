@@ -25,10 +25,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import com.alibaba.fastjson.JSONObject;
 import com.compass.park.model.ParkBean;
 import com.compass.park.service.ParkService;
+import com.compass.systemlog.service.SystemLogService;
 import com.compass.utils.ConstantUtils;
 import com.compass.utils.ExcelUtils;
+import com.compass.utils.IpUtils;
 import com.compass.utils.PropertyPlaceholderConfigurerExt;
 import com.compass.utils.mvc.AjaxReturnInfo;
 import com.compass.vehicle.model.MonthVehicleBrandBean;
@@ -64,6 +67,9 @@ public class MonthVehicleBrandController {
 			HttpServletRequest req) {
 		String rows = req.getParameter("rows");
 		String page = req.getParameter("page");
+		String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+		String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+		outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 		MonthVehicleBrandBean monthVehicleBrandBean= new MonthVehicleBrandBean();
 		if (StringUtils.isNotBlank(carNumber)) {
 			monthVehicleBrandBean.setCarNumber(carNumber);
@@ -77,8 +83,10 @@ public class MonthVehicleBrandController {
 		if (StringUtils.isNotBlank(isExpire)) {
 			monthVehicleBrandBean.setIsExpire(isExpire);
 		}
+		monthVehicleBrandBean.setOutParkingId(outParkingId);
 		// 待添加查询条件
 		Integer count = monthVehicleBrandService.getMonthVehicleBrandCount(monthVehicleBrandBean);
+		count = count!=null?count:0;
 		int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
 				: page);
 		int rownumber = Integer.parseInt((rows == "0" || rows == null) ? "20"
@@ -110,7 +118,10 @@ public class MonthVehicleBrandController {
 			HttpServletRequest req) {
 		try {
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			String outParkingId = "10180";//后续从session中获取
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			MonthVehicleBrandBean monthVehicleBrandBean = new MonthVehicleBrandBean();
 			monthVehicleBrandBean.setMonthVehicleBrandId(monthVehicleBrandId);
@@ -134,7 +145,52 @@ public class MonthVehicleBrandController {
 			if(StringUtils.isNotBlank(monthPayAmount)){
 				monthVehicleBrandBean.setMonthPayAmount(new BigDecimal(monthPayAmount));
 			}
+			this.addLog(req, ConstantUtils.OPERNAMEMONTHVEHICLEBRAND, ConstantUtils.OPERTYPEUPD, JSONObject.toJSONString(monthVehicleBrandBean));
 			boolean flag = monthVehicleBrandService.updateMonthVehicleBrandById(monthVehicleBrandBean);
+			if(flag){
+				return AjaxReturnInfo.success("更新成功");
+			}else{
+				return AjaxReturnInfo.failed("更新失败");
+			}
+		} catch (Exception e) {
+			log.error("月卡管理修改异常",e);
+		}
+		return AjaxReturnInfo.failed("系统异常");
+	}
+	
+	@RequestMapping(params = "method=returnMonthVehicleBrand")
+	@ResponseBody
+	public AjaxReturnInfo returnMonthVehicleBrand(
+			@RequestParam(value = "monthVehicleBrandId") String monthVehicleBrandId,
+			@RequestParam(value = "vehicleBrandType") String vehicleBrandType,
+			@RequestParam(value = "vehiclePlace") String vehiclePlace,
+			@RequestParam(value = "carOwnerName") String carOwnerName,
+			@RequestParam(value = "endDate") String endDate,
+			@RequestParam(value = "refundMoney") String refundMoney,
+			HttpServletRequest req) {
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
+			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
+			log.info("userId:"+userId+",monthVehicleBrandId:"+monthVehicleBrandId+",新的日期:"+endDate+",退费："+refundMoney);
+			MonthVehicleBrandBean monthVehicleBrandBean = new MonthVehicleBrandBean();
+			monthVehicleBrandBean.setMonthVehicleBrandId(monthVehicleBrandId);
+			monthVehicleBrandBean.setVehicleBrandType(vehicleBrandType);
+			monthVehicleBrandBean.setVehiclePlace(vehiclePlace);
+			monthVehicleBrandBean.setCarOwnerName(carOwnerName);
+			monthVehicleBrandBean.setModifyUserid(userId);
+			monthVehicleBrandBean.setOutParkingId(outParkingId);
+			if(StringUtils.isNotBlank(endDate)){
+				monthVehicleBrandBean.setEndDate(dateFormat.parse(endDate));
+			}
+			if(StringUtils.isNotBlank(refundMoney)){
+				monthVehicleBrandBean.setMonthPayAmount(new BigDecimal(refundMoney));
+			}
+			this.addLog(req, ConstantUtils.OPERNAMEMONTHVEHICLEBRAND, ConstantUtils.OPERTYPERET, JSONObject.toJSONString(monthVehicleBrandBean));
+			boolean flag = monthVehicleBrandService.returnMonthVehicleBrandById(monthVehicleBrandBean);
 			if(flag){
 				return AjaxReturnInfo.success("更新成功");
 			}else{
@@ -163,7 +219,10 @@ public class MonthVehicleBrandController {
 			@RequestParam(value = "monthPayAmount") String monthPayAmount,
 			HttpServletRequest req) {
 		try {
-			String outParkingId = "10180";
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			MonthVehicleBrandBean monthVehicleBrandBean = new MonthVehicleBrandBean();
@@ -187,6 +246,7 @@ public class MonthVehicleBrandController {
 			if(StringUtils.isNotBlank(monthPayAmount)){
 				monthVehicleBrandBean.setMonthPayAmount(new BigDecimal(monthPayAmount));
 			}
+			this.addLog(req, ConstantUtils.OPERNAMEMONTHVEHICLEBRAND, ConstantUtils.OPERTYPEADD, JSONObject.toJSONString(monthVehicleBrandBean));
 			boolean flag = monthVehicleBrandService.addMonthVehicleBrand(monthVehicleBrandBean);
 			if(flag){
 				return AjaxReturnInfo.success("新增成功");
@@ -208,7 +268,10 @@ public class MonthVehicleBrandController {
 			@RequestParam(value = "isExpire") String isExpire,
 			HttpServletRequest req,HttpServletResponse response) {
 		try {
-			String outParkingId = "10180";
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			MonthVehicleBrandBean monthVehicleBrandBean= new MonthVehicleBrandBean();
 			if (StringUtils.isNotBlank(carNumber)) {
 				monthVehicleBrandBean.setCarNumber(carNumber);
@@ -223,8 +286,12 @@ public class MonthVehicleBrandController {
 				monthVehicleBrandBean.setIsExpire(isExpire);
 			}
 			monthVehicleBrandBean.setOutParkingId(outParkingId);
+			this.addLog(req, ConstantUtils.OPERNAMEMONTHVEHICLEBRAND, ConstantUtils.OPERTYPEEXPO, JSONObject.toJSONString(monthVehicleBrandBean));
 			List<MonthVehicleBrandExportBean> list = monthVehicleBrandService.getMonthVehicleBrandExport(monthVehicleBrandBean);
-			ParkBean parkBean = parkService.getParkByOutParkingId(outParkingId);
+			ParkBean parkBean = new ParkBean();
+			if(StringUtils.isNotBlank(outParkingId)){
+				parkBean = parkService.getParkByOutParkingId(outParkingId);
+			}
 			ExcelUtils.exportDataToExcel(response, list, new String[]{"车牌号","车牌性质","有效期起始日期","有效期终止日期","当期缴费金额","是否逾期","车辆在场状态","车主姓名","联系方式","备注"}, "月卡车信息", ".xls",parkBean);
 		} catch (Exception e) {
 			log.error("monthVehicleBrandExport导出异常",e);
@@ -237,7 +304,10 @@ public class MonthVehicleBrandController {
 		String msg = "系统异常";
 		FileInputStream fileInputStream = null;
 		try {
-			String outParkingId = "10180";
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			//测试用
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
 			MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) req;
 			MultipartFile file = multipartRequest.getFile("upload_file");  
 	        if(file.isEmpty()){  
@@ -276,5 +346,20 @@ public class MonthVehicleBrandController {
 			}
 		}
 		return AjaxReturnInfo.failed(msg);
+	}
+	
+	@Autowired
+    @Qualifier("systemLogService")
+    private SystemLogService     systemLogService;
+	
+	public void addLog(HttpServletRequest req,String operName,String operType,String operateDetail){
+		try {
+			String ipAddress = IpUtils.getRemoteHost(req);
+			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
+			String agencyIdS = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString();
+			systemLogService.addLog(ipAddress, agencyIdS, userId, operName, operType, operateDetail);
+		} catch (Exception e) {
+			log.error("insert--log---error",e);
+		}
 	}
 }

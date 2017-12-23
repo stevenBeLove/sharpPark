@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.compass.order.model.OrderBean;
 import com.compass.order.service.OrderService;
+import com.compass.utils.ConstantUtils;
 import com.compass.utils.mvc.AjaxReturnInfo;
 
 @Controller
@@ -36,12 +37,53 @@ public class OrderController {
 			@RequestParam(value = "carNumber") String carNumber,
 			HttpServletRequest req) {
 		LogPay.info("carNumber:"+carNumber);
+		String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+		String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
 		OrderBean orderBean = new OrderBean();
 		if(StringUtils.isNotBlank(carNumber)){
 			orderBean.setCarNumber(carNumber);
 		}
+		if(!ConstantUtils.CENTERCODE.equals(outParkingId)){
+			orderBean.setOutParkingId(outParkingId);
+		}else{
+			orderBean.setOutParkingId(changeParkId);
+		}
 		String rows = req.getParameter("rows");
 		String page = req.getParameter("page");
+		orderBean.setStatus("0");
+		Integer count = orderService.getOrderCount(orderBean);
+		int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
+				: page);
+		int rownumber = Integer.parseInt((rows == "0" || rows == null) ? "20"
+				: rows);
+		int start = (pagenumber - 1) * rownumber;
+		int end = (start + rownumber) > count ? count : start + rownumber;
+		orderBean.setStart(start);
+		orderBean.setEnd(end);
+		List<OrderBean> list = orderService.getOrderAll(orderBean);
+		return AjaxReturnInfo.setTable(count, list);
+	}
+	
+	@RequestMapping(params = "method=getExcepOrder")
+	@ResponseBody
+	public Map<String, Object> getExcepOrder(
+			@RequestParam(value = "carNumber") String carNumber,
+			HttpServletRequest req) {
+		LogPay.info("carNumber:"+carNumber);
+		String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+		String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+		OrderBean orderBean = new OrderBean();
+		if(StringUtils.isNotBlank(carNumber)){
+			orderBean.setCarNumber(carNumber);
+		}
+		if(!ConstantUtils.CENTERCODE.equals(outParkingId)){
+			orderBean.setOutParkingId(outParkingId);
+		}else{
+			orderBean.setOutParkingId(changeParkId);
+		}
+		String rows = req.getParameter("rows");
+		String page = req.getParameter("page");
+		orderBean.setStatus("1");
 		Integer count = orderService.getOrderCount(orderBean);
 		int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
 				: page);

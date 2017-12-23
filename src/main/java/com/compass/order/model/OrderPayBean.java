@@ -839,7 +839,9 @@ public class OrderPayBean {
 	private Integer end;
 	private Date startDate;
 	private Date endDate;
-
+	private String inStatus;
+	private String billingTyper;
+	private String lane;
 	public Integer getStart() {
 		return start;
 	}
@@ -870,5 +872,29 @@ public class OrderPayBean {
 
 	public void setEndDate(Date endDate) {
 		this.endDate = endDate;
+	}
+
+	public String getInStatus() {
+		return inStatus;
+	}
+
+	public void setInStatus(String inStatus) {
+		this.inStatus = inStatus;
+	}
+
+	public String getBillingTyper() {
+		return billingTyper;
+	}
+
+	public void setBillingTyper(String billingTyper) {
+		this.billingTyper = billingTyper;
+	}
+
+	public String getLane() {
+		return lane;
+	}
+
+	public void setLane(String lane) {
+		this.lane = lane;
 	}
 }

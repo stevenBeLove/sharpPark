@@ -478,6 +478,7 @@
       SUB_FREE_TIME = #subFreeTime:DECIMAL#,
       N_SUB_FREE_TIME = #nSubFreeTime:DECIMAL#
     where PARK_RULE_SET_ID = #parkRuleSetId:VARCHAR#
+    and OUT_PARKING_ID = #outParkingId:VARCHAR#
   </update>
   
   <select id="getParkRuleSetCount" resultClass="java.lang.Integer">
