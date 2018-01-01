@@ -164,7 +164,6 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 						BigDecimal nsubCharge = parkRuleSetBean.getnSubCharge();
 						long nsubFreeTime = parkRuleSetBean.getnSubFreeTime();
 	
-						if ("2".equals(parkRuleSetBean.getType())) {
 							Date startHour = date.parse(dayDate.format(in) + " "
 									+ parkRuleSetBean.getStartHour() + ":00");
 							Date endHour = date.parse(dayDate.format(in) + " "
@@ -290,7 +289,6 @@ public class QueryParkPriceServiceImpl implements QueryParkPriceService {
 								}
 							}
 							listPrice.add(price);
-						}
 					} else {
 						log.info("未找到收费策略");
 					}
