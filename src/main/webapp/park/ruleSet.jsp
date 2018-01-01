@@ -745,7 +745,7 @@ span.title {
 						<div id="Layer6">
 						<span class="title">计时收费策略</span>
 							<p>
-								免费停车时长 <input id="nFreeTime" name="nSubFreeTime" type="text" size="1" /> 分钟
+								免费停车时长 <input id="nSubFreeTime" name="nSubFreeTime" type="text" size="1" /> 分钟
 							</p>
 							<p>
 								前 <input id="nStartChargeTime" name="nStartChargeTime" type="text" size="1" /> 分钟，收费 <input

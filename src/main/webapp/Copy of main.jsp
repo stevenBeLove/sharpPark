@@ -538,11 +538,11 @@ if(username.equals(agencyId)){
                 请输入手机号码<input id="messageText" type="text" maxlength="11" >
                 <input id="checkCode" onkeyup="value=this.value.replace(/\D+/g,'')" type="text" maxlength="6" ><input id="getCheckCode" onclick="sendMessage()" type="button" value="发送验证码"></input><br/>
                </c:if>
-               <c:if test="${!empty sessionScope.userPhone}">
+               <%-- <c:if test="${!empty sessionScope.userPhone}">
                <span id="warnID1">为了您的账号安全，请输入验证码</span><br/><br>
                 <input id="checkCode" onkeyup="value=this.value.replace(/\D+/g,'')" type="text" maxlength="6" ><input id="getCheckCode"  type="button" onclick="sendMessage()" value="发送验证码"></input><br/>
                 <span>验证码将发送到您绑定的手机号码${fn:substring(sessionScope.userPhone,0,3)}****${fn:substring(sessionScope.userPhone,fn:length(sessionScope.userPhone)-4,fn:length(sessionScope.userPhone))}</span>
-               </c:if>
+               </c:if> --%>
 
             </div>
             <div region="south" border="false" style="text-align: center; height: 30px; line-height: 30px;">

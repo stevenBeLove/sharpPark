@@ -582,4 +582,45 @@
         </iterate>
 	 	and t.STATUS=1
   </select>
+  
+  	<select id="queryParkRuleSetByType" parameterClass="com.compass.park.model.ParkRuleSetBean" resultClass="com.compass.park.model.ParkRuleSetBean">
+  		select t.PARK_RULE_SET_ID     parkRuleSetId,
+		       t.RULE_NAME            ruleName,
+		       t.VEHICLE_TYPE         vehicleType,
+		       t.OUT_PARKING_ID       outParkingId,
+		       t.DAY_LIMIT            dayLimit,
+		       t.START_HOUR           startHour,
+		       t.END_HOUR             endHour,
+		       t.DATE_SET             dateSet,
+		       t.CHARGE_TYPE          chargeType,
+		       t.FREE_TIME            freeTime,
+		       t.SUB_CHARGE           subCharge,
+		       t.TIME_SLOT_LIMIT      timeSlotLimit,
+		       t.START_CHARGE_TIME    startChargeTime,
+		       t.START_CHARGE_PRICE   startChargePrice,
+		       t.CHARGE_TIME          chargeTime,
+		       t.CHARGE_PRICE         chargePrice,
+		       t.STATUS               status,
+		       t.CREATE_USERID        createUserid,
+		       t.MODIFY_USERID        modifyUserid,
+		       t.CREATE_DATETIME      createDatetime,
+		       t.MODIFY_DATETIME      modifyDatetime,
+		       t.N_CHARGE_TYPE        nChargeType,
+		       t.N_FREE_TIME          nFreeTime,
+		       t.N_SUB_CHARGE         nSubCharge,
+		       t.N_TIME_SLOT_LIMIT    nTimeSlotLimit,
+		       t.N_START_CHARGE_TIME  nStartChargeTime,
+		       t.N_START_CHARGE_PRICE nStartChargePrice,
+		       t.N_CHARGE_TIME        nChargeTime,
+		       t.N_CHARGE_PRICE       nChargePrice,
+		       t.N_START_HOUR         nStartHour,
+		       t.N_END_HOUR           nEndHour,
+		       t.SUB_FREE_TIME		  subFreeTime,
+		       t.N_SUB_FREE_TIME	  nSubFreeTime,
+		       t.TYPE
+  from TB_PARK_RULE_SET t
+	 where t.out_parking_id = #outParkingId:VARCHAR# 
+	 	and VEHICLE_TYPE = #vehicleType:VARCHAR# 
+	 	and t.STATUS=1
+  	</select>
 </sqlMap>

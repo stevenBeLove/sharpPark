@@ -68,36 +68,37 @@ public class ParkRuleSetController {
 	@ResponseBody
 	public AjaxReturnInfo editParkRule(
 			@RequestParam(value = "parkRuleSetId") String parkRuleSetId,
-			@RequestParam(value = "ruleName") String ruleName,
-			@RequestParam(value = "vehicleType") String vehicleType,
-			@RequestParam(value = "dayLimit") String dayLimit,
-			@RequestParam(value = "startHour") String startHour,
-			@RequestParam(value = "endHour") String endHour,
-			@RequestParam(value = "dateSet") String dateSet,
-			@RequestParam(value = "chargeType") String chargeType,
-			@RequestParam(value = "subCharge") String subCharge,
-			@RequestParam(value = "timeSlotLimit") String timeSlotLimit,
-			@RequestParam(value = "startChargeTime") String startChargeTime,
-			@RequestParam(value = "startChargePrice") String startChargePrice,
-			@RequestParam(value = "chargeTime") String chargeTime,
-			@RequestParam(value = "chargePrice") String chargePrice,
-			@RequestParam(value = "nChargeType") String nChargeType,
-			@RequestParam(value = "nFreeTime") String nFreeTime,
-			@RequestParam(value = "nSubCharge") String nSubCharge,
-			@RequestParam(value = "nTimeSlotLimit") String nTimeSlotLimit,
-			@RequestParam(value = "nStartChargeTime") String nStartChargeTime,
-			@RequestParam(value = "nStartChargePrice") String nStartChargePrice,
-			@RequestParam(value = "nChargeTime") String nChargeTime,
-			@RequestParam(value = "nChargePrice") String nChargePrice,
-			@RequestParam(value = "nStartHour") String nStartHour,
-			@RequestParam(value = "nEndHour") String nEndHour,
-			@RequestParam(value = "type") String type,
-			@RequestParam(value = "subFreeTime") String subFreeTime,
-			@RequestParam(value = "nSubFreeTime") String nSubFreeTime,
-			@RequestParam(value = "status") String status,
-			@RequestParam(value = "freeTime") String freeTime,
 			HttpServletRequest req) {
 		try {
+			String ruleName = req.getParameter("ruleName");
+			String vehicleType = req.getParameter("vehicleType");
+			String dayLimit = req.getParameter("dayLimit");
+			String startHour = req.getParameter("startHour");
+			String endHour = req.getParameter("endHour");
+			String dateSet = req.getParameter("dateSet");
+			String chargeType = req.getParameter("chargeType");
+			String subCharge = req.getParameter("subCharge");
+			String timeSlotLimit = req.getParameter("timeSlotLimit");
+			String startChargeTime = req.getParameter("startChargeTime");
+			String startChargePrice = req.getParameter("startChargePrice");
+			String chargeTime = req.getParameter("chargeTime");
+			String chargePrice = req.getParameter("chargePrice");
+			String nChargeType = req.getParameter("nChargeType");
+			String nFreeTime = req.getParameter("nFreeTime");
+			String nSubCharge = req.getParameter("nSubCharge");
+			String nTimeSlotLimit = req.getParameter("nTimeSlotLimit");
+			String nStartChargeTime = req.getParameter("nStartChargeTime");
+			String nStartChargePrice = req.getParameter("nStartChargePrice");
+			String nChargeTime = req.getParameter("nChargeTime");
+			String nChargePrice = req.getParameter("nChargePrice");
+			String nStartHour = req.getParameter("nStartHour");
+			String nEndHour = req.getParameter("nEndHour");
+			String type = req.getParameter("type");
+			String subFreeTime = req.getParameter("subFreeTime");
+			String nSubFreeTime = req.getParameter("nSubFreeTime");
+			String status = req.getParameter("status");
+			String freeTime = req.getParameter("freeTime");
+			
 			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
 			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
 			//测试用
@@ -150,36 +151,36 @@ public class ParkRuleSetController {
 	@RequestMapping(params = "method=addParkRule")
 	@ResponseBody
 	public AjaxReturnInfo addParkRule(
-			@RequestParam(value = "ruleName") String ruleName,
-			@RequestParam(value = "vehicleType") String vehicleType,
-			@RequestParam(value = "dayLimit") String dayLimit,
-			@RequestParam(value = "startHour") String startHour,
-			@RequestParam(value = "endHour") String endHour,
-			@RequestParam(value = "dateSet") String dateSet,
-			@RequestParam(value = "chargeType") String chargeType,
-			@RequestParam(value = "subCharge") String subCharge,
-			@RequestParam(value = "timeSlotLimit") String timeSlotLimit,
-			@RequestParam(value = "startChargeTime") String startChargeTime,
-			@RequestParam(value = "startChargePrice") String startChargePrice,
-			@RequestParam(value = "chargeTime") String chargeTime,
-			@RequestParam(value = "chargePrice") String chargePrice,
-			@RequestParam(value = "nChargeType") String nChargeType,
-			@RequestParam(value = "nFreeTime") String nFreeTime,
-			@RequestParam(value = "nSubCharge") String nSubCharge,
-			@RequestParam(value = "nTimeSlotLimit") String nTimeSlotLimit,
-			@RequestParam(value = "nStartChargeTime") String nStartChargeTime,
-			@RequestParam(value = "nStartChargePrice") String nStartChargePrice,
-			@RequestParam(value = "nChargeTime") String nChargeTime,
-			@RequestParam(value = "nChargePrice") String nChargePrice,
-			@RequestParam(value = "nStartHour") String nStartHour,
-			@RequestParam(value = "nEndHour") String nEndHour,
-			@RequestParam(value = "type") String type,
-			@RequestParam(value = "subFreeTime") String subFreeTime,
-			@RequestParam(value = "nSubFreeTime") String nSubFreeTime,
-			@RequestParam(value = "status") String status,
-			@RequestParam(value = "freeTime") String freeTime,
 			HttpServletRequest req) {
 		try {
+			String ruleName = req.getParameter("ruleName");
+			String vehicleType = req.getParameter("vehicleType");
+			String dayLimit = req.getParameter("dayLimit");
+			String startHour = req.getParameter("startHour");
+			String endHour = req.getParameter("endHour");
+			String dateSet = req.getParameter("dateSet");
+			String chargeType = req.getParameter("chargeType");
+			String subCharge = req.getParameter("subCharge");
+			String timeSlotLimit = req.getParameter("timeSlotLimit");
+			String startChargeTime = req.getParameter("startChargeTime");
+			String startChargePrice = req.getParameter("startChargePrice");
+			String chargeTime = req.getParameter("chargeTime");
+			String chargePrice = req.getParameter("chargePrice");
+			String nChargeType = req.getParameter("nChargeType");
+			String nFreeTime = req.getParameter("nFreeTime");
+			String nSubCharge = req.getParameter("nSubCharge");
+			String nTimeSlotLimit = req.getParameter("nTimeSlotLimit");
+			String nStartChargeTime = req.getParameter("nStartChargeTime");
+			String nStartChargePrice = req.getParameter("nStartChargePrice");
+			String nChargeTime = req.getParameter("nChargeTime");
+			String nChargePrice = req.getParameter("nChargePrice");
+			String nStartHour = req.getParameter("nStartHour");
+			String nEndHour = req.getParameter("nEndHour");
+			String type = req.getParameter("type");
+			String subFreeTime = req.getParameter("subFreeTime");
+			String nSubFreeTime = req.getParameter("nSubFreeTime");
+			String status = req.getParameter("status");
+			String freeTime = req.getParameter("freeTime");
 			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
 			String userId = req.getSession().getAttribute(ConstantUtils.USERID).toString();
 			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
@@ -227,5 +228,7 @@ public class ParkRuleSetController {
 		}
 		return AjaxReturnInfo.failed("系统异常");
 	}
+	
+	
 	
 }

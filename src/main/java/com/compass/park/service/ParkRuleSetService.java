@@ -27,4 +27,8 @@ public class ParkRuleSetService extends AbstractService{
 	public List<ParkRuleSetBean> queryParkRuleSetByParkId(ParkRuleSetBean parkRuleSetBean){
 		return (List<ParkRuleSetBean>)dao.queryForList("TB_PARK_RULE_SET.queryParkRuleSetByParkId", parkRuleSetBean);
 	}
+	
+	public List<ParkRuleSetBean> queryParkRuleSetByType(ParkRuleSetBean parkRuleSetBean){
+		return (List<ParkRuleSetBean>)dao.queryForList("TB_PARK_RULE_SET.queryParkRuleSetByType", parkRuleSetBean);
+	}
 }

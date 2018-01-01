@@ -44,5 +44,10 @@
 	<property name="monthVehicleBrandService" ref="monthVehicleBrandService"></property>
   </bean>
   
+  <bean id="parkingCostService" class="com.imobpay.park.service.impl.ParkingCostServiceImpl">
+	<property name="parkRuleSetService" ref="parkRuleSetService"></property>
+	<property name="freeVehicleBrandService" ref="freeVehicleBrandService"></property>
+  </bean>
+  
  <!--  <import resource="provider.xml"/> -->
 </beans>
