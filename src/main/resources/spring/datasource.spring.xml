@@ -22,7 +22,7 @@
 	    <bean id="configProperties" class="com.compass.utils.PropertyPlaceholderConfigurerExt">
 				<property name="locations">
 					<list>
-					    <value>file:/home/weblogic/etc/system.properties</value>
+					    <value>file:/home/tomcat/etc/system.properties</value>
 					    <!-- <value>file:E:/soft/config/system.properties</value> -->
 					</list>
 				</property>

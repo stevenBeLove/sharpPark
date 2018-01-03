@@ -41,7 +41,7 @@
 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
 		<property name="defaultEncoding" value="UTF-8" />
 
-		<!-- <property name="uploadTempDir" value="/home/weblogic/qtfr/tmp"/> <property name="uploadTempDir" value="/WEB-INF/tmp"/> 最大上传文件10M -->
+		<!-- <property name="uploadTempDir" value="/home/tomcat/qtfr/tmp"/> <property name="uploadTempDir" value="/WEB-INF/tmp"/> 最大上传文件10M -->
 		<property name="maxUploadSize" value="10485760" />
 	</bean>
 
