@@ -176,6 +176,7 @@
 			<version>${ojdbc6.version}</version>
 		</dependency>
 
+
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid</artifactId>
@@ -444,17 +445,17 @@
 		  <version>2.3.4.726</version>
 		</dependency>
 		
-		<dependency>
+		<!-- <dependency>
 		    <groupId>net.bull.javamelody</groupId>
 		    <artifactId>javamelody-core</artifactId>
 		    <version>1.65.0</version>
-		</dependency>
-		
+		</dependency> -->
+	<!-- 	
 		<dependency>
 		  <groupId>org.jrobin</groupId>
 		  <artifactId>jrobin</artifactId>
 		  <version>1.5.9</version>
-		</dependency>
+		</dependency> -->
 		
 		<dependency>
     		<groupId>org.slf4j</groupId>
