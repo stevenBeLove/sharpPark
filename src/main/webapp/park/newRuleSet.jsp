@@ -1,6 +1,6 @@
 <%@ page language="java" pageEncoding="UTF-8"%>
 <%@ include file="/commons/taglibs.jsp"%>
-<%@ page import="com.compass.utils.ConstantUtils;"%>
+<%@ page import="com.compass.utils.ConstantUtils"%>
 <%
 	String agencyId = session.getAttribute(ConstantUtils.AGENCYID)
 			.toString();
@@ -160,6 +160,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		if ($.trim(vehicleType) == "") {
 			$.messager.alert("提示 ", "请选择车辆类型");
 			return false;
+		}
+		if(type==5||type==4||type==6){
+			if ($.trim(chargeType) == ""||$.trim(nChargeType) == "") {
+				$.messager.alert("提示 ", "请选择策略类型");
+				return false;
+			}
 		}
 		if (flag == "-1") {
 			$('#save').linkbutton('disable');
@@ -1771,3 +1777,4 @@ span.title {
 		</div>
 	</div>
 </body>
+</html>

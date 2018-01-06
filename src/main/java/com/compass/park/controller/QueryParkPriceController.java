@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.imobpay.base.services.QueryParkPriceService;
+import com.imobpay.park.service.ParkingCostService;
 
 @Controller
 public class QueryParkPriceController {
@@ -28,6 +29,10 @@ public class QueryParkPriceController {
 	@Autowired
 	@Qualifier("queryParkPriceService")
 	private QueryParkPriceService queryParkPriceService;
+	
+	@Autowired
+	@Qualifier("parkingCostService")
+	private ParkingCostService parkingCostService;
 	
 	@RequestMapping(value="/qeryParkPrice.do",method = RequestMethod.POST)
 	@ResponseBody
@@ -63,7 +68,8 @@ public class QueryParkPriceController {
 				paramMap.put("outTime", outTime);
 				paramMap.put("vehicleType", vehicleType);
 				paramMap.put("carNumber", carNumber);
-				Map<String, Object> queryRetMap = queryParkPriceService.execute(paramMap);
+				//Map<String, Object> queryRetMap = queryParkPriceService.execute(paramMap);
+				Map<String, Object> queryRetMap = parkingCostService.execute(paramMap);
 				if(!queryRetMap.isEmpty()&&"00".equals(queryRetMap.get("retCode"))){
 					retMap.put("totalPrice", (String)queryRetMap.get("totalPrice"));
 					retMap.put("payType", (String)queryRetMap.get("payType"));

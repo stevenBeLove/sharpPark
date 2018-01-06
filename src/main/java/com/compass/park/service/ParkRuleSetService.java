@@ -16,6 +16,10 @@ public class ParkRuleSetService extends AbstractService{
 	        return dao.queryForList("TB_PARK_RULE_SET.getParkRuleSetAll", parkRuleSetBean);
 	}
 	
+	public int checkParkRuleCount(ParkRuleSetBean parkRuleSetBean){
+		return (Integer) dao.queryForObject("TB_PARK_RULE_SET.checkParkRuleCount", parkRuleSetBean);
+	}
+	
 	public boolean addParkRuleSet(ParkRuleSetBean parkRuleSetBean){
 		return dao.insert("TB_PARK_RULE_SET.addParkRuleSet", parkRuleSetBean)>0?true:false;
 	}

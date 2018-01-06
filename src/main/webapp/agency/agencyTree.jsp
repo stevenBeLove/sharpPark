@@ -1,6 +1,6 @@
 <%@ page language="java" pageEncoding="UTF-8"%>
 <%@ include file="/commons/taglibs.jsp" %>
-<%@ page import="com.compass.utils.ConstantUtils;" %>
+<%@ page import="com.compass.utils.ConstantUtils" %>
 <%
 	String agencyId=session.getAttribute(ConstantUtils.AGENCYID).toString();
 %>

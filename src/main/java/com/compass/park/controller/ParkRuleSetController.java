@@ -136,11 +136,17 @@ public class ParkRuleSetController {
 			parkRuleSetBean.setnSubFreeTime(Long.valueOf(StringUtils.isEmpty(nSubFreeTime)?"0":nSubFreeTime));
 			parkRuleSetBean.setStatus(status);
 			parkRuleSetBean.setModifyUserid(userId);
-			boolean flag = parkRuleSetService.updateParkRuleSetById(parkRuleSetBean);
-			if(flag){
-				return AjaxReturnInfo.success("更新成功");
+			
+			int count = parkRuleSetService.checkParkRuleCount(parkRuleSetBean);
+			if(count>0){
+				return AjaxReturnInfo.failed("存在相同类型的规则");
 			}else{
-				return AjaxReturnInfo.failed("更新失败");
+				boolean flag = parkRuleSetService.updateParkRuleSetById(parkRuleSetBean);
+				if(flag){
+					return AjaxReturnInfo.success("更新成功");
+				}else{
+					return AjaxReturnInfo.failed("更新失败");
+				}
 			}
 		} catch (Exception e) {
 			log.error("规则修改异常",e);
@@ -217,11 +223,16 @@ public class ParkRuleSetController {
 			parkRuleSetBean.setnSubFreeTime(Long.valueOf(StringUtils.isEmpty(nSubFreeTime)?"0":nSubFreeTime));
 			parkRuleSetBean.setStatus(status);
 			parkRuleSetBean.setCreateUserid(userId);
-			boolean flag = parkRuleSetService.addParkRuleSet(parkRuleSetBean);
-			if(flag){
-				return AjaxReturnInfo.success("成功");
+			int count = parkRuleSetService.checkParkRuleCount(parkRuleSetBean);
+			if(count>0){
+				return AjaxReturnInfo.failed("存在相同类型的规则");
 			}else{
-				return AjaxReturnInfo.failed("失败");
+				boolean flag = parkRuleSetService.addParkRuleSet(parkRuleSetBean);
+				if(flag){
+					return AjaxReturnInfo.success("成功");
+				}else{
+					return AjaxReturnInfo.failed("失败");
+				}
 			}
 		} catch (Exception e) {
 			log.error("规则新增异常",e);

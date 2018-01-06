@@ -623,4 +623,15 @@
 	 	and VEHICLE_TYPE = #vehicleType:VARCHAR# 
 	 	and t.STATUS=1
   	</select>
+  	
+  	<select id="checkParkRuleCount" parameterClass="com.compass.park.model.ParkRuleSetBean" resultClass="java.lang.Integer">
+  		select count(1)
+  		from TB_PARK_RULE_SET t
+	 where t.out_parking_id = #outParkingId:VARCHAR# 
+	 	and VEHICLE_TYPE = #vehicleType:VARCHAR# 
+	 	and t.STATUS=1
+	 	<isNotEmpty prepend="and" property="parkRuleSetId" >
+	 	PARK_RULE_SET_ID != #parkRuleSetId:VARCHAR#
+	 	</isNotEmpty>
+  	</select>
 </sqlMap>
