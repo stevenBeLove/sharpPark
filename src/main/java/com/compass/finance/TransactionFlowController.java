@@ -3,7 +3,9 @@ package com.compass.finance;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.alibaba.fastjson.JSONObject;
 import com.compass.order.model.OrderPayBean;
 import com.compass.order.service.OrderPayService;
 import com.compass.park.model.ParkBean;
@@ -35,7 +38,10 @@ import com.compass.park.service.ParkService;
 import com.compass.systemlog.service.SystemLogService;
 import com.compass.utils.ConstantUtils;
 import com.compass.utils.DateUtil;
+import com.compass.utils.HttpClientUtil;
 import com.compass.utils.IpUtils;
+import com.compass.utils.Md5Util;
+import com.compass.utils.PropertyPlaceholderConfigurerExt;
 import com.compass.utils.mvc.AjaxReturnInfo;
 
 /**
@@ -49,6 +55,10 @@ public class TransactionFlowController {
 	
 	private static final Logger log = LoggerFactory
 			.getLogger(TransactionFlowController.class);
+	
+	private static final String REFUND_URL = (String) PropertyPlaceholderConfigurerExt.getProperties().get("refund.url");
+	
+	private final String SIGN_KEY = (String) PropertyPlaceholderConfigurerExt.getProperties().get("parkPrice.sign");
 	
 	@Autowired
 	@Qualifier("orderPayService")
@@ -100,11 +110,51 @@ public class TransactionFlowController {
 			orderPayBean.setEnd(end);
 			orderPayBean.setStartDate(DateUtil.fromatDate(startDate, format));
 			orderPayBean.setEndDate(DateUtil.fromatDate(endDate, format));
+			count = orderPayService.getOrderPayCount(orderPayBean);
 			list = orderPayService.getOrderPayAll(orderPayBean);
 		} catch (Exception e) {
 			log.error("getOrderPay---error",e);
 		}
 		return AjaxReturnInfo.setTable(count, list);
+	}
+	
+	@RequestMapping(params = "method=transactionRefundMoney")
+	@ResponseBody
+	public AjaxReturnInfo transactionRefundMoney(
+			@RequestParam(value = "refundMoney") String refundMoney,
+			@RequestParam(value = "orderNo") String orderNo,
+			HttpServletRequest req){
+		try {
+			String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+			String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			outParkingId = ConstantUtils.CENTERCODE.equals(outParkingId)?changeParkId:outParkingId;
+			OrderPayBean orderPayBean = this.orderPayService.getOrderPayBeanByOrderNo(orderNo, outParkingId);
+			if(orderPayBean!=null){
+				Map postParam = new HashMap();
+				postParam.put("tradeNO", orderNo);
+				log.info("refundMoney:"+refundMoney);
+				String signValue = Md5Util.sortMapByKey(postParam);
+				String sign = Md5Util.getMd5(signValue+SIGN_KEY);
+				postParam.put("sign", sign);
+				log.info("refund-param:"+postParam);
+				String ret = HttpClientUtil.sendPostUrl(REFUND_URL, postParam, Charset.forName("utf-8"), null);
+				log.info(orderNo+"调用退款返回："+ret);
+				if(StringUtils.isNotBlank(ret)){
+					JSONObject jsonObject = JSONObject.parseObject(ret);
+					String success =  jsonObject.getString("success");
+					if("true".equals(success)){
+						return AjaxReturnInfo.success("退款成功");
+					}else{
+						return AjaxReturnInfo.failed(jsonObject.getString("message"));
+					}
+				}
+			}else{
+				return AjaxReturnInfo.failed("订单不存在");
+			}
+		} catch (Exception e) {
+			log.error("transactionRefundMoney---error",e);
+		}
+		return AjaxReturnInfo.failed("系统异常");
 	}
 	
 	@RequestMapping(params = "method=makeTransactionFlow")

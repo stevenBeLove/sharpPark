@@ -19,6 +19,8 @@ import com.compass.order.model.OrderBean;
 import com.compass.order.service.OrderService;
 import com.compass.utils.ConstantUtils;
 import com.compass.utils.mvc.AjaxReturnInfo;
+import com.compass.vehicle.model.MonthVehicleBrandBean;
+import com.compass.vehicle.service.MonthVehicleBrandService;
 
 @Controller
 @RequestMapping("/order/order.do")
@@ -30,6 +32,10 @@ public class OrderController {
 	@Autowired
 	@Qualifier("orderService")
 	private OrderService orderService;
+	
+	@Autowired
+	@Qualifier("monthVehicleBrandService")
+	private MonthVehicleBrandService monthVehicleBrandService;
 	
 	@RequestMapping(params = "method=getOrder")
 	@ResponseBody
@@ -61,6 +67,14 @@ public class OrderController {
 		orderBean.setStart(start);
 		orderBean.setEnd(end);
 		List<OrderBean> list = orderService.getOrderAll(orderBean);
+		for (OrderBean bean : list) {
+			MonthVehicleBrandBean brandBean = monthVehicleBrandService.queryMonthVehicleByCarNumber(bean.getOutParkingId(),bean.getCarNumber());
+			if(brandBean!=null){
+				bean.setCarOwnerPhone(brandBean.getCarOwnerPhone());
+				bean.setCarOwnerName(brandBean.getCarOwnerName());
+				bean.setRemark(brandBean.getRemark());
+			}
+		}
 		return AjaxReturnInfo.setTable(count, list);
 	}
 	

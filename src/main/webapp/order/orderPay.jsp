@@ -84,37 +84,49 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true
 			}, {
-				field : "outOrderNo",
-				title : "设备商订单号",
+				field : "carType",
+				title : "车辆类型",
 				width : 100,
-				align : "center",
-				sortable : true
-			}, {
-				field : "orderStatus",
-				title : "设备商订单状态",
-				width : 100,
-				align : "center",
-				sortable : true,
-				formatter:function(value,row,index){
-		          	if(value == 0){
-		          		return '成功';
-		          	}else{
-		          		return '失败';
-		          	}
-		        }
-			}, {
-				field : "payType",
-				title : "付款方式",
-				width : 150,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
 		          	if(value == 1){
-		          		return '支付宝在线缴费';
+		          		return '小型车';
 		          	}else if(value == 2){
-		          		return '支付宝代扣缴费';
+		          		return '中型车';
+		          	}else if(value == 3){
+		          		return '大型车';
+		          	}else if(value == 4){
+		          		return '摩托车';
+		          	}else if(value == 5){
+		          		return '其他';
 		          	}else{
 		          		return '未知';
+		          	}
+		        }
+			}, {
+				field : "billingTyper",
+				title : "缴费类型",
+				width : 150,
+				align : "center",
+				sortable : true,
+				formatter:function(value,row,index){
+		          	if(value == 'M'){
+		          		return '月卡';
+		          	}else if(value == 'L'){
+		          		return '临时';
+		          	}else if(value == 'F'){
+		          		return '免费';
+		          	}else if(value == 'N'){
+		          		return '无牌车';
+		          	}else if(value == 'A'){
+		          		return '支付宝';
+		          	}else if(value == 'W'){
+		          		return '微信';
+		          	}else if(value == 'C'){
+		          		return '现金';
+		          	}else if(value == 'G'){
+		          		return '强制放行';
 		          	}
 		        }
 			}, {
@@ -136,27 +148,22 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			}, {
 				field : "inTime",
 				title : "入场时间",
-				width : 100,
+				width : 120,
 				align : "center",
 			}, {
 				field : "inDuration",
-				title : "停车时长（以分为单位）",
+				title : "停车时长（分）",
 				width : 110,
-				align : "center",
-			}, {
-				field : "cardNumber",
-				title : "停车卡卡号",
-				width : 100,
 				align : "center",
 			}, {
 				field : "payTime",
 				title : "缴费时间",
-				width : 100,
+				width : 120,
 				align : "center",
 			}, {
 				field : "orderTime",
 				title : "订单创建时间",
-				width : 100,
+				width : 120,
 				align : "center",
 			} ] ],
 			hideColumn : [ [ {

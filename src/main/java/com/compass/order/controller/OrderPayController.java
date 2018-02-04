@@ -121,4 +121,37 @@ public class OrderPayController {
 		}
 		return AjaxReturnInfo.setTable(count, list);
 	}
+	
+	@RequestMapping(params = "method=getOrderRelease")
+	@ResponseBody
+	public Map<String, Object> getOrderRelease(
+			@RequestParam(value = "carNumber") String carNumber,
+			HttpServletRequest req) {
+		log.info("carNumber:"+carNumber);
+		String changeParkId = (String) req.getSession().getAttribute("changeParkId");
+		String outParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+		OrderPayBean orderPayBean = new OrderPayBean();
+		if(StringUtils.isNotBlank(carNumber)){
+			orderPayBean.setCarNumber(carNumber);
+		}
+		if(!ConstantUtils.CENTERCODE.equals(outParkingId)){
+			orderPayBean.setOutParkingId(outParkingId);
+		}else{
+			orderPayBean.setOutParkingId(changeParkId);
+		}
+		String rows = req.getParameter("rows");
+		String page = req.getParameter("page");
+		orderPayBean.setBillingTyper("G");//强制放行
+		Integer count = orderPayService.getOrderPayCount(orderPayBean);
+		int pagenumber = Integer.parseInt((page == null || page == "0") ? "1"
+				: page);
+		int rownumber = Integer.parseInt((rows == "0" || rows == null) ? "20"
+				: rows);
+		int start = (pagenumber - 1) * rownumber;
+		int end = (start + rownumber) > count ? count : start + rownumber;
+		orderPayBean.setStart(start);
+		orderPayBean.setEnd(end);
+		List<OrderPayBean> list = orderPayService.getOrderPayAll(orderPayBean);
+		return AjaxReturnInfo.setTable(count, list);
+	}
 }

@@ -1079,9 +1079,24 @@ public class ParkRuleSetBean implements Serializable{
 	
 	public String getRuleDesc() {
 		StringBuffer desc = new StringBuffer();
-		desc.append(mergeRule("1", this.chargeType, this.freeTime, this.startChargeTime, this.startChargePrice, this.chargeTime, this.chargePrice, this.timeSlotLimit, this.subCharge));
-		desc.append("</br>");
-		desc.append(mergeRule("2", this.nChargeType, this.nFreeTime, this.nStartChargeTime, this.nStartChargePrice, this.nChargeTime, this.nChargePrice, this.nTimeSlotLimit, this.nSubCharge));
+		//desc.append(mergeRule("1", this.chargeType, this.freeTime, this.startChargeTime, this.startChargePrice, this.chargeTime, this.chargePrice, this.timeSlotLimit, this.subCharge));
+		//desc.append("</br>");
+		//desc.append(mergeRule("2", this.nChargeType, this.nFreeTime, this.nStartChargeTime, this.nStartChargePrice, this.nChargeTime, this.nChargePrice, this.nTimeSlotLimit, this.nSubCharge));
+		if("0".equals(type)){
+			desc.append("在免费策略生效期间，所有出场的车辆均免费");
+		}else if("1".equals(type)){
+			desc.append("在每日(0:00~24:00)内按照停车时长计费");
+		}else if("2".equals(type)){
+			desc.append("在每日(0:00~24:00)内按照停车次数计费");
+		}else if("3".equals(type)){
+			desc.append("从车辆入场时刻起算，每24小时作为一个计费周期");
+		}else if("4".equals(type)){
+			desc.append("按照日间和夜间分别设置收费策略：在跨日时段内，按照\"日间起始时刻~次日的起始时刻\",作为一个收费周期");
+		}else if("5".equals(type)){
+			desc.append("按照日间和夜间分别设置收费策略：在当日时段内，按照0:00~24:00，作为一个计费周期");
+		}else if("6".equals(type)){
+			desc.append("按照周一~周五和周六~周日分别设置收费策略：在每日内，可以按照时长/次数/免费。");
+		}
 		return desc.toString();
 	}
 

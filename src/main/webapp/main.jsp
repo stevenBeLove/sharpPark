@@ -835,6 +835,7 @@ if(username.equals(agencyId)){
 
 
 	<div align="center" data-options="region:'south',title:'',split:true" style="overflow: true; height: 30%; line-height: 20px; font-family: Verdana, 微软雅黑, 黑体" class='colors'>
+		<p style="font-size: 14px;color: #777777;margin-top: 0px;">Copyright 云停风驰 版权所有 沪ICP备17047021号-1</p>
 		<%-- <img align="middle" src="${ctx}/commons/images/bottom.png" alt="" /> --%>
 	</div>
 

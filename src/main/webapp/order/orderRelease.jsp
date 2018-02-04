@@ -58,12 +58,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			carNumber = "";
 		}
 		$('#viewOrder').datagrid({
-			title : '场内车辆',
+			title : '强制放行',
 			width : $(window).width() - 8,
 			height : $(window).height() * 0.9,
 			pageSize : 20,
 			pageNumber : 1,
-			url : "${ctx}/order/order.do?method=getOrder",
+			url : "${ctx}/orderPay/orderPay.do?method=getOrderRelease",
 			queryParams : {
 				carNumber : carNumber
 			},
@@ -74,12 +74,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			{
 				field : "parkingName",
 				title : "停车场名称",
-				width : 139,
+				width : 100,
 				align : "center",
 				sortable : true
 			}, {
 				field : "carNumber",
-				title : "车牌号码",
+				title : "车牌",
 				width : 100,
 				align : "center",
 				sortable : true
@@ -116,20 +116,50 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true
 			}, {
-				field : "carOwnerName",
-				title : "车主姓名",
-				width : 100,
+				field : "outTime",
+				title : "出场时间",
+				width : 120,
 				align : "center",
 			}, {
-				field : "carOwnerPhone",
-				title : "联系方式",
-				width : 100,
+				field : "lane",
+				title : "车场车道",
+				width : 80,
 				align : "center",
 			}, {
-				field : "remark",
-				title : "备注",
-				width : 100,
+				field : "inDuration",
+				title : "停车时长（分）",
+				width : 130,
 				align : "center",
+			}, {
+				field : "paidMoney",
+				title : "应收停车费",
+				width : 110,
+				align : "center",
+			}, {
+				field : "billingTyper",
+				title : "缴费类型",
+				width : 150,
+				align : "center",
+				sortable : true,
+				formatter:function(value,row,index){
+		          	if(value == 'M'){
+		          		return '月卡';
+		          	}else if(value == 'L'){
+		          		return '临时';
+		          	}else if(value == 'F'){
+		          		return '免费';
+		          	}else if(value == 'N'){
+		          		return '无牌车';
+		          	}else if(value == 'A'){
+		          		return '支付宝';
+		          	}else if(value == 'W'){
+		          		return '微信';
+		          	}else if(value == 'C'){
+		          		return '现金';
+		          	}else if(value == 'G'){
+		          		return '强制放行';
+		          	}
+		        }
 			} ] ],
 			hideColumn : [ [ {
 				field : "timeOut"
@@ -161,7 +191,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				车牌：
 			</td>
 			<td>
-			<input type="text" id="carNumber" name="carNumber" style="width:150px"></input></td>
+			<input type="text" id="carNumber" name="carNumber" style="width:150px"></input>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="$.viewOrder()">查询</a></td>
 			<td><a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" onclick="resetOrder()">重置</a></td>
 		</tr>

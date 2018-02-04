@@ -549,4 +549,17 @@
 	   and OUT_PARKING_ID = #outParkingId:VARCHAR#
   </update>
   
+  <select id="queryMonthVehicleByCarNumber" parameterClass="java.util.HashMap" resultClass="com.compass.vehicle.model.MonthVehicleBrandBean">
+  	select *
+	  from (select f.car_owner_phone carOwnerPhone, f.remark,f.CAR_OWNER_NAME carOwnerName
+	          from tb_free_vehicle_brand f
+	         where f.car_number = #carNumber:VARCHAR# and OUT_PARKING_ID = #outParkingId:VARCHAR#
+	        union all
+	        select m.car_owner_phone carOwnerPhone, m.remark,m.CAR_OWNER_NAME carOwnerName
+	          from tb_month_vehicle_brand m
+	         where m.car_number = #carNumber:VARCHAR# and OUT_PARKING_ID = #outParkingId:VARCHAR#) x
+	 where x.carOwnerPhone is not null
+	   and rownum = 1
+  </select>
+  
 </sqlMap>

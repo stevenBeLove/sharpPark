@@ -271,6 +271,12 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			pagination : true,
 			columns : [ [ 
 			{field : "ck",checkbox : true
+			},{
+				field : "outParkingId",
+				title : "停车场ID",
+				width : 100,
+				align : "center",
+				sortable : true
 			}, {
 				field : "ruleName",
 				title : "策略名称",
@@ -284,9 +290,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
-		          	if(value == 0){
-		          		return '全部';
-		          	}else if(value == 1){
+		          	if(value == 1){
 		          		return '小型车';
 		          	}else if(value == 2){
 		          		return '中型车';
@@ -297,36 +301,30 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		          	}else if(value == 5){
 		          		return '其他';
 		          	}else{
-		          		return '全部';
+		          		return '未知';
 		          	}
 		        }
 			}, {
-				field : "dateSet",
-				title : "日期设定",
+				field : "type",
+				title : "计费方式",
 				width : 100,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
-		          	if(value == 1){
-		          		return '每周七日';
+		          	if(value == 0){
+		          		return '免费';
+		          	}else if(value == 1){
+		          		return '按时长';
 		          	}else if(value == 2){
-		          		return '周一~周五';
+		          		return '按次数';
 		          	}else if(value == 3){
-		          		return '周六周日';
-		          	}else if(value == 11){
-		          		return '周一';
-		          	}else if(value == 12){
-		          		return '周二';
-		          	}else if(value == 13){
-		          		return '周三';
-		          	}else if(value == 14){
-		          		return '周四';
-		          	}else if(value == 15){
-		          		return '周五';
-		          	}else if(value == 16){
-		          		return '周六';
-		          	}else if(value == 17){
-		          		return '周日';
+		          		return '按24小时轮询';
+		          	}else if(value == 4){
+		          		return '按跨日时段';
+		          	}else if(value == 5){
+		          		return '按当日时段';
+		          	}else if(value == 6){
+		          		return '按工作日/非工作日';
 		          	}else{
 		          		return '未知';
 		          	}
@@ -345,21 +343,9 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		          	}
 		        }
 			}, {
-				field : "startHourAndEndHour",
-				title : "时间设定",
-				width : 150,
-				align : "center",
-				sortable : true
-			}, {
-				field : "chargeTypeDesc",
-				title : "计费方式",
-				width : 200,
-				align : "center",
-				sortable : true
-			}, {
 				field : "ruleDesc",
 				title : "策略说明",
-				width : 450,
+				width : 587,
 				align : "center",
 			}, {
 				field : "status",
@@ -489,7 +475,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			$("#nowDayDiv").hide();
 			
 			$("#durationDiv").show();
-			remark = "在每日(0:00~24:00)内按照停车时长计费"
+			remark = "在每日(0:00~24:00)内按照停车时长计费";
 		}else if(type==2){
 			$("#workTypeDiv").hide();
 			$("#freeTypeDiv").hide();
@@ -561,7 +547,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$("input[name='type'][value='0']").prop("checked", "checked");
 		$("#parkRuleSetId").val('');
 		$("#ruleName").val('');
-		$("#vehicleType").combobox('select', '0');
+		$("#vehicleType").combobox('select', '1');
 		$("#dayLimit"+type+"").val('');
 		$("#startHour"+type+"").val('');
 		$("#endHour"+type+"").val('');
@@ -1104,7 +1090,6 @@ span.title {
 				    <p>车辆选择：
 				      <label>
 				       <select class="easyui-combobox" id="vehicleType" name="vehicleType" style="width: 176px;">
-								<option value="0" >全部</option>
 								<option value="1">小型车</option>
 								<option value="2">中型车</option>
 								<option value="3">大型车</option>

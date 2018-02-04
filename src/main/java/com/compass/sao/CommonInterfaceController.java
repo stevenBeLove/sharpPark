@@ -23,6 +23,8 @@ import com.compass.systemlog.service.SystemLogService;
 import com.compass.utils.ConstantUtils;
 import com.compass.utils.DateUtil;
 import com.compass.utils.IpUtils;
+import com.compass.utils.Md5Util;
+import com.compass.utils.PropertyPlaceholderConfigurerExt;
 import com.compass.vehicle.model.FreeVehicleBrandBean;
 import com.compass.vehicle.model.MonthVehicleBrandBean;
 import com.compass.vehicle.service.FreeVehicleBrandService;
@@ -32,7 +34,9 @@ import com.compass.vehicle.service.MonthVehicleBrandService;
 public class CommonInterfaceController {
 
 	private static final Logger log = LoggerFactory.getLogger(CommonInterfaceController.class);
-
+	
+	private final String SIGN_KEY = (String) PropertyPlaceholderConfigurerExt.getProperties().get("parkPrice.sign");
+	
 	@Autowired
 	@Qualifier("freeVehicleBrandService")
 	public FreeVehicleBrandService freeVehicleBrandService;
@@ -45,6 +49,7 @@ public class CommonInterfaceController {
 	@ResponseBody
 	public Map<String, String> queryCarNumberType(@RequestParam(value = "outParkingId") String outParkingId,
 			@RequestParam(value = "carNumber") String carNumber, HttpServletRequest req) {
+		String sign = req.getParameter("sign");
 		String retCode = "99";
 		String retMessage = "系统异常";
 		String carNumberType = "";
@@ -54,6 +59,20 @@ public class CommonInterfaceController {
 				retCode = "01";
 				retMessage = "请求参数为空";
 			} else {
+				if(StringUtils.isNotBlank(sign)){
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("outParkingId", outParkingId);
+					param.put("carNumber", new String(carNumber.getBytes("utf-8")));
+					String signValue = Md5Util.sortMapByKey(param);
+					log.info("queryCarNumberType---signValue:"+signValue);
+					String nSign = Md5Util.getMd5(signValue+SIGN_KEY);
+					log.info("queryCarNumberType---nSign:"+nSign+",sign:"+sign);
+					if(!sign.equals(nSign)){
+						retMap.put("retCode", "101");
+						retMap.put("retMessage", "验签失败");
+						return retMap;
+					}
+				}
 				MonthVehicleBrandBean monthVehicleBrandBean = new MonthVehicleBrandBean();
 				monthVehicleBrandBean.setOutParkingId(outParkingId);
 				monthVehicleBrandBean.setCarNumber(carNumber);
@@ -87,6 +106,7 @@ public class CommonInterfaceController {
 			@RequestParam(value = "vehicleBrandType") String vehicleBrandType,
 			@RequestParam(value = "startDate") String startDate, @RequestParam(value = "endDate") String endDate,
 			@RequestParam(value = "monthPayAmount") String monthPayAmount, HttpServletRequest req) {
+		String sign = req.getParameter("sign");
 		String retCode = "99";
 		String retMessage = "系统异常";
 		String format = "yyyy-MM-dd";
@@ -102,6 +122,27 @@ public class CommonInterfaceController {
 				retCode = "01";
 				retMessage = "请求参数为空";
 			}else{
+				if(StringUtils.isNotBlank(sign)){
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("outParkingId", outParkingId);
+					param.put("carNumber", new String(carNumber.getBytes("utf-8")));
+					param.put("vehicleBrandType", vehicleBrandType);
+					param.put("startDate", startDate);
+					param.put("endDate", endDate);
+					param.put("monthPayAmount", monthPayAmount);
+					param.put("carOwnerName",carOwnerName);
+					param.put("carOwnerPhone",carOwnerPhone);
+					param.put("remark", remark);
+					String signValue = Md5Util.sortMapByKey(param);
+					log.info("monthCardRecharge---signValue:"+signValue);
+					String nSign = Md5Util.getMd5(signValue+SIGN_KEY);
+					log.info("monthCardRecharge---nSign:"+nSign+",sign:"+sign);
+					if(!sign.equals(nSign)){
+						retMap.put("retCode", "101");
+						retMap.put("retMessage", "验签失败");
+						return retMap;
+					}
+				}
 				try {
 					monthVehicleBrandBean.setStartDate(DateUtil.fromatDate(startDate, format));
 					monthVehicleBrandBean.setEndDate(DateUtil.fromatDate(endDate, format));
@@ -144,6 +185,7 @@ public class CommonInterfaceController {
 			@RequestParam(value = "refundMoney") String refundMoney,
 			@RequestParam(value = "startDate") String startDate, @RequestParam(value = "endDate") String endDate,
 			HttpServletRequest req) {
+		String sign = req.getParameter("sign");
 		String retCode = "99";
 		String retMessage = "系统异常";
 		String format = "yyyy-MM-dd";
@@ -155,6 +197,23 @@ public class CommonInterfaceController {
 				retCode = "01";
 				retMessage = "请求参数为空";
 			}else{
+				if(StringUtils.isNotBlank(sign)){
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("outParkingId", outParkingId);
+					param.put("carNumber", new String(carNumber.getBytes("utf-8")));
+					param.put("refundMoney", refundMoney);
+					param.put("startDate", startDate);
+					param.put("endDate", endDate);
+					String signValue = Md5Util.sortMapByKey(param);
+					log.info("monthCardRefund---signValue:"+signValue);
+					String nSign = Md5Util.getMd5(signValue+SIGN_KEY);
+					log.info("monthCardRefund---nSign:"+nSign+",sign:"+sign);
+					if(!sign.equals(nSign)){
+						retMap.put("retCode", "101");
+						retMap.put("retMessage", "验签失败");
+						return retMap;
+					}
+				}
 				MonthVehicleBrandBean monthVehicleBrandBean = new MonthVehicleBrandBean();
 				try {
 					monthVehicleBrandBean.setEndDate(DateUtil.fromatDate(endDate, format));
@@ -204,6 +263,25 @@ public class CommonInterfaceController {
 				String carOwnerName = req.getParameter("carOwnerName");
 				String carOwnerPhone = req.getParameter("carOwnerPhone");
 				String remark = req.getParameter("remark");
+				String sign = req.getParameter("sign");
+				if(StringUtils.isNotBlank(sign)){
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("outParkingId", outParkingId);
+					param.put("carNumber", new String(carNumber.getBytes("utf-8")));
+					param.put("vehicleBrandType", vehicleBrandType);
+					param.put("carOwnerName", carOwnerName);
+					param.put("carOwnerPhone", carOwnerPhone);
+					param.put("remark", remark);
+					String signValue = Md5Util.sortMapByKey(param);
+					log.info("addFreeCard---signValue:"+signValue);
+					String nSign = Md5Util.getMd5(signValue+SIGN_KEY);
+					log.info("addFreeCard---nSign:"+nSign+",sign:"+sign);
+					if(!sign.equals(nSign)){
+						retMap.put("retCode", "101");
+						retMap.put("retMessage", "验签失败");
+						return retMap;
+					}
+				}
 				FreeVehicleBrandBean freeVehicleBrandBean = new FreeVehicleBrandBean();
 				freeVehicleBrandBean.setCarNumber(carNumber);
 				freeVehicleBrandBean.setVehicleBrandType(vehicleBrandType);
@@ -245,6 +323,21 @@ public class CommonInterfaceController {
 				retCode = "01";
 				retMessage = "请求参数为空";
 			}else{
+				String sign = req.getParameter("sign");
+				if(StringUtils.isNotBlank(sign)){
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("outParkingId", outParkingId);
+					param.put("carNumber", new String(carNumber.getBytes("utf-8")));
+					String signValue = Md5Util.sortMapByKey(param);
+					log.info("delFreeCard---signValue:"+signValue);
+					String nSign = Md5Util.getMd5(signValue+SIGN_KEY);
+					log.info("delFreeCard---nSign:"+nSign+",sign:"+sign);
+					if(!sign.equals(nSign)){
+						retMap.put("retCode", "101");
+						retMap.put("retMessage", "验签失败");
+						return retMap;
+					}
+				}
 				FreeVehicleBrandBean freeVehicleBrandBean = new FreeVehicleBrandBean();
 				freeVehicleBrandBean.setCarNumber(carNumber);
 				freeVehicleBrandBean.setOutParkingId(outParkingId);
@@ -285,6 +378,25 @@ public class CommonInterfaceController {
 				String carOwnerName = req.getParameter("carOwnerName");
 				String carOwnerPhone = req.getParameter("carOwnerPhone");
 				String remark = req.getParameter("remark");
+				String sign = req.getParameter("sign");
+				if(StringUtils.isNotBlank(sign)){
+					Map<String, String> param = new HashMap<String, String>();
+					param.put("outParkingId", outParkingId);
+					param.put("carNumber", new String(carNumber.getBytes("utf-8")));
+					param.put("vehicleBrandType", vehicleBrandType);
+					param.put("carOwnerName", carOwnerName);
+					param.put("carOwnerPhone", carOwnerPhone);
+					param.put("remark", remark);
+					String signValue = Md5Util.sortMapByKey(param);
+					log.info("updateFreeCard---signValue:"+signValue);
+					String nSign = Md5Util.getMd5(signValue+SIGN_KEY);
+					log.info("updateFreeCard---nSign:"+nSign+",sign:"+sign);
+					if(!sign.equals(nSign)){
+						retMap.put("retCode", "101");
+						retMap.put("retMessage", "验签失败");
+						return retMap;
+					}
+				}
 				FreeVehicleBrandBean freeVehicleBrandBean = new FreeVehicleBrandBean();
 				freeVehicleBrandBean.setCarNumber(carNumber);
 				freeVehicleBrandBean.setOutParkingId(outParkingId);

@@ -260,10 +260,10 @@
 				</div>
 			</TD>
 		</TR>
-		<p style="border-top: 1px solid #E6E6E6;margin:25 auto 0;width: 1000px;"></p>
+		<!-- <p style="border-top: 1px solid #E6E6E6;margin:25 auto 0;width: 1000px;"></p> -->
 		<TD align="center" valign="middle">
-			<div align="center" style="margin-top: 26px;margin-bottom: 26px;">
-				<p style="font-size: 14px;color: #777777;">Copyright 版权所有</p>
+			<div align="center" style="margin-top: 0px;margin-bottom: 26px;">
+				<p style="font-size: 14px;color: #777777;">Copyright 云停风驰 版权所有 沪ICP备17047021号-1</p>
 			</div>
 		</TD>
 	</div>

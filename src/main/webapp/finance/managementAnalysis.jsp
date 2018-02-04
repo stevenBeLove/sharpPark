@@ -97,22 +97,42 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				title : "临停总金额",
 				width : 100,
 				align : "center",
+				formatter:function(value,row,index){
+		          	if (row != null) {
+                      return parseFloat(value).toFixed(2);
+                    }
+		        }
 			}, {
 				field : "tempAmount",
 				title : "临停现金",
 				width : 100,
-				align : "center"
+				align : "center",
+				formatter:function(value,row,index){
+		          	if (row != null) {
+                      return parseFloat(value).toFixed(2);
+                    }
+		        }
 			}, {
 				field : "tempAlipayAmount",
 				title : "临停支付宝",
 				width : 150,
 				align : "center",
-				sortable : true
+				sortable : true,
+				formatter:function(value,row,index){
+		          	if (row != null) {
+                      return parseFloat(value).toFixed(2);
+                    }
+		        }
 			}, {
 				field : "tempWeiXinAmount",
 				title : "临停微信",
 				width : 200,
 				align : "center",
+				formatter:function(value,row,index){
+		          	if (row != null) {
+                      return parseFloat(value).toFixed(2);
+                    }
+		        }
 			}, {
 				field : "inTimeCount",
 				title : "入库车次",

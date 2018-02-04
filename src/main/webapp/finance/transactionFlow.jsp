@@ -51,8 +51,55 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 	};
 	$.close = function() {
 		$.hideDivShade();
-		$("#markSave").window('close');
+		$("#orderRefund").window('close');
 	};
+	var flag;
+	$.openWin = function(obj) {
+		$("#refundMoney").val('');
+		var rows = $('#search').datagrid('getSelections');
+		var len = rows.length;
+		$('#orderRefund').window({
+			title : '退款'
+		});
+		flag = obj;
+		if (flag != "-1") {
+			var rows = $('#search').datagrid('getSelections');
+			if (rows.length > 1) {
+				$.hideDivShade();
+				$.messager.alert("提示 ", "只能对单条记录修改");
+				return;
+			}else if(rows.length ==0){
+				$.hideDivShade();
+				$.messager.alert("提示 ", "请选择要修改的记录");
+				return;
+			}
+			var row = $('#search').datagrid('getSelected');
+			var orderPayStatus = row.orderPayStatus;
+			if(orderPayStatus!=null&&'1'==orderPayStatus){
+				$.messager.alert("提示 ", "订单已退款成功");
+				return;
+			}
+			if('0'==row.orderNo){
+				$.messager.alert("提示 ", "订单退款失败，金额为0");
+				return;
+			}
+			$("#refundMoney").val(row.paidMoney);
+			 $("#r_orderNo").val(row.orderNo);
+		}
+		$("#orderRefund").window('open').window('refresh');
+	};
+	$.save = function() {
+		var refundMoney = $("#refundMoney").val();
+		var orderNo = $("#r_orderNo").val();
+		$('#save').linkbutton('disable');
+		$.post("${ctx}/finance/transactionFlow.do?method=transactionRefundMoney", {
+			orderNo : orderNo,
+			refundMoney : refundMoney
+		}, function(data) {
+			$.parseAjaxReturnInfo(data, $.success, $.failed);
+		}, "json");
+	};
+	
 	$.search = function(obj) {
 		type = obj;
 		var carNumber = $('#carNumber').val();
@@ -92,7 +139,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			remoteSort : false,
 			pagination : true,
 			columns : [ [ 
-			{
+			{field : "ck",checkbox : true
+			},{
 				field : "carNumber",
 				title : "车牌",
 				width : 100,
@@ -119,7 +167,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			},{
 				field : "orderNo",
 				title : "支付宝支付流水",
-				width : 200,
+				width : 213,
 				align : "center",
 				sortable : true
 			}, {
@@ -133,20 +181,43 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
                     }
 		        }
 			}, {
-				field : "payType",
-				title : "收费类型",
+				field : "billingTyper",
+				title : "缴费类型",
 				width : 150,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
-		          	if(value == 1){
-		          		return '支付宝在线缴费';
+		          	if(value == 'M'){
+		          		return '月卡';
+		          	}else if(value == 'L'){
+		          		return '临时';
+		          	}else if(value == 'F'){
+		          		return '免费';
+		          	}else if(value == 'N'){
+		          		return '无牌车';
+		          	}else if(value == 'A'){
+		          		return '支付宝';
+		          	}else if(value == 'W'){
+		          		return '微信';
+		          	}else if(value == 'C'){
+		          		return '现金';
+		          	}else if(value == 'G'){
+		          		return '强制放行';
+		          	}
+		        }
+			}, {
+				field : "orderPayStatus",
+				title : "订单状态",
+				width : 150,
+				align : "center",
+				sortable : true,
+				formatter:function(value,row,index){
+		          	if(value == 0){
+		          		return '交易成功';
+		          	}else if(value == 1){
+		          		return '退款成功';
 		          	}else if(value == 2){
-		          		return '支付宝代扣缴费';
-		          	}else if(value == 3){
-		          		return '当面付';
-		          	}else{
-		          		return '未知';
+		          		return '退款失败';
 		          	}
 		        }
 			}, {
@@ -161,11 +232,21 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 			}] ],
 			hideColumn : [ [ {
-				field : "timeOut"
+				field : "timeOut",
+				orderNo : "orderNo"
 			} ] ],
 			pagination : true,
 			rownumbers : true,
-			showFooter : true
+			showFooter : true,
+			toolbar : [ {
+				id : 'btnadd',
+				text : '退款',
+				iconCls : 'icon-add',
+				handler : function() {
+					$.openWin(0);
+				}
+			}
+			]
 		});
 		$('#btnsave').hide();
 		var p = $('#search').datagrid('getPager');
@@ -253,4 +334,31 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		</tr>
 	</table>
 	<table id="search"></table>
+	
+	<div id="orderRefund" class="easyui-window" title="退费" closed=true cache="false" collapsible="false" zIndex="20px" minimizable="false"
+		maximizable="false" resizable="false" draggable="true" closable="false"
+		style="width: 430px; height: 255px; top: 10px; padding: 0px; background: #fafafa; overflow: hidden;">
+		<div class="easyui-layout" fit="true">
+			<div region="center" border="true" style="padding: 10px; background: #fff; overflow: hidden;">
+				<input type="hidden" id="r_orderNo" name="r_orderNo"/>
+				<table style="width: 100%;">
+					<tr align="center">
+						<td></td>
+						<td></td>
+						<td>退款金额：</td>
+						<td><input id="refundMoney" name="refundMoney" readonly="readonly"/></td>
+						<td></td>
+						<td></td>
+					</tr>
+					<tr height="54px">
+						<td align="center" colspan="6"><a name="r_save" id="r_save" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-save'"
+							onclick="$.save()">退款</a>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a name="close"
+							id="close" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="$.close()">关闭</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>	
 </body>

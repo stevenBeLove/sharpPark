@@ -52,6 +52,13 @@ public class MonthVehicleBrandService extends AbstractService{
 	    return dao.queryForList("TB_MONTH_VEHICLE_BRAND.getMonthVehicleBrandExport", monthVehicleBrandBean);
 	}
 	
+	public MonthVehicleBrandBean queryMonthVehicleByCarNumber(String outParkingId,String carNumber){
+		Map<String,String> reqParam = new HashMap<String, String>();
+		reqParam.put("outParkingId", outParkingId);
+		reqParam.put("carNumber", carNumber);
+		return (MonthVehicleBrandBean) dao.queryForObject("TB_MONTH_VEHICLE_BRAND.queryMonthVehicleByCarNumber",reqParam);
+	}
+	
 	public Map<String,Object> addBatchMonthVehicleBrand(List list,String outParkingId) throws Exception{
 		List<MonthVehicleBrandBean> addList = new ArrayList<MonthVehicleBrandBean>();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");

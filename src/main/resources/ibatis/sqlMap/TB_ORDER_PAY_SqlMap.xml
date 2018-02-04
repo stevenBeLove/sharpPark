@@ -32,6 +32,7 @@
     <result column="CAR_COLOR" property="carColor" jdbcType="VARCHAR" />
     <result column="CAR_TYPE" property="carType" jdbcType="VARCHAR" />
     <result column="ORDER_TRADE" property="orderTrade" jdbcType="VARCHAR" />
+    <result column="BILLING_TYPER" property="billingTyper" jdbcType="VARCHAR" />
   </resultMap>
   <sql id="ibatorgenerated_Example_Where_Clause" >
     <!--
@@ -419,6 +420,9 @@
     <isNotEmpty prepend="and" property="carNumber" >
         CAR_NUMBER like '%$carNumber$%'
     </isNotEmpty>
+    <isNotEmpty prepend="and" property="billingTyper" >
+				        BILLING_TYPER = #billingTyper:VARCHAR#
+	</isNotEmpty>
     <isNotEmpty prepend="and" property="startDate" >
 	<![CDATA[
 	       		to_date(order_time,'yyyy-MM-dd hh24:mi:ss')>=#startDate:TIMESTAMP#
@@ -462,11 +466,15 @@
 					       t.CAR_ID           carId,
 					       t.CAR_COLOR        carColor,
 					       t.CAR_TYPE         carType,
-					       t.ORDER_TRADE      orderTrade
+					       t.ORDER_TRADE      orderTrade,
+					       t.BILLING_TYPER billingTyper
 					  from TB_ORDER_PAY t
 	                 where 1 = 1
 	                 <isNotEmpty prepend="and" property="outParkingId" >
 				        t.OUT_PARKING_ID = #outParkingId:VARCHAR#
+				    </isNotEmpty>
+				    <isNotEmpty prepend="and" property="billingTyper" >
+				        t.BILLING_TYPER = #billingTyper:VARCHAR#
 				    </isNotEmpty>
 	                 <isNotEmpty prepend="and" property="carNumber" >
 				        t.CAR_NUMBER like '%$carNumber$%'
@@ -544,19 +552,23 @@
 	          select substr(p.pay_time, 0, 10) dateStr,
            (select nvl(sum(nvl(p1.PAID_MONEY, 0)), 0)
               from tb_order_pay p1
-             where p1.billing_typer = 'L'
+             where p1.ORDER_SYN_STATUS = '1'
                and substr(p1.pay_time, 0, 10) = substr(p.pay_time, 0, 10) and p1.out_parking_id=#outParkingId:VARCHAR#) tempTotalAmount,
            (select nvl(sum(nvl(p2.PAID_MONEY, 0)), 0)
               from tb_order_pay p2
-             where p2.billing_typer = 'L'
+             where p2.ORDER_SYN_STATUS = '1'
                and substr(p2.pay_time, 0, 10) = substr(p.pay_time, 0, 10)
-               and p2.pay_type = '3' and p2.out_parking_id=#outParkingId:VARCHAR#) tempAmount,
+               and p2.BILLING_TYPER = 'C' and p2.out_parking_id=#outParkingId:VARCHAR#) tempAmount,
            (select nvl(sum(nvl(p3.PAID_MONEY, 0)), 0)
               from tb_order_pay p3
-             where p3.billing_typer = 'L'
+             where p3.ORDER_SYN_STATUS = '1'
                and substr(p3.pay_time, 0, 10) = substr(p.pay_time, 0, 10)
-               and p3.pay_type in ('1', '2') and p3.out_parking_id=#outParkingId:VARCHAR#) tempAlipayAmount,
-           0 tempWeiXinAmount,
+               and p3.BILLING_TYPER ='A' and p3.out_parking_id=#outParkingId:VARCHAR#) tempAlipayAmount,
+           (select nvl(sum(nvl(p3.PAID_MONEY, 0)), 0)
+              from tb_order_pay p3
+             where p3.ORDER_SYN_STATUS = '1'
+               and substr(p3.pay_time, 0, 10) = substr(p.pay_time, 0, 10)
+               and p3.BILLING_TYPER ='W' and p3.out_parking_id=#outParkingId:VARCHAR#) tempWeiXinAmount,
            (select count(1) c
               from tb_order_pay p4
              where substr(p4.in_time, 0, 10) = substr(p.pay_time, 0, 10) and p4.out_parking_id=#outParkingId:VARCHAR#) inTimeCount,
@@ -608,7 +620,8 @@
 	       to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
 	       to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss')
 	   and p.out_parking_id = #outParkingId:VARCHAR#
-	   and p.pay_type ='3'
+	   and p.BILLING_TYPER ='C'
+	   and p.ORDER_SYN_STATUS = '1'
 	union all 
 	select 2 payType,
 			'支付宝'  payTypeName,
@@ -626,20 +639,27 @@
 	       to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
 	       to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss')
 	   and p.out_parking_id = #outParkingId:VARCHAR#
-	   and p.pay_type in ('1', '2')
-	   union all 
+	   and p.BILLING_TYPER='A'
+	   and p.ORDER_SYN_STATUS = '1'
+	union all 
 		select 3 payType,
 		'微信'  payTypeName,
-		       0 totalCount,
-		       0 transactionAmount,
-		       0 refundCount,
-		       0 refundAmount,
-		       0 merchantDiscount,
-		       0 cloudDiscount,
-		       0 actualAmount,
-		       0 freeAmount,
-		       0 settAmount
-		  from dual)
+		        count(1) totalCount,
+	       nvl(sum(nvl(p.paid_money,0)),0) transactionAmount,
+	       nvl(sum(decode(p.refund_money, null, 0, 1)),0) refundCount,
+	       nvl(sum(nvl(p.refund_money, 0)), 0) refundAmount,
+	       0 merchantDiscount,
+	       0 cloudDiscount,
+	       nvl(sum(nvl(p.paid_money,0)),0) actualAmount,
+	       0 freeAmount,
+	       nvl(sum(nvl(p.paid_money,0)),0) settAmount
+	  from tb_order_pay p
+	 where to_date(p.PAY_TIME, 'yyyy-MM-dd hh24:mi:ss') between
+	       to_date(#startDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss') and
+	       to_date(#endDate:VARCHAR#, 'yyyy-MM-dd hh24:mi:ss')
+	   and p.out_parking_id = #outParkingId:VARCHAR#
+	   and p.BILLING_TYPER='W'
+	   and p.ORDER_SYN_STATUS = '1')
       ]]>
 		  where 1=1
 	  <isNotEmpty prepend="and" property="payType" >
@@ -809,6 +829,39 @@
 				 ) b
 	         where rownum <![CDATA[<=]]> #end#)
 	where rn > #start#
+  </select>
+  
+  <select id="getOrderPayBeanByOrderNo" parameterClass="com.compass.order.model.OrderPayBean" resultClass="com.compass.order.model.OrderPayBean">
+  select t.ORDER_ID         orderId,
+		       t.USER_ID          userId,
+		       t.OUT_PARKING_ID   outParkingId,
+		       t.PARKING_NAME     parkingName,
+		       t.CAR_NUMBER       carNumber,
+		       t.OUT_ORDER_NO     outOrderNo,
+		       t.ORDER_STATUS     orderStatus,
+		       t.ORDER_TIME       orderTime,
+		       t.ORDER_NO         orderNo,
+		       t.PAY_TIME         payTime,
+		       t.PAY_TYPE         payType,
+		       t.PAY_MONEY        payMoney,
+		       t.IN_TIME          inTime,
+		       t.PARKING_ID       parkingId,
+		       t.IN_DURATION      inDuration,
+		       t.CARD_NUMBER      cardNumber,
+		       t.DISCOUNT_MONEY   discountMoney,
+		       t.PAID_MONEY       paidMoney,
+		       t.SELLER_ID        sellerId,
+		       t.OUT_TIME         outTime,
+		       t.ORDER_SYN_STATUS orderSynStatus,
+		       t.ORDER_PAY_STATUS orderPayStatus,
+		       t.CAR_ID           carId,
+		       t.CAR_COLOR        carColor,
+		       t.CAR_TYPE         carType,
+		       t.ORDER_TRADE      orderTrade
+		  from TB_ORDER_PAY t
+               where 1 = 1
+	        	AND	t.OUT_PARKING_ID = #outParkingId:VARCHAR#
+	        	AND	t.ORDER_NO = #orderNo:VARCHAR#
   </select>
   
 </sqlMap>

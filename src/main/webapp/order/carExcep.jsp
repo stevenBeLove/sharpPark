@@ -58,7 +58,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			carNumber = "";
 		}
 		$('#viewOrder').datagrid({
-			title : '异常车牌',
+			title : '异常出场',
 			width : $(window).width() - 8,
 			height : $(window).height() * 0.9,
 			pageSize : 20,
@@ -84,53 +84,97 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true
 			}, {
-				field : "outOrderNo",
-				title : "设备商订单号",
-				width : 100,
-				align : "center",
-				sortable : true
-			}, {
-				field : "orderStatus",
-				title : "设备商订单状态",
+				field : "carType",
+				title : "车牌类型",
 				width : 100,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
-		          	if(value == 0){
-		          		return '成功';
+		          	if(value == 1){
+		          		return '小型车';
+		          	}else if(value == 2){
+		          		return '中型车';
+		          	}else if(value == 3){
+		          		return '大型车';
+		          	}else if(value == 4){
+		          		return '摩托车';
+		          	}else if(value == 5){
+		          		return '其他';
 		          	}else{
-		          		return '失败';
+		          		return '未知';
 		          	}
 		        }
-			}, {
-				field : "orderNo",
-				title : "支付宝支付流水",
-				width : 200,
-				align : "center",
-				sortable : true
-			}, {
-				field : "payMoney",
-				title : "缴费金额",
-				width : 100,
-				align : "center",
 			}, {
 				field : "inTime",
 				title : "入场时间",
 				width : 120,
 				align : "center",
 			}, {
+				field : "lane",
+				title : "入场车道",
+				width : 80,
+				align : "center",
+				sortable : true
+			}, {
 				field : "outTime",
 				title : "出场时间",
 				width : 120,
 				align : "center",
 			}, {
-				field : "payTime",
-				title : "缴费时间",
-				width : 120,
+				field : "lane",
+				title : "车场车道",
+				width : 80,
 				align : "center",
 			}, {
-				field : "orderTime",
-				title : "订单创建时间",
+				field : "inDuration",
+				title : "停车时长（分）",
+				width : 130,
+				align : "center",
+			}, {
+				field : "paidMoney",
+				title : "应收停车费",
+				width : 110,
+				align : "center",
+			}, {
+				field : "orderSynStatus",
+				title : "是否缴费",
+				width : 100,
+				align : "center",
+				formatter:function(value,row,index){
+		          	if(value == '0'){
+		          		return '未支付';
+		          	}else if(value == '1'){
+		          		return '已支付';
+		          	}
+				}
+			}, {
+				field : "billingTyper",
+				title : "缴费类型",
+				width : 150,
+				align : "center",
+				sortable : true,
+				formatter:function(value,row,index){
+		          	if(value == 'M'){
+		          		return '月卡';
+		          	}else if(value == 'L'){
+		          		return '临时';
+		          	}else if(value == 'F'){
+		          		return '免费';
+		          	}else if(value == 'N'){
+		          		return '无牌车';
+		          	}else if(value == 'A'){
+		          		return '支付宝';
+		          	}else if(value == 'W'){
+		          		return '微信';
+		          	}else if(value == 'C'){
+		          		return '现金';
+		          	}else if(value == 'G'){
+		          		return '强制放行';
+		          	}
+		        }
+			}, {
+				field : "paidMoney",
+				title : "缴费金额",
 				width : 100,
 				align : "center",
 			} ] ],

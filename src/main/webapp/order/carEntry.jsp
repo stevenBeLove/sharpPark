@@ -102,20 +102,24 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				align : "center",
 				sortable : true
 			}, {
-				field : "billingTyper",
-				title : "车牌性质",
-				width : 60,
+				field : "carType",
+				title : "车牌类型",
+				width : 100,
 				align : "center",
 				sortable : true,
 				formatter:function(value,row,index){
-		          	if(value == 'M'){
-		          		return '月卡';
-		          	}else if(value == 'L'){
-		          		return '临时';
-		          	}else if(value == 'F'){
-		          		return '免费';
-		          	}else{
+		          	if(value == 1){
+		          		return '小型车';
+		          	}else if(value == 2){
+		          		return '中型车';
+		          	}else if(value == 3){
+		          		return '大型车';
+		          	}else if(value == 4){
+		          		return '摩托车';
+		          	}else if(value == 5){
 		          		return '其他';
+		          	}else{
+		          		return '未知';
 		          	}
 		        }
 			}, {
@@ -167,19 +171,27 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
                     }
 		        }
 			}, {
-				field : "payType",
+				field : "billingTyper",
 				title : "缴费类型",
 				width : 100,
 				align : "center",
 				formatter:function(value,row,index){
-		          	if(value == '1'){
+		          	if(value == 'M'){
+		          		return '月卡';
+		          	}else if(value == 'L'){
+		          		return '临时';
+		          	}else if(value == 'F'){
+		          		return '免费';
+		          	}else if(value == 'N'){
+		          		return '无牌车';
+		          	}else if(value == 'A'){
 		          		return '支付宝';
-		          	}else if(value == '2'){
-		          		return '支付宝';
-		          	}else if(value == '3'){
+		          	}else if(value == 'W'){
+		          		return '微信';
+		          	}else if(value == 'C'){
 		          		return '现金';
-		          	}else{
-		          		return '其他';
+		          	}else if(value == 'G'){
+		          		return '强制放行';
 		          	}
 		        }
 			}, {

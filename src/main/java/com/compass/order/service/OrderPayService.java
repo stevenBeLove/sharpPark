@@ -62,4 +62,12 @@ public class OrderPayService extends AbstractService{
 	public List<OrderPayBean> getOrderPayEntryAll(OrderPayBean orderPayBean) {
 	        return dao.queryForList("TB_ORDER_PAY.getOrderPayEntryAll", orderPayBean);
 	}
+	
+	
+	public OrderPayBean getOrderPayBeanByOrderNo(String orderNo,String outParkingId){
+		OrderPayBean orderPayBean = new OrderPayBean();
+		orderPayBean.setOrderNo(orderNo);
+		orderPayBean.setOutParkingId(outParkingId);
+		return (OrderPayBean) dao.queryForObject("TB_ORDER_PAY.getOrderPayBeanByOrderNo", orderPayBean);
+	}
 }
