@@ -33,6 +33,7 @@ import com.compass.agency.model.AgencyBean;
 import com.compass.agency.model.SpecSystemBean;
 import com.compass.agency.service.AgencyService;
 import com.compass.authority.service.AuthorityService;
+import com.compass.park.model.ParkBean;
 import com.compass.role.service.RoleService;
 import com.compass.system.service.SystemManageService;
 import com.compass.systemlog.model.SystemLogBean;
@@ -341,10 +342,11 @@ public class UsersController {
         if(ConstantUtils.CENTERCODE.equals(list.get(0).getUserid())){
             session.setAttribute(ConstantUtils.TINYBUSSINESS,true);
         }
-        
         //登录名
         session.setAttribute(ConstantUtils.USERLOGINNAME, loginName);
-        
+        if(ConstantUtils.CENTERCODE.equals(list.get(0).getAgencyId())){
+        	session.setAttribute(ConstantUtils.ROLE, "1");
+        }
         log.info("查询是否显示归属机构 ");
         SpecSystemBean spec = systemManageService.checkOnlineSystem(systemId);
         String onlineControl = "0";

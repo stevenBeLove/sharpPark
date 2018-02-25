@@ -32,6 +32,7 @@
     <result column="CONTACT_ALIPAY" property="contactAlipay" jdbcType="VARCHAR" />
     <result column="PARKING_NAME" property="parkingName" jdbcType="VARCHAR" />
     <result column="TIME_OUT" property="timeOut" jdbcType="VARCHAR" />
+    <result column="LICENSE_COUNT" property="licenseCount" jdbcType="INTEGER" />
   </resultMap>
   <sql id="abatorgenerated_Example_Where_Clause" >
     <!--
@@ -1497,7 +1498,7 @@
       EQUIPMENT_NAME, PARKING_ADDRESS, LONGITUDE, LATITUDE, PARKING_START_TIME, PARKING_END_TIME,
       PARKING_NUMBER, PARKING_LOT_TYPE, PARKING_TYPE, PAYMENT_MODE, PAY_TYPE, SHOPINGMALL_ID,
       PARKING_FEE_DESCRIPTION, CONTACT_NAME, CONTACT_MOBILE, CONTACT_TEL, CONTACT_EMALI,
-      CONTACT_WEIXIN, CONTACT_ALIPAY, PARKING_NAME, TIME_OUT,CREATE_USERID,CREATE_DATETIME,status)
+      CONTACT_WEIXIN, CONTACT_ALIPAY, PARKING_NAME, TIME_OUT,CREATE_USERID,CREATE_DATETIME,status,LICENSE_COUNT)
     values (#outParkingId:VARCHAR#, #merchantName:VARCHAR#, #merchantServicePhone:VARCHAR#,
       #accountNo:VARCHAR#, #cityId:VARCHAR#, #equipmentName:VARCHAR#, #parkingAddress:VARCHAR#,
       #longitude:VARCHAR#, #latitude:VARCHAR#, #parkingStartTime:VARCHAR#, #parkingEndTime:VARCHAR#,
@@ -1505,7 +1506,7 @@
       #paymentMode:VARCHAR#, #payType:VARCHAR#, #shopingmallId:VARCHAR#,
       #parkingFeeDescription:VARCHAR#, #contactName:VARCHAR#, #contactMobile:VARCHAR#,
       #contactTel:VARCHAR#, #contactEmali:VARCHAR#, #contactWeixin:VARCHAR#,
-      #contactAlipay:VARCHAR#, #parkingName:VARCHAR#, #timeOut:VARCHAR#,#createUserId:VARCHAR#,sysdate,#status:VARCHAR#)
+      #contactAlipay:VARCHAR#, #parkingName:VARCHAR#, #timeOut:VARCHAR#,#createUserId:VARCHAR#,sysdate,#status:VARCHAR#,#licenseCount:INTEGER#)
   </insert>
   <update id="updateParkById" parameterClass="com.compass.park.model.ParkBean" >
     <!--
@@ -1541,6 +1542,9 @@
       MODIFY_USERID=#modifyUserId:VARCHAR#,
       MODIFY_DATETIME=sysdate,
       STATUS=#status:VARCHAR#
+      <isNotNull prepend="," property="licenseCount" >
+        LICENSE_COUNT = #licenseCount:INTEGER#
+      </isNotNull>
     where OUT_PARKING_ID = #outParkingId:VARCHAR#
   </update>
   <update id="abatorgenerated_updateByPrimaryKeySelective" parameterClass="com.compass.park.model.ParkBean" >
@@ -1684,7 +1688,9 @@
 				t.MODIFY_USERID modifyUserId,
 				t.CREATE_DATETIME createDatetime,
 				t.MODIFY_DATETIME modifyDatetime,
-				t.STATUS status from TB_PARK t
+				t.STATUS status,
+				t.LICENSE_COUNT licenseCount 
+				from TB_PARK t
 				where 1=1 
 				<isNotEmpty property="merchantName" prepend="and">
 					t.MERCHANT_NAME like '%$merchantName$%'

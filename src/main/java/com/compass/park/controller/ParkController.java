@@ -175,6 +175,15 @@ public class ParkController {
 			parkBean.setTimeOut(timeOut);
 			parkBean.setStatus(status);
 			parkBean.setCreateUserId(createId);
+			String loutParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			if(ConstantUtils.CENTERCODE.equals(loutParkingId)){
+				String lcount = req.getParameter("licenseCount");
+				if(StringUtils.isNotBlank(lcount)){
+					parkBean.setLicenseCount(Integer.valueOf(lcount));
+				}
+			}else{
+				parkBean.setLicenseCount(0);
+			}
 			String outParkingId = parkService.getParkSeq();
 			parkBean.setOutParkingId(outParkingId);
 			log.info("addPark："+JSONObject.toJSONString(parkBean));
@@ -297,6 +306,13 @@ public class ParkController {
 			parkBean.setStatus(status);
 			parkBean.setOutParkingId(outParkingId);
 			parkBean.setModifyUserId(userId);
+			String loutParkingId = req.getSession().getAttribute(ConstantUtils.AGENCYID).toString().trim();
+			if(ConstantUtils.CENTERCODE.equals(loutParkingId)){
+				String lcount = req.getParameter("licenseCount");
+				if(StringUtils.isNotBlank(lcount)){
+					parkBean.setLicenseCount(Integer.valueOf(lcount));
+				}
+			}
 			log.info("editPark"+JSONObject.toJSONString(parkBean));
 			boolean flag = this.parkService.updateParkById(parkBean);
 			if(flag){

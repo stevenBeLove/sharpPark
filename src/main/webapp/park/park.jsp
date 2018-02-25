@@ -18,7 +18,7 @@ var staticagecyId='<%=ConstantUtils.CENTERCODE%>';
 var roleid=${sessionScope.roletypeId};
 var onlineControl='<%=session.getAttribute(ConstantUtils.ONLINEFLAG)%>';
 var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
-
+var role = '<%=session.getAttribute(ConstantUtils.ROLE)%>';
 
 	//判断是否为中文
 	function checkChinese(str) {
@@ -73,7 +73,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		$("#contactAlipay").val('');
 		$("#parkingName").val('');
 		$("#timeOut").val('');
-		$("#status").combobox('select', ''	);
+		$("#licenseCount").val('');
+		$("#status").combobox('select', '1'	);
 		var rows = $('#viewAgency').datagrid('getSelections');
 		var len = rows.length;
 		$('#markSave').window({
@@ -131,6 +132,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 			$("#timeOut").val(row.timeOut);
 			$("#status").combobox('select', row.status);
 			$("#outParkingIdU").val(row.outParkingId);
+			$("#licenseCount").val(row.licenseCount);
 		}
 		$("#markSave").window('open').window('refresh');
 	};
@@ -166,6 +168,7 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 		var timeOut = $("#timeOut").val();
 		var outParkingId =$("#outParkingIdU").val();
 		var status = $("#status").combobox('getValue');
+		var licenseCount = $("#licenseCount").val();
 		if ($.trim(merchantName) == "") {
 			$.messager.alert("提示 ", "请输入商户简称");
 			return false;
@@ -202,7 +205,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				contactAlipay:contactAlipay,
 				parkingName:parkingName,
 				timeOut:timeOut,
-				status:status
+				status:status,
+				licenseCount:licenseCount
 			}, function(data) {
 				$.parseAjaxReturnInfo(data, $.success, $.failed);
 			}, "json");
@@ -234,7 +238,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				parkingName:parkingName,
 				timeOut:timeOut,
 				status:status,
-				outParkingId:outParkingId
+				outParkingId:outParkingId,
+				licenseCount:licenseCount
 			}, function(data) {
 				$.parseAjaxReturnInfo(data, $.success, $.failed);
 			}, "json");
@@ -376,7 +381,8 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 				field : "contactWeixin",
 				field : "contactAlipay",
 				field : "parkingName",
-				field : "timeOut"
+				field : "timeOut",
+				field : "licenseCount"
 			} ] ],
 			pagination : true,
 			rownumbers : true,
@@ -592,14 +598,18 @@ var agencyControl='<%=session.getAttribute(ConstantUtils.AGENCYFLAG)%>';
 						<td align="right">状态：</td>
 						<td align="left">
 							<select class="easyui-combobox" id="status" name="status" style="width: 155px;" editable="false">
-									<option value="" selected="selected">--请选择--</option>
-									<option value="1">可用</option>
+									<option value="1" selected="selected">可用</option>
 									<option value="0">不可用</option>
 							</select>
 						</td>
-						<td align="right"></td>
-						<td align="left">
-						</td>
+						<c:if test="${'1'==role }">
+							<td align="right">
+								license数量:
+							</td>
+							<td align="left">
+								<input type="text" name="licenseCount" id="licenseCount" />
+							</td>
+						</c:if>
 					</tr>
 					
 					<tr>

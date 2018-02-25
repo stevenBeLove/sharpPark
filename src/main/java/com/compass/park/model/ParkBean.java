@@ -843,7 +843,8 @@ public class ParkBean {
 	private Date modifyDatetime;
 	private String status;//0不可用，1 可用
 	private String isSubPark; //是否查询子停车场 1：查询
-
+	private Integer licenseCount;
+	
 	public Integer getStart() {
 		return start;
 	}
@@ -906,5 +907,13 @@ public class ParkBean {
 
 	public void setIsSubPark(String isSubPark) {
 		this.isSubPark = isSubPark;
+	}
+
+	public Integer getLicenseCount() {
+		return licenseCount;
+	}
+
+	public void setLicenseCount(Integer licenseCount) {
+		this.licenseCount = licenseCount;
 	}
 }

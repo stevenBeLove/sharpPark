@@ -35,6 +35,7 @@ public class ConstantUtils {
 	public static final String VESTAGENCYID = "vestagencyId"; // 归属机构Id
 	public static final String TINYBUSSINESS = "tinyBussiness";//是否为小微商
 	public static final String USERLOGINNAME = "userLoginName";//登录名
+	public static final String ROLE = "role"; //1.超级管理员
 
 	public static final String AGENCY[] = { "机构编号", "企业名称", "归属机构", "上级机构名称", "法人姓名", "身份证号", "手机号码", "激活状态", "激活链接", "激活时间", "企业邮箱", "企业地址", "组织机构代码", "法人信息 ", "合同编号", "省", "市",
 			"实名状态", "开户银行", "开户银行编码", "户名", "银行账号", "创建人", "创建时间", "联系人", "企业电话"};//顶级机构导出
